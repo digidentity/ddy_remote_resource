@@ -16,7 +16,7 @@ module RemoteResource
 
     module ClassMethods
 
-      attr_accessor :site, :path_prefix, :path_postfix, :content_type, :collection, :root_element
+      attr_accessor :site, :path_prefix, :path_postfix, :content_type, :collection, :collection_name, :root_element
 
       def app_host(app, env = Rails.env)
         CONFIG[env.to_sym][:apps][app.to_sym]
@@ -35,7 +35,7 @@ module RemoteResource
       end
 
       def relative_name
-        self.name.to_s.demodulize
+        @collection_name.to_s.presence || self.name.to_s.demodulize
       end
 
       def use_relative_model_naming?

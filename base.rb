@@ -51,6 +51,24 @@ module RemoteResource
         Typhoeus::Request
       end
 
+      def find(id)
+        response = connection.get "#{base_url}/#{id}#{content_type.presence}", headers: headers
+        if response.success?
+          new JSON.parse(response.body)
+        end
+      end
+
+      def find_by(params)
+        get params
+      end
+
+      def get(attributes = {})
+        response = connection.get "#{base_url}#{content_type.presence}", body: attributes, headers: headers
+        if response.success?
+          new JSON.parse(response.body)
+        end
+      end
+
     end
 
     module InstanceMethods

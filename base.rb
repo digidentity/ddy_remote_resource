@@ -129,8 +129,7 @@ module RemoteResource
       end
 
       def patch(attributes = {})
-        id = attributes.fetch :id
-        response = self.class.connection.patch "#{self.class.base_url}/#{id}#{self.class.content_type.presence}", body: attributes, headers: self.class.headers
+        response = self.class.connection.patch collection_determined_url, body: attributes, headers: self.class.headers
         if response.success?
           true
         elsif response.response_code == 422
@@ -143,6 +142,14 @@ module RemoteResource
       end
 
       private
+
+      def collection_determined_url
+        if self.class.collection
+          "#{self.class.base_url}/#{self.id}#{self.class.content_type.presence}"
+        else
+          "#{self.class.base_url}#{self.class.content_type.presence}"
+        end
+      end
 
       def pack_up_request_body(body)
         self.class.send :pack_up_request_body, body

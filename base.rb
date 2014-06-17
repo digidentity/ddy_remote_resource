@@ -59,13 +59,31 @@ module RemoteResource
       end
 
       def find_by(params)
-        get params
+        get pack_up_request_body(params)
       end
 
       def get(attributes = {})
         response = connection.get "#{base_url}#{content_type.presence}", body: attributes, headers: headers
         if response.success?
-          new JSON.parse(response.body)
+          new unpack_response_body(response.body)
+        end
+      end
+
+      private
+
+      def pack_up_request_body(body)
+        if root_element.present?
+          Hash[root_element.to_s, body]
+        else
+          body
+        end
+      end
+
+      def unpack_response_body(body)
+        if root_element.present?
+          JSON.parse(body)[root_element.to_s]
+        else
+          JSON.parse(body)
         end
       end
 

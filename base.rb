@@ -104,14 +104,14 @@ module RemoteResource
       end
 
       def save
-        create_or_update pack_up_params(params)
+        create_or_update params
       end
 
       def create_or_update(attributes = {})
         if attributes.has_key? :id
-          patch attributes
+          patch pack_up_request_body(attributes)
         else
-          post attributes
+          post pack_up_request_body(attributes)
         end
       end
 
@@ -144,12 +144,12 @@ module RemoteResource
 
       private
 
-      def pack_up_params(params)
-        if self.class.root_element.present?
-          Hash[self.class.root_element.to_s, params]
-        else
-          params
-        end
+      def pack_up_request_body(body)
+        self.class.send :pack_up_request_body, body
+      end
+
+      def unpack_response_body(body)
+        self.class.send :unpack_response_body, body
       end
 
       def assign_errors(error_data)

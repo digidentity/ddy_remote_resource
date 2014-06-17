@@ -120,8 +120,7 @@ module RemoteResource
         if response.success?
           true
         elsif response.response_code == 422
-          parsed_response = JSON.parse response.body
-          assign_errors parsed_response
+          assign_errors JSON.parse(response.body)
           false
         else
           false
@@ -133,8 +132,7 @@ module RemoteResource
         if response.success?
           true
         elsif response.response_code == 422
-          parsed_response = JSON.parse response.body
-          assign_errors parsed_response
+          assign_errors JSON.parse(response.body)
           false
         else
           false

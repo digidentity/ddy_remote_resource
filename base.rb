@@ -103,10 +103,6 @@ module RemoteResource
         !persisted?
       end
 
-      def valid?
-        self.errors.blank?
-      end
-
       def save
         create_or_update params
       end

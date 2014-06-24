@@ -18,7 +18,7 @@ module RemoteResource
 
       attr_accessor :site, :path_prefix, :path_postfix, :content_type, :collection, :collection_name, :root_element
 
-      def app_host(app, env = Rails.env)
+      def app_host(app, env = 'development')
         CONFIG[env.to_sym][:apps][app.to_sym]
       end
 

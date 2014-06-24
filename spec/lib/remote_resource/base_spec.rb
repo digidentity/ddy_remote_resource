@@ -114,7 +114,7 @@ describe RemoteResource::Base do
 
   describe ".use_relative_model_naming?" do
     it "returns true" do
-      expect(dummy_class.use_relative_model_naming?).to be_true
+      expect(dummy_class.use_relative_model_naming?).to be_truthy
     end
   end
 
@@ -129,20 +129,20 @@ describe RemoteResource::Base do
     let(:headers)       { { "Accept"=>"application/json" } }
     let(:response_mock) { double('response', success?: false).as_null_object }
 
-    before { Typhoeus::Request.any_instance.stub(:run) { response_mock } }
+    before { allow_any_instance_of(Typhoeus::Request).to receive(:run) { response_mock } }
 
     it "uses the HTTP GET method" do
-      Typhoeus::Request.should_receive(:get).and_call_original
+      expect(Typhoeus::Request).to receive(:get).and_call_original
       dummy_class.find id
     end
 
     it "uses the id as request url" do
-      Typhoeus::Request.should_receive(:get).with('https://foobar.com/dummy/12', headers: headers).and_call_original
+      expect(Typhoeus::Request).to receive(:get).with('https://foobar.com/dummy/12', headers: headers).and_call_original
       dummy_class.find id
     end
 
     it "uses the headers as request headers" do
-      Typhoeus::Request.should_receive(:get).with('https://foobar.com/dummy/12', headers: { "Accept"=>"application/json" }).and_call_original
+      expect(Typhoeus::Request).to receive(:get).with('https://foobar.com/dummy/12', headers: { "Accept"=>"application/json" }).and_call_original
       dummy_class.find id
     end
 
@@ -150,7 +150,7 @@ describe RemoteResource::Base do
       it "uses the content_type as request url" do
         dummy_class.content_type = '.json'
 
-        Typhoeus::Request.should_receive(:get).with('https://foobar.com/dummy/12.json', headers: headers).and_call_original
+        expect(Typhoeus::Request).to receive(:get).with('https://foobar.com/dummy/12.json', headers: headers).and_call_original
         dummy_class.find id
 
         dummy_class.content_type = nil
@@ -163,7 +163,7 @@ describe RemoteResource::Base do
       let(:response_mock)   { double('response', success?: true, body: response_body) }
 
       it "instantiates the resource with the parsed response body" do
-        dummy_class.should_receive(:new).with(parsed_response).and_call_original
+        expect(dummy_class).to receive(:new).with(parsed_response).and_call_original
         dummy_class.find id
       end
 
@@ -176,7 +176,7 @@ describe RemoteResource::Base do
       let(:response_mock) { double('response', success?: false) }
 
       it "does NOT instantiate the resource" do
-        dummy_class.should_not_receive(:new)
+        expect(dummy_class).not_to receive(:new)
         dummy_class.find id
       end
 
@@ -193,7 +193,7 @@ describe RemoteResource::Base do
       it "packs the params in the root_element and calls the .get" do
         dummy_class.root_element = :foobar
 
-        dummy_class.should_receive(:get).with({ 'foobar' => { id: '12' } })
+        expect(dummy_class).to receive(:get).with({ 'foobar' => { id: '12' } })
         dummy_class.find_by params
 
         dummy_class.root_element = nil
@@ -204,7 +204,7 @@ describe RemoteResource::Base do
       it "does NOT pack the params in the root_element and calls the .get" do
         dummy_class.root_element = nil
 
-        dummy_class.should_receive(:get).with({ id: '12' })
+        expect(dummy_class).to receive(:get).with({ id: '12' })
         dummy_class.find_by params
       end
     end
@@ -215,20 +215,20 @@ describe RemoteResource::Base do
     let(:headers)       { { "Accept"=>"application/json" } }
     let(:response_mock) { double('response', success?: false).as_null_object }
 
-    before { Typhoeus::Request.any_instance.stub(:run) { response_mock } }
+    before { allow_any_instance_of(Typhoeus::Request).to receive(:run) { response_mock } }
 
     it "uses the HTTP GET method" do
-      Typhoeus::Request.should_receive(:get).and_call_original
+      expect(Typhoeus::Request).to receive(:get).and_call_original
       dummy_class.get attributes
     end
 
     it "uses the attributes as request body" do
-      Typhoeus::Request.should_receive(:get).with('https://foobar.com/dummy', body: { foo: 'bar' }, headers: headers).and_call_original
+      expect(Typhoeus::Request).to receive(:get).with('https://foobar.com/dummy', body: { foo: 'bar' }, headers: headers).and_call_original
       dummy_class.get attributes
     end
 
     it "uses the headers as request headers" do
-      Typhoeus::Request.should_receive(:get).with('https://foobar.com/dummy', body: attributes, headers: { "Accept"=>"application/json" }).and_call_original
+      expect(Typhoeus::Request).to receive(:get).with('https://foobar.com/dummy', body: attributes, headers: { "Accept"=>"application/json" }).and_call_original
       dummy_class.get attributes
     end
 
@@ -236,7 +236,7 @@ describe RemoteResource::Base do
       it "uses the content_type as request url" do
         dummy_class.content_type = '.json'
 
-        Typhoeus::Request.should_receive(:get).with('https://foobar.com/dummy.json', body: attributes, headers: headers).and_call_original
+        expect(Typhoeus::Request).to receive(:get).with('https://foobar.com/dummy.json', body: attributes, headers: headers).and_call_original
         dummy_class.get attributes
 
         dummy_class.content_type = nil
@@ -254,7 +254,7 @@ describe RemoteResource::Base do
         after   { dummy_class.root_element = nil }
 
         it "unpacks the response body from the root_element and instantiates the resource with the parsed response body" do
-          dummy_class.should_receive(:new).with(parsed_response).and_call_original
+          expect(dummy_class).to receive(:new).with(parsed_response).and_call_original
           dummy_class.get attributes
         end
 
@@ -270,7 +270,7 @@ describe RemoteResource::Base do
         before { dummy_class.root_element = nil }
 
         it "does NOT unpack the response body from the root_element and instantiates the resource with the parsed response body" do
-          dummy_class.should_receive(:new).with(parsed_response).and_call_original
+          expect(dummy_class).to receive(:new).with(parsed_response).and_call_original
           dummy_class.get attributes
         end
 
@@ -284,7 +284,7 @@ describe RemoteResource::Base do
       let(:response_mock) { double('response', success?: false) }
 
       it "does NOT instantiate the resource" do
-        dummy_class.should_not_receive(:new)
+        expect(dummy_class).not_to receive(:new)
         dummy_class.get attributes
       end
 
@@ -298,13 +298,13 @@ describe RemoteResource::Base do
     context "when id is present" do
       it "returns true" do
         dummy.id = 10
-        expect(dummy.persisted?).to be_true
+        expect(dummy.persisted?).to be_truthy
       end
     end
 
     context "when is is NOT present" do
       it "returns false" do
-        expect(dummy.persisted?).to be_false
+        expect(dummy.persisted?).to be_falsey
       end
     end
   end
@@ -312,26 +312,26 @@ describe RemoteResource::Base do
   describe "#new_record?" do
     context "when instance persisted" do
       it "returns false" do
-        dummy.stub(:persisted?) { true }
+        allow(dummy).to receive(:persisted?) { true }
 
-        expect(dummy.new_record?).to be_false
+        expect(dummy.new_record?).to be_falsey
       end
     end
 
     context "when instance does NOT persist" do
       it "returns true" do
-        dummy.stub(:persisted?) { false }
+        allow(dummy).to receive(:persisted?) { false }
 
-        expect(dummy.new_record?).to be_true
+        expect(dummy.new_record?).to be_truthy
       end
     end
   end
 
   describe "#save" do
-    before { dummy.stub(:post) }
+    before { allow(dummy).to receive(:post) }
 
     it "calls #create_or_update" do
-      dummy.should_receive(:create_or_update).with({ foo: 'bar' }).and_call_original
+      expect(dummy).to receive(:create_or_update).with({ foo: 'bar' }).and_call_original
       dummy.save
     end
   end
@@ -342,7 +342,7 @@ describe RemoteResource::Base do
         it "packs the attributes in the root_element and calls #patch" do
           dummy_class.root_element = :foobar
 
-          dummy.should_receive(:patch).with({ 'foobar' => { id: 10, foo: 'bar' } })
+          expect(dummy).to receive(:patch).with({ 'foobar' => { id: 10, foo: 'bar' } })
           dummy.create_or_update id: 10, foo: 'bar'
 
           dummy_class.root_element = nil
@@ -353,7 +353,7 @@ describe RemoteResource::Base do
         it "does NOT pack the attributes in the root_element and calls #patch" do
           dummy_class.root_element = nil
 
-          dummy.should_receive(:patch).with({ id: 10, foo: 'bar' })
+          expect(dummy).to receive(:patch).with({ id: 10, foo: 'bar' })
           dummy.create_or_update id: 10, foo: 'bar'
         end
       end
@@ -364,7 +364,7 @@ describe RemoteResource::Base do
         it "packs the attributes in the root_element and calls #post" do
           dummy_class.root_element = :foobar
 
-          dummy.should_receive(:post).with({ 'foobar' => { foo: 'bar' } })
+          expect(dummy).to receive(:post).with({ 'foobar' => { foo: 'bar' } })
           dummy.create_or_update foo: 'bar'
 
           dummy_class.root_element = nil
@@ -375,7 +375,7 @@ describe RemoteResource::Base do
         it "does NOT pack the attributes in the root_element and calls #post" do
           dummy_class.root_element = nil
 
-          dummy.should_receive(:post).with({ foo: 'bar' })
+          expect(dummy).to receive(:post).with({ foo: 'bar' })
           dummy.create_or_update foo: 'bar'
         end
       end
@@ -387,20 +387,20 @@ describe RemoteResource::Base do
     let(:headers)       { { "Accept"=>"application/json" } }
     let(:response_mock) { double('response').as_null_object }
 
-    before { Typhoeus::Request.any_instance.stub(:run) { response_mock } }
+    before { allow_any_instance_of(Typhoeus::Request).to receive(:run) { response_mock } }
 
     it "uses the HTTP POST method" do
-      Typhoeus::Request.should_receive(:post).and_call_original
+      expect(Typhoeus::Request).to receive(:post).and_call_original
       dummy.post attributes
     end
 
     it "uses the attributes as request body" do
-      Typhoeus::Request.should_receive(:post).with('https://foobar.com/dummy', body: { foo: 'bar' }, headers: headers).and_call_original
+      expect(Typhoeus::Request).to receive(:post).with('https://foobar.com/dummy', body: { foo: 'bar' }, headers: headers).and_call_original
       dummy.post attributes
     end
 
     it "uses the headers as request headers" do
-      Typhoeus::Request.should_receive(:post).with('https://foobar.com/dummy', body: attributes, headers: { "Accept"=>"application/json" }).and_call_original
+      expect(Typhoeus::Request).to receive(:post).with('https://foobar.com/dummy', body: attributes, headers: { "Accept"=>"application/json" }).and_call_original
       dummy.post attributes
     end
 
@@ -408,7 +408,7 @@ describe RemoteResource::Base do
       it "uses the content_type as request url" do
         dummy_class.content_type = '.json'
 
-        Typhoeus::Request.should_receive(:post).with('https://foobar.com/dummy.json', body: attributes, headers: headers).and_call_original
+        expect(Typhoeus::Request).to receive(:post).with('https://foobar.com/dummy.json', body: attributes, headers: headers).and_call_original
         dummy.post attributes
 
         dummy_class.content_type = nil
@@ -419,7 +419,7 @@ describe RemoteResource::Base do
       let(:response_mock) { double('response', success?: true) }
 
       it "returns true" do
-        expect(dummy.post attributes).to be_true
+        expect(dummy.post attributes).to be_truthy
       end
     end
 
@@ -434,7 +434,7 @@ describe RemoteResource::Base do
           after { dummy_class.root_element = nil }
 
           it "returns false" do
-            expect(dummy.post attributes).to be_false
+            expect(dummy.post attributes).to be_falsey
           end
 
           it "finds the errors in the response body and assigns the errors" do
@@ -449,7 +449,7 @@ describe RemoteResource::Base do
           before { dummy_class.root_element = nil }
 
           it "returns false" do
-            expect(dummy.post attributes).to be_false
+            expect(dummy.post attributes).to be_falsey
           end
 
           it "finds the errors in the response body and assigns the errors" do
@@ -463,7 +463,7 @@ describe RemoteResource::Base do
         let(:response_mock) { double('response', success?: false, response_code: 400) }
 
         it "returns false" do
-          expect(dummy.post attributes).to be_false
+          expect(dummy.post attributes).to be_falsey
         end
 
         it "does NOT assign the errors" do
@@ -482,24 +482,24 @@ describe RemoteResource::Base do
 
     before do
       dummy.id = 10
-      Typhoeus::Request.any_instance.stub(:run) { response_mock }
+      allow_any_instance_of(Typhoeus::Request).to receive(:run) { response_mock }
     end
 
     before { dummy_class.collection = true }
     after { dummy_class.collection = false }
 
     it "uses the HTTP PATCH method" do
-      Typhoeus::Request.should_receive(:patch).and_call_original
+      expect(Typhoeus::Request).to receive(:patch).and_call_original
       dummy.patch attributes
     end
 
     it "uses the attributes as request body" do
-      Typhoeus::Request.should_receive(:patch).with(request_url, body: { id: 10, foo: 'bar' }, headers: headers).and_call_original
+      expect(Typhoeus::Request).to receive(:patch).with(request_url, body: { id: 10, foo: 'bar' }, headers: headers).and_call_original
       dummy.patch attributes
     end
 
     it "uses the headers as request headers" do
-      Typhoeus::Request.should_receive(:patch).with(request_url, body: attributes, headers: { "Accept"=>"application/json" }).and_call_original
+      expect(Typhoeus::Request).to receive(:patch).with(request_url, body: attributes, headers: { "Accept"=>"application/json" }).and_call_original
       dummy.patch attributes
     end
 
@@ -507,7 +507,7 @@ describe RemoteResource::Base do
       it "uses the id in the request url" do
         dummy_class.collection = true
 
-        Typhoeus::Request.should_receive(:patch).with('https://foobar.com/dummies/10', body: attributes, headers: headers).and_call_original
+        expect(Typhoeus::Request).to receive(:patch).with('https://foobar.com/dummies/10', body: attributes, headers: headers).and_call_original
         dummy.patch attributes
 
         dummy_class.collection = false
@@ -518,7 +518,7 @@ describe RemoteResource::Base do
       it "does NOT use the id in the request url" do
         dummy_class.collection = false
 
-        Typhoeus::Request.should_receive(:patch).with('https://foobar.com/dummy', body: attributes, headers: headers).and_call_original
+        expect(Typhoeus::Request).to receive(:patch).with('https://foobar.com/dummy', body: attributes, headers: headers).and_call_original
         dummy.patch attributes
 
         dummy_class.collection = true
@@ -529,7 +529,7 @@ describe RemoteResource::Base do
       it "uses the content_type as request url" do
         dummy_class.content_type = '.json'
 
-        Typhoeus::Request.should_receive(:patch).with("#{request_url}.json", body: attributes, headers: headers).and_call_original
+        expect(Typhoeus::Request).to receive(:patch).with("#{request_url}.json", body: attributes, headers: headers).and_call_original
         dummy.patch attributes
 
         dummy_class.content_type = nil
@@ -540,7 +540,7 @@ describe RemoteResource::Base do
       let(:response_mock) { double('response', success?: true) }
 
       it "returns true" do
-        expect(dummy.patch attributes).to be_true
+        expect(dummy.patch attributes).to be_truthy
       end
     end
 
@@ -555,7 +555,7 @@ describe RemoteResource::Base do
           after { dummy_class.root_element = nil }
 
           it "returns false" do
-            expect(dummy.patch attributes).to be_false
+            expect(dummy.patch attributes).to be_falsey
           end
 
           it "finds the errors in the response body and assigns the errors" do
@@ -570,7 +570,7 @@ describe RemoteResource::Base do
           before { dummy_class.root_element = nil }
 
           it "returns false" do
-            expect(dummy.patch attributes).to be_false
+            expect(dummy.patch attributes).to be_falsey
           end
 
           it "finds the errors in the response body and assigns the errors" do
@@ -584,7 +584,7 @@ describe RemoteResource::Base do
         let(:response_mock) { double('response', success?: false, response_code: 400) }
 
         it "returns false" do
-          expect(dummy.patch attributes).to be_false
+          expect(dummy.patch attributes).to be_falsey
         end
 
         it "does NOT assign the errors" do

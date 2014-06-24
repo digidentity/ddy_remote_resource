@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.version       = RemoteResource::VERSION
   spec.authors       = ["Jan van der Pas"]
   spec.email         = ["jvanderpas@digidentity.eu"]
-  spec.summary       = %q{TODO: Write a short summary. Required.}
-  spec.description   = %q{TODO: Write a longer description. Optional.}
+  spec.summary       = %q{RemoteResource, a gem to use resources with REST services.}
+  spec.description   = %q{RemoteResource, a gem to use resources with REST services. A replacement for ActiveResource gem.}
   spec.homepage      = ""
   spec.license       = "MIT"
 

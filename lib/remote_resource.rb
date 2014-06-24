@@ -3,7 +3,7 @@ require 'active_model'
 require 'virtus'
 require 'typhoeus'
 
-require "remote_resource/version"
+require 'remote_resource/version'
 
 module RemoteResource
   # Your code goes here...

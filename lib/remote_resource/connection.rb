@@ -1,6 +1,10 @@
 module RemoteResource
   module Connection
 
+    def connection
+      Typhoeus::Request
+    end
+
     def headers=(headers)
       Thread.current['remote_resource.headers'] = headers
     end
@@ -8,10 +12,6 @@ module RemoteResource
     def headers
       Thread.current['remote_resource.headers'] ||= {}
       Thread.current['remote_resource.headers'].merge({"Accept" => "application/json"})
-    end
-
-    def connection
-      Typhoeus::Request
     end
 
   end

@@ -92,21 +92,43 @@ describe RemoteResource::Base do
     let(:params) { { id: '12' } }
 
     context "when a root_element is defined" do
-      it "packs the params in the root_element and calls the .get" do
-        dummy_class.root_element = :foobar
+      before { dummy_class.root_element = :foobar }
+      after  { dummy_class.root_element = nil }
 
+      it "packs the params in the root_element and calls the .get" do
         expect(dummy_class).to receive(:get).with({ 'foobar' => { id: '12' } })
         dummy_class.find_by params
+      end
 
-        dummy_class.root_element = nil
+      it "instanties the resource with the response" do
+        allow(dummy_class).to receive(:get) { { id: '12' } }
+
+        expect(dummy_class).to receive(:new).with({ id: '12' })
+        dummy_class.find_by params
       end
     end
 
     context "when NO root_element is defined" do
-      it "does NOT pack the params in the root_element and calls the .get" do
-        dummy_class.root_element = nil
+      before { dummy_class.root_element = nil }
 
+      it "does NOT pack the params in the root_element and calls the .get" do
         expect(dummy_class).to receive(:get).with({ id: '12' })
+        dummy_class.find_by params
+      end
+
+      it "instanties the resource with the response" do
+        allow(dummy_class).to receive(:get) { { id: '12' } }
+
+        expect(dummy_class).to receive(:new).with({ id: '12' })
+        dummy_class.find_by params
+      end
+    end
+
+    context "when the response returns nil" do
+      it "instanties with a empty Hash" do
+        allow(dummy_class).to receive(:get) { nil }
+
+        expect(dummy_class).to receive(:new).with({})
         dummy_class.find_by params
       end
     end
@@ -153,15 +175,10 @@ describe RemoteResource::Base do
         let(:parsed_response) { JSON.parse(response_body)["foobar"] }
 
         before { dummy_class.root_element = :foobar }
-        after   { dummy_class.root_element = nil }
+        after  { dummy_class.root_element = nil }
 
-        it "unpacks the response body from the root_element and instantiates the resource with the parsed response body" do
-          expect(dummy_class).to receive(:new).with(parsed_response).and_call_original
-          dummy_class.get attributes
-        end
-
-        it "returns the instantiated resource" do
-          expect(dummy_class.get(attributes).id).to eql '12'
+        it "returns the unpacked and parsed response body from the root_element" do
+          expect(dummy_class.get attributes).to eql({ "id" => "12" })
         end
       end
 
@@ -171,24 +188,14 @@ describe RemoteResource::Base do
 
         before { dummy_class.root_element = nil }
 
-        it "does NOT unpack the response body from the root_element and instantiates the resource with the parsed response body" do
-          expect(dummy_class).to receive(:new).with(parsed_response).and_call_original
-          dummy_class.get attributes
-        end
-
-        it "returns the instantiated resource" do
-          expect(dummy_class.get(attributes).id).to eql '12'
+        it "returns the parsed response body from the root_element" do
+          expect(dummy_class.get attributes).to eql({ "id" => "12" })
         end
       end
     end
 
     context "when a response is NOT a success" do
       let(:response_mock) { double('response', success?: false) }
-
-      it "does NOT instantiate the resource" do
-        expect(dummy_class).not_to receive(:new)
-        dummy_class.get attributes
-      end
 
       it "returns nil" do
         expect(dummy_class.get(attributes)).to be_nil

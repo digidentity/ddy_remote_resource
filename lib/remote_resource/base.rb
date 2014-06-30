@@ -29,13 +29,13 @@ module RemoteResource
       end
 
       def find_by(params)
-        get pack_up_request_body(params)
+        new get(pack_up_request_body(params)) || {}
       end
 
       def get(attributes = {})
         response = connection.get "#{base_url}#{content_type.presence}", body: attributes, headers: headers
         if response.success?
-          new unpack_response_body(response.body)
+          unpack_response_body(response.body)
         end
       end
 

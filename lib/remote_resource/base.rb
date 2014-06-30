@@ -32,8 +32,14 @@ module RemoteResource
         new get(pack_up_request_body(params)) || {}
       end
 
-      def get(attributes = {})
-        response = connection.get "#{base_url}#{content_type.presence}", body: attributes, headers: headers
+      def get(attributes = {}, &options)
+
+        if block_given?
+          connection_options = OpenStruct.new
+          options.call(connection_options)
+        end
+
+        response = connection.get connection_options.try(:url) || "#{base_url}#{content_type.presence}", body: attributes, headers: headers
         if response.success?
           unpack_response_body(response.body)
         end

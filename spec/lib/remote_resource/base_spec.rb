@@ -156,6 +156,13 @@ describe RemoteResource::Base do
       dummy_class.get attributes
     end
 
+    it "uses the options when given" do
+      expect(Typhoeus::Request).to receive(:get).with('https://hello.com/', body: attributes, headers: headers).and_call_original
+      dummy_class.get(attributes) do |options|
+        options.url = 'https://hello.com/'
+      end
+    end
+
     context "when a .content_type is specified" do
       it "uses the content_type as request url" do
         dummy_class.content_type = '.json'

@@ -203,6 +203,51 @@ describe RemoteResource::Base do
     end
   end
 
+  describe "#initialize" do
+    it "instanties the resource" do
+      expect(dummy_class.new(id: 12).id).to eql 12
+    end
+
+    it "calls #thread_safe! on the resource" do
+      expect_any_instance_of(dummy_class).to receive(:thread_safe!).and_call_original
+      dummy_class.new id: 12
+    end
+  end
+
+  describe "#thread_safe!" do
+    it "defines the getter and setter methods for the THREADED_OPTIONS" do
+      dummy.thread_safe!
+
+      dummy_class::THREADED_OPTIONS.each do |option|
+        expect(dummy).to respond_to "#{option}"
+        expect(dummy).to respond_to "#{option}="
+      end
+    end
+
+    it "assigns the instace_variable of the option in the THREADED_OPTIONS" do
+      dummy.thread_safe!
+
+      dummy_class::THREADED_OPTIONS.each do |option|
+        expect(dummy.public_send(option)).to eql dummy_class.public_send(option)
+      end
+    end
+
+    it "allows to set option different to the class method of the option" do
+      dummy_class.root_element = :foobar
+      dummy.thread_safe!
+
+      expect(dummy_class.root_element).to eql :foobar
+      expect(dummy.root_element).to eql :foobar
+
+      dummy.root_element = :bazbar
+
+      expect(dummy_class.root_element).to eql :foobar
+      expect(dummy.root_element).to eql :bazbar
+
+      dummy_class.root_element = nil
+    end
+  end
+
   describe "#persisted?" do
     context "when id is present" do
       it "returns true" do

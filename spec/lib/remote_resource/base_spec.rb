@@ -18,16 +18,11 @@ describe RemoteResource::Base do
   let(:dummy)       { dummy_class.new }
 
   specify { expect(described_class.const_defined?('RemoteResource::UrlNaming')).to be_truthy }
+  specify { expect(described_class.const_defined?('RemoteResource::Connection')).to be_truthy }
 
   describe "attributes" do
     it "#id" do
       expect(dummy.attributes).to have_key :id
-    end
-  end
-
-  describe ".connection" do
-    it "uses Typhoeus::Request" do
-      expect(dummy_class.connection).to eql Typhoeus::Request
     end
   end
 

@@ -6,6 +6,7 @@ require 'typhoeus'
 require 'remote_resource/version'
 require 'remote_resource/base'
 require 'remote_resource/url_naming'
+require 'remote_resource/connection'
 
 module RemoteResource
 end

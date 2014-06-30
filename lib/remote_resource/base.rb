@@ -11,6 +11,7 @@ module RemoteResource
       include InstanceMethods
 
       extend RemoteResource::UrlNaming
+      extend RemoteResource::Connection
 
       attribute :id
 
@@ -19,19 +20,6 @@ module RemoteResource
     module ClassMethods
 
       attr_accessor :content_type, :root_element
-
-      def headers=(headers)
-        Thread.current['remote_resource.headers'] = headers
-      end
-
-      def headers
-        Thread.current['remote_resource.headers'] ||= {}
-        Thread.current['remote_resource.headers'].merge({"Accept" => "application/json"})
-      end
-
-      def connection
-        Typhoeus::Request
-      end
 
       def find(id)
         response = connection.get "#{base_url}/#{id}#{content_type.presence}", headers: headers

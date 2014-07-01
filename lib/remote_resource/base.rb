@@ -44,7 +44,7 @@ module RemoteResource
       def get(attributes = {}, connection_options = {})
         connection_options.reverse_merge! self.connection_options.to_hash
 
-        response = connection.get "#{base_url}#{connection_options[:content_type].presence}", body: attributes, headers: connection_options[:default_headers] || headers.merge(connection_options[:headers])
+        response = connection.get "#{base_url}#{connection_options[:content_type].presence}", body: attributes, headers: connection_options[:default_headers] || self.connection_options.headers.merge(connection_options[:headers])
         if response.success?
           unpack_response_body(response.body, connection_options[:root_element])
         end
@@ -101,7 +101,7 @@ module RemoteResource
       def post(attributes = {}, connection_options = {})
         connection_options.reverse_merge! self.connection_options.to_hash
 
-        response = self.class.connection.post "#{self.class.base_url}#{connection_options[:content_type].presence}", body: attributes, headers: connection_options[:default_headers] || self.class.headers.merge(connection_options[:headers])
+        response = self.class.connection.post "#{self.class.base_url}#{connection_options[:content_type].presence}", body: attributes, headers: connection_options[:default_headers] || self.connection_options.headers.merge(connection_options[:headers])
         if response.success?
           true
         elsif response.response_code == 422
@@ -115,7 +115,7 @@ module RemoteResource
       def patch(attributes = {}, connection_options = {})
         connection_options.reverse_merge! self.connection_options.to_hash
 
-        response = self.class.connection.patch "#{collection_determined_url(connection_options[:collection])}#{connection_options[:content_type].presence}", body: attributes, headers: connection_options[:default_headers] || self.class.headers.merge(connection_options[:headers])
+        response = self.class.connection.patch "#{collection_determined_url(connection_options[:collection])}#{connection_options[:content_type].presence}", body: attributes, headers: connection_options[:default_headers] || self.connection_options.headers.merge(connection_options[:headers])
         if response.success?
           true
         elsif response.response_code == 422

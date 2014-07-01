@@ -13,6 +13,8 @@ module RemoteResource
       extend RemoteResource::UrlNaming
       extend RemoteResource::Connection
 
+      OPTIONS = [:site, :headers, :path_prefix, :path_postfix, :content_type, :collection, :collection_name, :root_element]
+
       attribute :id
 
     end

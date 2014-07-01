@@ -286,22 +286,47 @@ describe RemoteResource::Base do
   end
 
   describe "#save" do
+    let(:params) { dummy.params }
+
     before { allow(dummy).to receive(:post) }
 
     it "calls #create_or_update" do
-      expect(dummy).to receive(:create_or_update).with({ foo: 'bar' }).and_call_original
+      expect(dummy).to receive(:create_or_update).with({ foo: 'bar' }, {}).and_call_original
       dummy.save
+    end
+
+    context "when connection_options are given" do
+      let(:custom_connection_options) do
+        {
+            content_type: '.xml',
+            headers: { "Foo" => "Bar" }
+        }
+      end
+
+      it "passes the connection_options to the #create_or_update" do
+        expect(dummy).to receive(:create_or_update).with(params, custom_connection_options).and_call_original
+        dummy.save custom_connection_options
+      end
+    end
+
+    context "when NO connection_options are given" do
+      it "passes the connection_options as empty Hash to the #create_or_update" do
+        expect(dummy).to receive(:create_or_update).with(params, {}).and_call_original
+        dummy.save
+      end
     end
   end
 
   describe "#create_or_update" do
     context "when the attributes contain an id" do
+      let(:attributes) { { id: 10, foo: 'bar' } }
+
       context "and a root_element is defined" do
         it "packs the attributes in the root_element and calls #patch" do
           dummy_class.root_element = :foobar
 
-          expect(dummy).to receive(:patch).with({ 'foobar' => { id: 10, foo: 'bar' } })
-          dummy.create_or_update id: 10, foo: 'bar'
+          expect(dummy).to receive(:patch).with({ 'foobar' => { id: 10, foo: 'bar' } }, {})
+          dummy.create_or_update attributes
 
           dummy_class.root_element = nil
         end
@@ -311,19 +336,42 @@ describe RemoteResource::Base do
         it "does NOT pack the attributes in the root_element and calls #patch" do
           dummy_class.root_element = nil
 
-          expect(dummy).to receive(:patch).with({ id: 10, foo: 'bar' })
-          dummy.create_or_update id: 10, foo: 'bar'
+          expect(dummy).to receive(:patch).with({ id: 10, foo: 'bar' }, {})
+          dummy.create_or_update attributes
+        end
+      end
+
+      context "and connection_options are given" do
+        let(:custom_connection_options) do
+          {
+              content_type: '.xml',
+              headers: { "Foo" => "Bar" }
+          }
+        end
+
+        it "passes the connection_options to the #patch" do
+          expect(dummy).to receive(:patch).with(attributes, custom_connection_options)
+          dummy.create_or_update attributes, custom_connection_options
+        end
+      end
+
+      context "and NO connection_options are given" do
+        it "passes the connection_options as empty Hash to the #patch" do
+          expect(dummy).to receive(:patch).with(attributes, {})
+          dummy.create_or_update attributes
         end
       end
     end
 
     context "when the attributes DON'T contain an id" do
+      let(:attributes) { { foo: 'bar' } }
+
       context "and a root_element is defined" do
         it "packs the attributes in the root_element and calls #post" do
           dummy_class.root_element = :foobar
 
-          expect(dummy).to receive(:post).with({ 'foobar' => { foo: 'bar' } })
-          dummy.create_or_update foo: 'bar'
+          expect(dummy).to receive(:post).with({ 'foobar' => { foo: 'bar' } }, {})
+          dummy.create_or_update attributes
 
           dummy_class.root_element = nil
         end
@@ -333,8 +381,29 @@ describe RemoteResource::Base do
         it "does NOT pack the attributes in the root_element and calls #post" do
           dummy_class.root_element = nil
 
-          expect(dummy).to receive(:post).with({ foo: 'bar' })
-          dummy.create_or_update foo: 'bar'
+          expect(dummy).to receive(:post).with({ foo: 'bar' }, {})
+          dummy.create_or_update attributes
+        end
+      end
+
+      context "and connection_options are given" do
+        let(:custom_connection_options) do
+          {
+              content_type: '.xml',
+              headers: { "Foo" => "Bar" }
+          }
+        end
+
+        it "passes the connection_options to the #post" do
+          expect(dummy).to receive(:post).with(attributes, custom_connection_options)
+          dummy.create_or_update attributes, custom_connection_options
+        end
+      end
+
+      context "and NO connection_options are given" do
+        it "passes the connection_options as empty Hash to the #post" do
+          expect(dummy).to receive(:post).with(attributes, {})
+          dummy.create_or_update attributes
         end
       end
     end
@@ -362,14 +431,15 @@ describe RemoteResource::Base do
       dummy.post attributes
     end
 
-    context "when a .content_type is specified" do
-      it "uses the content_type as request url" do
-        dummy_class.content_type = '.json'
+    context "when connection_options are given" do
+      it "uses the connection_options" do
+        expect(Typhoeus::Request).to receive(:post).with('https://foobar.com/dummy.json', body: attributes, headers: { "Accept" => "application/json", "Baz" => "Bar" }).and_call_original
+        dummy.post(attributes, { content_type: '.json', headers: { "Baz" => "Bar" } })
+      end
 
-        expect(Typhoeus::Request).to receive(:post).with('https://foobar.com/dummy.json', body: attributes, headers: headers).and_call_original
-        dummy.post attributes
-
-        dummy_class.content_type = nil
+      it "overrides the headers with default_headers" do
+        expect(Typhoeus::Request).to receive(:post).with('https://foobar.com/dummy.json', body: attributes, headers: { "Baz" => "Bar" }).and_call_original
+        dummy.post(attributes, { content_type: '.json', default_headers: { "Baz" => "Bar" } })
       end
     end
 
@@ -461,6 +531,18 @@ describe RemoteResource::Base do
       dummy.patch attributes
     end
 
+    context "when connection_options are given" do
+      it "uses the connection_options" do
+        expect(Typhoeus::Request).to receive(:patch).with('https://foobar.com/dummies/10.json', body: attributes, headers: { "Accept" => "application/json", "Baz" => "Bar" }).and_call_original
+        dummy.patch(attributes, { content_type: '.json', headers: { "Baz" => "Bar" } })
+      end
+
+      it "overrides the headers with default_headers" do
+        expect(Typhoeus::Request).to receive(:patch).with('https://foobar.com/dummies/10.json', body: attributes, headers: { "Baz" => "Bar" }).and_call_original
+        dummy.patch(attributes, { content_type: '.json', default_headers: { "Baz" => "Bar" } })
+      end
+    end
+
     context "when .collection is set truthy" do
       it "uses the id in the request url" do
         dummy_class.collection = true
@@ -480,17 +562,6 @@ describe RemoteResource::Base do
         dummy.patch attributes
 
         dummy_class.collection = true
-      end
-    end
-
-    context "when a .content_type is specified" do
-      it "uses the content_type as request url" do
-        dummy_class.content_type = '.json'
-
-        expect(Typhoeus::Request).to receive(:patch).with("#{request_url}.json", body: attributes, headers: headers).and_call_original
-        dummy.patch attributes
-
-        dummy_class.content_type = nil
       end
     end
 

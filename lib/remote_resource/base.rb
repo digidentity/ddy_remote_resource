@@ -82,20 +82,22 @@ module RemoteResource
         !persisted?
       end
 
-      def save
-        create_or_update params
+      def save(connection_options = {})
+        create_or_update params, connection_options
       end
 
-      def create_or_update(attributes = {})
+      def create_or_update(attributes = {}, connection_options = {})
         if attributes.has_key? :id
-          patch pack_up_request_body(attributes)
+          patch(pack_up_request_body(attributes), connection_options)
         else
-          post pack_up_request_body(attributes)
+          post(pack_up_request_body(attributes), connection_options)
         end
       end
 
-      def post(attributes = {})
-        response = self.class.connection.post "#{self.class.base_url}#{self.class.content_type.presence}", body: attributes, headers: self.class.headers
+      def post(attributes = {}, connection_options = {})
+        connection_options.reverse_merge! self.connection_options.to_hash
+
+        response = self.class.connection.post "#{self.class.base_url}#{connection_options[:content_type].presence}", body: attributes, headers: connection_options[:default_headers] || self.class.headers.merge(connection_options[:headers])
         if response.success?
           true
         elsif response.response_code == 422
@@ -106,8 +108,10 @@ module RemoteResource
         end
       end
 
-      def patch(attributes = {})
-        response = self.class.connection.patch collection_determined_url, body: attributes, headers: self.class.headers
+      def patch(attributes = {}, connection_options = {})
+        connection_options.reverse_merge! self.connection_options.to_hash
+
+        response = self.class.connection.patch "#{collection_determined_url}#{connection_options[:content_type].presence}", body: attributes, headers: connection_options[:default_headers] || self.class.headers.merge(connection_options[:headers])
         if response.success?
           true
         elsif response.response_code == 422
@@ -122,9 +126,9 @@ module RemoteResource
 
       def collection_determined_url
         if self.class.collection
-          "#{self.class.base_url}/#{self.id}#{self.class.content_type.presence}"
+          "#{self.class.base_url}/#{self.id}"
         else
-          "#{self.class.base_url}#{self.class.content_type.presence}"
+          self.class.base_url
         end
       end
 

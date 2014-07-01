@@ -44,6 +44,7 @@ describe RemoteResource::Base do
 
   describe ".find" do
     let(:id)            { '12' }
+    let(:request_url)   { 'https://foobar.com/dummy/12' }
     let(:headers)       { { "Accept"=>"application/json" } }
     let(:response_mock) { double('response', success?: false).as_null_object }
 
@@ -54,35 +55,35 @@ describe RemoteResource::Base do
       dummy_class.find id
     end
 
-    it "uses the id as request url" do
+    it "uses the id in the request url" do
       expect(Typhoeus::Request).to receive(:get).with('https://foobar.com/dummy/12', headers: headers).and_call_original
       dummy_class.find id
     end
 
-    it "uses the headers as request headers" do
-      expect(Typhoeus::Request).to receive(:get).with('https://foobar.com/dummy/12', headers: { "Accept"=>"application/json" }).and_call_original
+    it "uses the connection_options headers as request headers" do
+      expect(Typhoeus::Request).to receive(:get).with(request_url, headers: { "Accept"=>"application/json" }).and_call_original
       dummy_class.find id
     end
 
-    context "when connection_options are given" do
-      it "uses the connection_options" do
+    context "when custom connection_options are given" do
+      it "uses the custom connection_options" do
         expect(Typhoeus::Request).to receive(:get).with('https://foobar.com/dummy/12.json', headers: { "Accept" => "application/json", "Baz" => "Bar" }).and_call_original
         dummy_class.find(id, { content_type: '.json', headers: { "Baz" => "Bar" } })
       end
 
-      it "overrides the headers with default_headers" do
+      it "overrides the connection_options headers with custom connection_options default_headers" do
         expect(Typhoeus::Request).to receive(:get).with('https://foobar.com/dummy/12.json', headers: { "Baz" => "Bar" }).and_call_original
         dummy_class.find(id, { content_type: '.json', default_headers: { "Baz" => "Bar" } })
       end
     end
 
-    context "when response is a success" do
+    context "when the response is a success" do
       let(:response_body)   { '{"id":"12"}' }
       let(:parsed_response) { JSON.parse response_body }
       let(:response_mock)   { double('response', success?: true, body: response_body) }
 
       it "instantiates the resource with the parsed response body" do
-        expect(dummy_class).to receive(:new).with(parsed_response).and_call_original
+        expect(dummy_class).to receive(:new).with(parsed_response)
         dummy_class.find id
       end
 

@@ -105,7 +105,7 @@ module RemoteResource
         if response.success?
           true
         elsif response.response_code == 422
-          assign_errors JSON.parse(response.body)
+          assign_errors JSON.parse(response.body), connection_options[:root_element]
           false
         else
           false

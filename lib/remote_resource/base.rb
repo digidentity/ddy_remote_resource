@@ -26,25 +26,23 @@ module RemoteResource
         Thread.current['remote_resource.connection_options'] ||= RemoteResource::ConnectionOptions.new(self)
       end
 
-      def find(id)
-        response = connection.get "#{base_url}/#{id}#{content_type.presence}", headers: headers
+      def find(id, connection_options = {})
+        connection_options.reverse_merge! self.connection_options.to_hash
+
+        response = connection.get "#{base_url}/#{id}#{connection_options[:content_type].presence}", headers: connection_options[:default_headers] || headers.merge(connection_options[:headers])
         if response.success?
           new JSON.parse(response.body)
         end
       end
 
-      def find_by(params)
-        new get(pack_up_request_body(params)) || {}
+      def find_by(params, connection_options = {})
+        new get(pack_up_request_body(params), connection_options) || {}
       end
 
-      def get(attributes = {}, &options)
+      def get(attributes = {}, connection_options = {})
+        connection_options.reverse_merge! self.connection_options.to_hash
 
-        if block_given?
-          connection_options = OpenStruct.new
-          options.call(connection_options)
-        end
-
-        response = connection.get connection_options.try(:url) || "#{base_url}#{content_type.presence}", body: attributes, headers: headers
+        response = connection.get "#{base_url}#{connection_options[:content_type].presence}", body: attributes, headers: connection_options[:default_headers] || headers.merge(connection_options[:headers])
         if response.success?
           unpack_response_body(response.body)
         end

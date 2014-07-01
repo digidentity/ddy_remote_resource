@@ -64,14 +64,15 @@ describe RemoteResource::Base do
       dummy_class.find id
     end
 
-    context "when a .content_type is specified" do
-      it "uses the content_type as request url" do
-        dummy_class.content_type = '.json'
+    context "when connection_options are given" do
+      it "uses the connection_options" do
+        expect(Typhoeus::Request).to receive(:get).with('https://foobar.com/dummy/12.json', headers: { "Accept" => "application/json", "Baz" => "Bar" }).and_call_original
+        dummy_class.find(id, { content_type: '.json', headers: { "Baz" => "Bar" } })
+      end
 
-        expect(Typhoeus::Request).to receive(:get).with('https://foobar.com/dummy/12.json', headers: headers).and_call_original
-        dummy_class.find id
-
-        dummy_class.content_type = nil
+      it "overrides the headers with default_headers" do
+        expect(Typhoeus::Request).to receive(:get).with('https://foobar.com/dummy/12.json', headers: { "Baz" => "Bar" }).and_call_original
+        dummy_class.find(id, { content_type: '.json', default_headers: { "Baz" => "Bar" } })
       end
     end
 
@@ -107,12 +108,33 @@ describe RemoteResource::Base do
   describe ".find_by" do
     let(:params) { { id: '12' } }
 
+    context "when connection_options are given" do
+      let(:custom_connection_options) do
+        {
+            content_type: '.xml',
+            headers: { "Foo" => "Bar" }
+        }
+      end
+
+      it "passes the connection_options to the .get" do
+        expect(dummy_class).to receive(:get).with({ id: '12' }, custom_connection_options)
+        dummy_class.find_by params, custom_connection_options
+      end
+    end
+
+    context "when NO connection_options are given" do
+      it "passes the connection_options as empty Hash to the .get" do
+        expect(dummy_class).to receive(:get).with({ id: '12' }, {})
+        dummy_class.find_by params
+      end
+    end
+
     context "when a root_element is defined" do
       before { dummy_class.root_element = :foobar }
       after  { dummy_class.root_element = nil }
 
       it "packs the params in the root_element and calls the .get" do
-        expect(dummy_class).to receive(:get).with({ 'foobar' => { id: '12' } })
+        expect(dummy_class).to receive(:get).with({ 'foobar' => { id: '12' } }, {})
         dummy_class.find_by params
       end
 
@@ -128,7 +150,7 @@ describe RemoteResource::Base do
       before { dummy_class.root_element = nil }
 
       it "does NOT pack the params in the root_element and calls the .get" do
-        expect(dummy_class).to receive(:get).with({ id: '12' })
+        expect(dummy_class).to receive(:get).with({ id: '12' }, {})
         dummy_class.find_by params
       end
 
@@ -152,7 +174,7 @@ describe RemoteResource::Base do
 
   describe ".get" do
     let(:attributes)    { { foo: 'bar' } }
-    let(:headers)       { { "Accept"=>"application/json" } }
+    let(:headers)       { { "Accept" => "application/json" } }
     let(:response_mock) { double('response', success?: false).as_null_object }
 
     before { allow_any_instance_of(Typhoeus::Request).to receive(:run) { response_mock } }
@@ -168,25 +190,19 @@ describe RemoteResource::Base do
     end
 
     it "uses the headers as request headers" do
-      expect(Typhoeus::Request).to receive(:get).with('https://foobar.com/dummy', body: attributes, headers: { "Accept"=>"application/json" }).and_call_original
+      expect(Typhoeus::Request).to receive(:get).with('https://foobar.com/dummy', body: attributes, headers: { "Accept" => "application/json" }).and_call_original
       dummy_class.get attributes
     end
 
-    it "uses the options when given" do
-      expect(Typhoeus::Request).to receive(:get).with('https://hello.com/', body: attributes, headers: headers).and_call_original
-      dummy_class.get(attributes) do |options|
-        options.url = 'https://hello.com/'
+    context "when connection_options are given" do
+      it "uses the connection_options" do
+        expect(Typhoeus::Request).to receive(:get).with('https://foobar.com/dummy.json', body: attributes, headers: { "Accept" => "application/json", "Baz" => "Bar" }).and_call_original
+        dummy_class.get(attributes, { content_type: '.json', headers: { "Baz" => "Bar" } })
       end
-    end
 
-    context "when a .content_type is specified" do
-      it "uses the content_type as request url" do
-        dummy_class.content_type = '.json'
-
-        expect(Typhoeus::Request).to receive(:get).with('https://foobar.com/dummy.json', body: attributes, headers: headers).and_call_original
-        dummy_class.get attributes
-
-        dummy_class.content_type = nil
+      it "overrides the headers with default_headers" do
+        expect(Typhoeus::Request).to receive(:get).with('https://foobar.com/dummy.json', body: attributes, headers: { "Baz" => "Bar" }).and_call_original
+        dummy_class.get(attributes, { content_type: '.json', default_headers: { "Baz" => "Bar" } })
       end
     end
 

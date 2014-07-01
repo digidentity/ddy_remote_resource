@@ -108,6 +108,11 @@ describe RemoteResource::Base do
   describe ".find_by" do
     let(:params) { { id: '12' } }
 
+    it "calls .get" do
+      expect(dummy_class).to receive(:get).with(params, {})
+      dummy_class.find_by params
+    end
+
     context "when connection_options are given" do
       let(:custom_connection_options) do
         {

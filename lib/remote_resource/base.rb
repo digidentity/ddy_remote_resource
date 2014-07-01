@@ -89,10 +89,12 @@ module RemoteResource
       end
 
       def create_or_update(attributes = {}, connection_options = {})
+        root_element = connection_options[:root_element] || self.connection_options.root_element
+
         if attributes.has_key? :id
-          patch(pack_up_request_body(attributes), connection_options)
+          patch(pack_up_request_body(attributes, root_element), connection_options)
         else
-          post(pack_up_request_body(attributes), connection_options)
+          post(pack_up_request_body(attributes, root_element), connection_options)
         end
       end
 

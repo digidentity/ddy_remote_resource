@@ -351,44 +351,53 @@ describe RemoteResource::Base do
     context "when the attributes contain an id" do
       let(:attributes) { { id: 10, foo: 'bar' } }
 
-      context "and a root_element is defined" do
-        it "packs the attributes in the root_element and calls #patch" do
-          dummy_class.root_element = :foobar
-
-          expect(dummy).to receive(:patch).with({ 'foobar' => { id: 10, foo: 'bar' } }, {})
-          dummy.create_or_update attributes
-
-          dummy_class.root_element = nil
-        end
-      end
-
-      context "and NO root_element is defined" do
-        it "does NOT pack the attributes in the root_element and calls #patch" do
-          dummy_class.root_element = nil
-
-          expect(dummy).to receive(:patch).with({ id: 10, foo: 'bar' }, {})
-          dummy.create_or_update attributes
-        end
-      end
-
-      context "and connection_options are given" do
+      context "and custom connection_options are given" do
         let(:custom_connection_options) do
           {
-              content_type: '.xml',
-              headers: { "Foo" => "Bar" }
+            content_type: '.xml',
+            headers: { "Foo" => "Bar" }
           }
         end
 
-        it "passes the connection_options to the #patch" do
+        it "passes the custom connection_options as Hash to the #patch" do
           expect(dummy).to receive(:patch).with(attributes, custom_connection_options)
           dummy.create_or_update attributes, custom_connection_options
         end
       end
 
-      context "and NO connection_options are given" do
+      context "and NO custom connection_options are given" do
         it "passes the connection_options as empty Hash to the #patch" do
           expect(dummy).to receive(:patch).with(attributes, {})
           dummy.create_or_update attributes
+        end
+      end
+
+      context "root_element" do
+        context "and the given custom connection_options contain a root_element" do
+          let(:custom_connection_options) { { root_element: :foobar } }
+
+          it "packs the attributes in the root_element and calls the #patch" do
+            expect(dummy).to receive(:patch).with({ 'foobar' => { id: 10, foo: 'bar' } }, custom_connection_options)
+            dummy.create_or_update attributes, custom_connection_options
+          end
+        end
+
+        context "and the connection_options contain a root_element" do
+          before { dummy.connection_options.merge root_element: :foobar  }
+
+          it "packs the attributes in the root_element and calls the #patch" do
+            expect(dummy).to receive(:patch).with({ 'foobar' => { id: 10, foo: 'bar' } }, {})
+            dummy.create_or_update attributes
+          end
+        end
+
+        context "and NO root_element is specified" do
+          before { dummy_class.connection_options.merge root_element: nil  }
+
+          it "does NOT pack the attributes in a root_element and calls the #patch" do
+            expect(dummy).to receive(:patch).with({ id: 10, foo: 'bar' }, {})
+            dummy.create_or_update attributes
+          end
         end
       end
     end
@@ -396,27 +405,7 @@ describe RemoteResource::Base do
     context "when the attributes DON'T contain an id" do
       let(:attributes) { { foo: 'bar' } }
 
-      context "and a root_element is defined" do
-        it "packs the attributes in the root_element and calls #post" do
-          dummy_class.root_element = :foobar
-
-          expect(dummy).to receive(:post).with({ 'foobar' => { foo: 'bar' } }, {})
-          dummy.create_or_update attributes
-
-          dummy_class.root_element = nil
-        end
-      end
-
-      context "and NO root_element is defined" do
-        it "does NOT pack the attributes in the root_element and calls #post" do
-          dummy_class.root_element = nil
-
-          expect(dummy).to receive(:post).with({ foo: 'bar' }, {})
-          dummy.create_or_update attributes
-        end
-      end
-
-      context "and connection_options are given" do
+      context "and custom connection_options are given" do
         let(:custom_connection_options) do
           {
               content_type: '.xml',
@@ -424,16 +413,45 @@ describe RemoteResource::Base do
           }
         end
 
-        it "passes the connection_options to the #post" do
+        it "passes the custom connection_options as Hash to the #post" do
           expect(dummy).to receive(:post).with(attributes, custom_connection_options)
           dummy.create_or_update attributes, custom_connection_options
         end
       end
 
-      context "and NO connection_options are given" do
+      context "and NO custom connection_options are given" do
         it "passes the connection_options as empty Hash to the #post" do
           expect(dummy).to receive(:post).with(attributes, {})
           dummy.create_or_update attributes
+        end
+      end
+
+      context "root_element" do
+        context "and the given custom connection_options contain a root_element" do
+          let(:custom_connection_options) { { root_element: :foobar } }
+
+          it "packs the attributes in the root_element and calls the #post" do
+            expect(dummy).to receive(:post).with({ 'foobar' => { foo: 'bar' } }, custom_connection_options)
+            dummy.create_or_update attributes, custom_connection_options
+          end
+        end
+
+        context "and the connection_options contain a root_element" do
+          before { dummy.connection_options.merge root_element: :foobar  }
+
+          it "packs the attributes in the root_element and calls the #post" do
+            expect(dummy).to receive(:post).with({ 'foobar' => { foo: 'bar' } }, {})
+            dummy.create_or_update attributes
+          end
+        end
+
+        context "and NO root_element is specified" do
+          before { dummy_class.connection_options.merge root_element: nil  }
+
+          it "does NOT pack the attributes in a root_element and calls the #post" do
+            expect(dummy).to receive(:post).with({ foo: 'bar' }, {})
+            dummy.create_or_update attributes
+          end
         end
       end
     end

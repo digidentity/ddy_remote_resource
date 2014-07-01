@@ -569,7 +569,7 @@ describe RemoteResource::Base do
   describe "#patch" do
     let(:request_url)   { 'https://foobar.com/dummies/10' }
     let(:attributes)    { { id: 10, foo: 'bar' } }
-    let(:headers)       { { "Accept"=>"application/json" } }
+    let(:headers)       { { "Accept" => "application/json" } }
     let(:response_mock) { double('response').as_null_object }
 
     before do
@@ -590,46 +590,53 @@ describe RemoteResource::Base do
       dummy.patch attributes
     end
 
-    it "uses the headers as request headers" do
+    it "uses the connection_options headers as request headers" do
       expect(Typhoeus::Request).to receive(:patch).with(request_url, body: attributes, headers: { "Accept"=>"application/json" }).and_call_original
       dummy.patch attributes
     end
 
-    context "when connection_options are given" do
-      it "uses the connection_options" do
+    context "when custom connection_options are given" do
+      it "uses the custom connection_options" do
         expect(Typhoeus::Request).to receive(:patch).with('https://foobar.com/dummies/10.json', body: attributes, headers: { "Accept" => "application/json", "Baz" => "Bar" }).and_call_original
         dummy.patch(attributes, { content_type: '.json', headers: { "Baz" => "Bar" } })
       end
 
-      it "overrides the headers with default_headers" do
+      it "overrides the connection_options headers with custom connection_options default_headers" do
         expect(Typhoeus::Request).to receive(:patch).with('https://foobar.com/dummies/10.json', body: attributes, headers: { "Baz" => "Bar" }).and_call_original
         dummy.patch(attributes, { content_type: '.json', default_headers: { "Baz" => "Bar" } })
       end
     end
 
-    context "when .collection is set truthy" do
-      it "uses the id in the request url" do
-        dummy_class.collection = true
+    context "collection" do
+      context "when the given custom connection_options collection option is truthy" do
+        let(:custom_connection_options) { { collection: true } }
 
-        expect(Typhoeus::Request).to receive(:patch).with('https://foobar.com/dummies/10', body: attributes, headers: headers).and_call_original
-        dummy.patch attributes
+        it "uses the id in the request url" do
+          expect(Typhoeus::Request).to receive(:patch).with('https://foobar.com/dummies/10', body: attributes, headers: headers).and_call_original
+          dummy.patch attributes, custom_connection_options
+        end
+      end
 
-        dummy_class.collection = false
+      context "when the connection_options collection option is truthy" do
+        before { dummy.connection_options.merge collection: true  }
+
+        it "uses the id in the request url" do
+          expect(Typhoeus::Request).to receive(:patch).with('https://foobar.com/dummies/10', body: attributes, headers: headers).and_call_original
+          dummy.patch attributes
+        end
+      end
+
+      context "when NO collection option is set OR falsely" do
+        before { dummy.connection_options.merge collection: false  }
+
+        it "does NOT use the id in the request url" do
+          expect(Typhoeus::Request).to receive(:patch).with('https://foobar.com/dummies', body: attributes, headers: headers).and_call_original
+          dummy.patch attributes
+        end
       end
     end
 
-    context "when .collection is set falsely" do
-      it "does NOT use the id in the request url" do
-        dummy_class.collection = false
-
-        expect(Typhoeus::Request).to receive(:patch).with('https://foobar.com/dummy', body: attributes, headers: headers).and_call_original
-        dummy.patch attributes
-
-        dummy_class.collection = true
-      end
-    end
-
-    context "when response is a success" do
+    context "when the response is a success" do
       let(:response_mock) { double('response', success?: true) }
 
       it "returns true" do
@@ -637,38 +644,53 @@ describe RemoteResource::Base do
       end
     end
 
-    context "when response is NOT a success" do
+    context "when the response is NOT a success" do
       context "and the response_code is 422" do
         let(:response_mock) { double('response', success?: false, response_code: 422, body: response_body) }
 
-        context "and a root_element is defined" do
-          let(:response_body) { '{"foobar":{"errors":{"foo":["is required"]}}}' }
+        context "root_element" do
+          context "and the given custom connection_options contain a root_element" do
+            let(:custom_connection_options) { { root_element: :foobar } }
+            let(:response_body)             { '{"foobar":{"errors":{"foo":["is required"]}}}' }
 
-          before { dummy_class.root_element = :foobar }
-          after { dummy_class.root_element = nil }
+            it "returns false" do
+              expect(dummy.patch attributes, custom_connection_options).to be_falsey
+            end
 
-          it "returns false" do
-            expect(dummy.patch attributes).to be_falsey
+            it "finds the errors in the parsed response body from the root_element and assigns the errors" do
+              dummy.patch attributes, custom_connection_options
+              expect(dummy.errors.messages).to eql foo: ["is required"]
+            end
           end
 
-          it "finds the errors in the response body and assigns the errors" do
-            dummy.patch attributes
-            expect(dummy.errors.messages).to eql foo: ["is required"]
+          context "and the connection_options contain a root_element" do
+            let(:response_body) { '{"foobar":{"errors":{"foo":["is required"]}}}' }
+
+            before { dummy.connection_options.merge root_element: :foobar  }
+
+            it "returns false" do
+              expect(dummy.patch attributes).to be_falsey
+            end
+
+            it "finds the errors in the parsed response body from the root_element and assigns the errors" do
+              dummy.patch attributes
+              expect(dummy.errors.messages).to eql foo: ["is required"]
+            end
           end
-        end
 
-        context "and NO root_element is defined" do
-          let(:response_body) { '{"errors":{"foo":["is required"]}}' }
+          context "and NO root_element is specified" do
+            let(:response_body) { '{"errors":{"foo":["is required"]}}' }
 
-          before { dummy_class.root_element = nil }
+            before { dummy.connection_options.merge root_element: nil  }
 
-          it "returns false" do
-            expect(dummy.patch attributes).to be_falsey
-          end
+            it "returns false" do
+              expect(dummy.patch attributes).to be_falsey
+            end
 
-          it "finds the errors in the response body and assigns the errors" do
-            dummy.patch attributes
-            expect(dummy.errors.messages).to eql foo: ["is required"]
+            it "finds the errors in the parsed response body and assigns the errors" do
+              dummy.patch attributes
+              expect(dummy.errors.messages).to eql foo: ["is required"]
+            end
           end
         end
       end

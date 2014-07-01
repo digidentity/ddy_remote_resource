@@ -33,7 +33,7 @@ describe RemoteResource::Base do
   end
 
   describe ".connection_options" do
-    it "instanties as a RemoteResource::ConnectionOptions" do
+    it "instantiates as a RemoteResource::ConnectionOptions" do
       expect(dummy_class.connection_options).to be_a RemoteResource::ConnectionOptions
     end
 

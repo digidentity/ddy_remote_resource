@@ -72,19 +72,8 @@ module RemoteResource
 
     module InstanceMethods
 
-      THREADED_OPTIONS = [:site, :path_prefix, :path_postfix, :content_type, :collection, :collection_name, :root_element]
-
-      def initialize(*args)
-        super.tap do |resource|
-          resource.thread_safe!
-        end
-      end
-
-      def thread_safe!
-        THREADED_OPTIONS.each do |option|
-          self.class.send :attr_accessor, option
-          instance_variable_set "@#{option}", self.class.public_send(option)
-        end
+      def connection_options
+        @connection_options ||= RemoteResource::ConnectionOptions.new(self.class)
       end
 
       def persisted?

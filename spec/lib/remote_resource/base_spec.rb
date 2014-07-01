@@ -318,30 +318,30 @@ describe RemoteResource::Base do
   describe "#save" do
     let(:params) { dummy.params }
 
-    before { allow(dummy).to receive(:post) }
+    before { allow(dummy).to receive(:create_or_update) }
 
     it "calls #create_or_update" do
-      expect(dummy).to receive(:create_or_update).with({ foo: 'bar' }, {}).and_call_original
+      expect(dummy).to receive(:create_or_update).with(params, {})
       dummy.save
     end
 
-    context "when connection_options are given" do
+    context "when custom connection_options are given" do
       let(:custom_connection_options) do
         {
-            content_type: '.xml',
-            headers: { "Foo" => "Bar" }
+          content_type: '.xml',
+          headers: { "Foo" => "Bar" }
         }
       end
 
-      it "passes the connection_options to the #create_or_update" do
-        expect(dummy).to receive(:create_or_update).with(params, custom_connection_options).and_call_original
+      it "passes the custom connection_options as Hash to the #create_or_update" do
+        expect(dummy).to receive(:create_or_update).with(params, custom_connection_options)
         dummy.save custom_connection_options
       end
     end
 
-    context "when NO connection_options are given" do
+    context "when NO custom connection_options are given" do
       it "passes the connection_options as empty Hash to the #create_or_update" do
-        expect(dummy).to receive(:create_or_update).with(params, {}).and_call_original
+        expect(dummy).to receive(:create_or_update).with(params, {})
         dummy.save
       end
     end

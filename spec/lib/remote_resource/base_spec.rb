@@ -32,6 +32,16 @@ describe RemoteResource::Base do
     end
   end
 
+  describe ".connection_options" do
+    it "instanties as a RemoteResource::ConnectionOptions" do
+      expect(dummy_class.connection_options).to be_a RemoteResource::ConnectionOptions
+    end
+
+    it "uses the implemented class as base_class" do
+      expect(dummy_class.connection_options.base_class).to be RemoteResource::Dummy
+    end
+  end
+
   describe ".find" do
     let(:id)            { '12' }
     let(:headers)       { { "Accept"=>"application/json" } }

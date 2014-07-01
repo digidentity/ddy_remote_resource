@@ -675,20 +675,16 @@ describe RemoteResource::Base do
   describe "#assign_errors" do
     let(:error_data) { JSON.parse json_error_data }
 
-    context "when a root_element is defined" do
+    context "when a root_element is given" do
       let(:json_error_data) { '{"foobar":{"errors":{"foo":["is required"]}}}' }
 
       it "assigns the errors within the root_element" do
-        dummy_class.root_element = :foobar
-
-        dummy.send :assign_errors, error_data
+        dummy.send :assign_errors, error_data, :foobar
         expect(dummy.errors.messages).to eql foo: ["is required"]
-
-        dummy_class.root_element = nil
       end
     end
 
-    context "when NO root_element is defined" do
+    context "when NO root_element is given" do
       let(:json_error_data) { '{"errors":{"foo":["is required"]}}' }
 
       it "assigns the errors without the root_element" do

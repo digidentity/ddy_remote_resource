@@ -144,8 +144,8 @@ module RemoteResource
         self.class.send :unpack_response_body, body, root_element
       end
 
-      def assign_errors(error_data)
-        error_messages = find_error_messages error_data
+      def assign_errors(error_data, root_element = nil)
+        error_messages = find_error_messages error_data, root_element
         error_messages.each do |attribute, attribute_errors|
           attribute_errors.each do |error|
             self.errors.add attribute, error
@@ -153,11 +153,11 @@ module RemoteResource
         end
       end
 
-      def find_error_messages(error_data)
+      def find_error_messages(error_data, root_element = nil)
         if error_data.has_key? "errors"
           error_data["errors"]
-        elsif self.class.root_element.present?
-          error_data[self.class.root_element.to_s]["errors"]
+        elsif root_element.present?
+          error_data[root_element.to_s]["errors"]
         end
       end
 

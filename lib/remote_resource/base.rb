@@ -36,7 +36,9 @@ module RemoteResource
       end
 
       def find_by(params, connection_options = {})
-        new get(pack_up_request_body(params), connection_options) || {}
+        root_element = connection_options[:root_element] || self.connection_options.root_element
+
+        new get(pack_up_request_body(params, root_element), connection_options) || {}
       end
 
       def get(attributes = {}, connection_options = {})

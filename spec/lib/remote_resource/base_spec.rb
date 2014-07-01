@@ -92,7 +92,7 @@ describe RemoteResource::Base do
       end
     end
 
-    context "when a response is NOT a success" do
+    context "when the response is NOT a success" do
       let(:response_mock) { double('response', success?: false) }
 
       it "does NOT instantiate the resource" do
@@ -114,66 +114,81 @@ describe RemoteResource::Base do
       dummy_class.find_by params
     end
 
-    context "when connection_options are given" do
+    context "when custom connection_options are given" do
       let(:custom_connection_options) do
         {
-            content_type: '.xml',
-            headers: { "Foo" => "Bar" }
+          content_type: '.xml',
+          headers: { "Foo" => "Bar" }
         }
       end
 
-      it "passes the connection_options to the .get" do
-        expect(dummy_class).to receive(:get).with({ id: '12' }, custom_connection_options)
+      it "passes the custom connection_options as Hash to the .get" do
+        expect(dummy_class).to receive(:get).with(params, custom_connection_options)
         dummy_class.find_by params, custom_connection_options
       end
     end
 
-    context "when NO connection_options are given" do
+    context "when NO custom connection_options are given" do
       it "passes the connection_options as empty Hash to the .get" do
-        expect(dummy_class).to receive(:get).with({ id: '12' }, {})
+        expect(dummy_class).to receive(:get).with(params, {})
         dummy_class.find_by params
       end
     end
 
-    context "when a root_element is defined" do
-      before { dummy_class.root_element = :foobar }
-      after  { dummy_class.root_element = nil }
+    context "root_element" do
+      context "when the given custom connection_options contain a root_element" do
+        let(:custom_connection_options) { { root_element: :foobar } }
 
-      it "packs the params in the root_element and calls the .get" do
-        expect(dummy_class).to receive(:get).with({ 'foobar' => { id: '12' } }, {})
-        dummy_class.find_by params
+        it "packs the params in the root_element and calls the .get" do
+          expect(dummy_class).to receive(:get).with({ 'foobar' => { id: '12' } }, custom_connection_options)
+          dummy_class.find_by params, custom_connection_options
+        end
       end
 
-      it "instanties the resource with the response" do
-        allow(dummy_class).to receive(:get) { { id: '12' } }
+      context "when the connection_options contain a root_element" do
+        before { dummy_class.connection_options.merge root_element: :foobar  }
 
-        expect(dummy_class).to receive(:new).with({ id: '12' })
-        dummy_class.find_by params
-      end
-    end
-
-    context "when NO root_element is defined" do
-      before { dummy_class.root_element = nil }
-
-      it "does NOT pack the params in the root_element and calls the .get" do
-        expect(dummy_class).to receive(:get).with({ id: '12' }, {})
-        dummy_class.find_by params
+        it "packs the params in the root_element and calls the .get" do
+          expect(dummy_class).to receive(:get).with({ 'foobar' => { id: '12' } }, {})
+          dummy_class.find_by params
+        end
       end
 
-      it "instanties the resource with the response" do
-        allow(dummy_class).to receive(:get) { { id: '12' } }
+      context "when NO root_element is specified" do
+        before { dummy_class.connection_options.merge root_element: nil  }
 
-        expect(dummy_class).to receive(:new).with({ id: '12' })
-        dummy_class.find_by params
+        it "does NOT pack the params in a root_element and calls the .get" do
+          expect(dummy_class).to receive(:get).with({ id: '12' }, {})
+          dummy_class.find_by params
+        end
       end
     end
 
-    context "when the response returns nil" do
-      it "instanties with a empty Hash" do
-        allow(dummy_class).to receive(:get) { nil }
+    context "when the response is a success" do
+      let(:parsed_response) { { id: '12', foo: 'bar' } }
 
+      before { allow(dummy_class).to receive(:get) { parsed_response } }
+
+      it "instantiate the resource with the parsed response" do
+        expect(dummy_class).to receive(:new).with parsed_response
+        dummy_class.find_by params
+      end
+
+      it "returns the instantiated resource" do
+        expect(dummy_class.find_by(params).id).to eql '12'
+      end
+    end
+
+    context "when the response is NOT a success" do
+      before { allow(dummy_class).to receive(:get) { nil } }
+
+      it "instantiate with a empty Hash" do
         expect(dummy_class).to receive(:new).with({})
         dummy_class.find_by params
+      end
+
+      it "returns the instantiated resource" do
+        expect(dummy_class.find_by(params).id).to be_nil
       end
     end
   end

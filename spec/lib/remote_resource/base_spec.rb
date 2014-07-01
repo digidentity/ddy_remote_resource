@@ -195,6 +195,7 @@ describe RemoteResource::Base do
 
   describe ".get" do
     let(:attributes)    { { foo: 'bar' } }
+    let(:request_url)   { 'https://foobar.com/dummy' }
     let(:headers)       { { "Accept" => "application/json" } }
     let(:response_mock) { double('response', success?: false).as_null_object }
 
@@ -206,55 +207,63 @@ describe RemoteResource::Base do
     end
 
     it "uses the attributes as request body" do
-      expect(Typhoeus::Request).to receive(:get).with('https://foobar.com/dummy', body: { foo: 'bar' }, headers: headers).and_call_original
+      expect(Typhoeus::Request).to receive(:get).with(request_url, body: { foo: 'bar' }, headers: headers).and_call_original
       dummy_class.get attributes
     end
 
-    it "uses the headers as request headers" do
-      expect(Typhoeus::Request).to receive(:get).with('https://foobar.com/dummy', body: attributes, headers: { "Accept" => "application/json" }).and_call_original
+    it "uses the connection_options headers as request headers" do
+      expect(Typhoeus::Request).to receive(:get).with(request_url, body: attributes, headers: { "Accept" => "application/json" }).and_call_original
       dummy_class.get attributes
     end
 
-    context "when connection_options are given" do
-      it "uses the connection_options" do
+    context "when custom connection_options are given" do
+      it "uses the custom connection_options" do
         expect(Typhoeus::Request).to receive(:get).with('https://foobar.com/dummy.json', body: attributes, headers: { "Accept" => "application/json", "Baz" => "Bar" }).and_call_original
         dummy_class.get(attributes, { content_type: '.json', headers: { "Baz" => "Bar" } })
       end
 
-      it "overrides the headers with default_headers" do
+      it "overrides the connection_options headers with custom connection_options default_headers" do
         expect(Typhoeus::Request).to receive(:get).with('https://foobar.com/dummy.json', body: attributes, headers: { "Baz" => "Bar" }).and_call_original
         dummy_class.get(attributes, { content_type: '.json', default_headers: { "Baz" => "Bar" } })
       end
     end
 
-    context "when response is a success" do
-      let(:response_mock)   { double('response', success?: true, body: response_body) }
+    context "when the response is a success" do
+      let(:response_mock) { double('response', success?: true, body: response_body) }
 
-      context "and a root_element is defined" do
-        let(:response_body) { '{"foobar":{"id":"12"}}' }
-        let(:parsed_response) { JSON.parse(response_body)["foobar"] }
+      context "root_element" do
+        context "and the given custom connection_options contain a root_element" do
+          let(:custom_connection_options) { { root_element: :foobar } }
+          let(:response_body)             { '{"foobar":{"id":"12"}}' }
 
-        before { dummy_class.root_element = :foobar }
-        after  { dummy_class.root_element = nil }
-
-        it "returns the unpacked and parsed response body from the root_element" do
-          expect(dummy_class.get attributes).to eql({ "id" => "12" })
+          it "returns the unpacked and parsed response body from the root_element" do
+            expect(dummy_class.get attributes, custom_connection_options).to eql({ "id" => "12" })
+          end
         end
-      end
 
-      context "and NO root_element is defined" do
-        let(:response_body)   { '{"id":"12"}' }
-        let(:parsed_response) { JSON.parse response_body }
+        context "and the connection_options contain a root_element" do
+          let(:response_body) { '{"foobar":{"id":"12"}}' }
 
-        before { dummy_class.root_element = nil }
+          before { dummy_class.connection_options.merge root_element: :foobar  }
 
-        it "returns the parsed response body from the root_element" do
-          expect(dummy_class.get attributes).to eql({ "id" => "12" })
+          it "returns the unpacked and parsed response body from the root_element" do
+            expect(dummy_class.get attributes).to eql({ "id" => "12" })
+          end
+        end
+
+        context "and NO root_element is specified" do
+          let(:response_body) { '{"id":"12"}' }
+
+          before { dummy_class.connection_options.merge root_element: nil  }
+
+          it "returns the parsed response body" do
+            expect(dummy_class.get attributes).to eql({ "id" => "12" })
+          end
         end
       end
     end
 
-    context "when a response is NOT a success" do
+    context "when the response is NOT a success" do
       let(:response_mock) { double('response', success?: false) }
 
       it "returns nil" do

@@ -46,7 +46,7 @@ module RemoteResource
 
         response = connection.get "#{base_url}#{connection_options[:content_type].presence}", body: attributes, headers: connection_options[:default_headers] || headers.merge(connection_options[:headers])
         if response.success?
-          unpack_response_body(response.body)
+          unpack_response_body(response.body, connection_options[:root_element])
         end
       end
 

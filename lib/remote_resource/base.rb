@@ -50,7 +50,7 @@ module RemoteResource
 
       private
 
-      def pack_up_request_body(body)
+      def pack_up_request_body(body, root_element = nil)
         if root_element.present?
           Hash[root_element.to_s, body]
         else
@@ -58,7 +58,7 @@ module RemoteResource
         end
       end
 
-      def unpack_response_body(body)
+      def unpack_response_body(body, root_element = nil)
         if root_element.present?
           JSON.parse(body)[root_element.to_s]
         else
@@ -132,12 +132,12 @@ module RemoteResource
         end
       end
 
-      def pack_up_request_body(body)
-        self.class.send :pack_up_request_body, body
+      def pack_up_request_body(body, root_element = nil)
+        self.class.send :pack_up_request_body, body, root_element
       end
 
-      def unpack_response_body(body)
-        self.class.send :unpack_response_body, body
+      def unpack_response_body(body, root_element = nil)
+        self.class.send :unpack_response_body, body, root_element
       end
 
       def assign_errors(error_data)

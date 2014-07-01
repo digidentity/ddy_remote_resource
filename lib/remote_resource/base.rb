@@ -128,8 +128,8 @@ module RemoteResource
 
       private
 
-      def collection_determined_url
-        if self.class.collection
+      def collection_determined_url(collection = nil)
+        if collection
           "#{self.class.base_url}/#{self.id}"
         else
           self.class.base_url

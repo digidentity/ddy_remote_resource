@@ -78,7 +78,8 @@ describe RemoteResource::ConnectionOptions do
   describe "#to_hash" do
     let(:connection_options_hash) do
       {
-        site:             "https://foobar.com",
+        base_url:         'https://foobar.com/prefix/connection_options_dummies/postfix',
+        site:             'https://foobar.com',
         headers:          { "Accept" => "application/json", "X-Locale" => "nl" },
         path_prefix:      '/prefix',
         path_postfix:     '/postfix',

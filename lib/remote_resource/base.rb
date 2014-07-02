@@ -140,6 +140,14 @@ module RemoteResource
 
       private
 
+      def determined_request_url(connection_options = {})
+        if connection_options[:collection] && self.id.present?
+          self.class.send :determined_request_url, connection_options, self.id
+        else
+          self.class.send :determined_request_url, connection_options
+        end
+      end
+
       def collection_determined_url(collection = nil)
         if collection
           "#{self.class.base_url}/#{self.id}"

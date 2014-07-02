@@ -764,6 +764,52 @@ describe RemoteResource::Base do
     end
   end
 
+  describe "#determined_request_url" do
+    context "collection" do
+      context "when the connection_options collection option is truthy" do
+        let(:connection_options)  { { collection: true } }
+
+        context "and the id is present" do
+          let(:id)    { 12 }
+          let(:dummy) { dummy_class.new id: id }
+
+          it "calls .determined_request_url" do
+            expect(dummy_class).to receive(:determined_request_url).with(connection_options, id)
+            dummy.send :determined_request_url, connection_options
+          end
+
+          it "uses the id for the request_url" do
+            expect(dummy.send :determined_request_url, connection_options).to eql 'https://foobar.com/dummy/12'
+          end
+        end
+
+        context "and the id is NOT present" do
+          it "calls .determined_request_url" do
+            expect(dummy_class).to receive(:determined_request_url).with(connection_options)
+            dummy.send :determined_request_url, connection_options
+          end
+
+          it "does NOT use the id for the request_url" do
+            expect(dummy.send :determined_request_url, connection_options).to eql 'https://foobar.com/dummy'
+          end
+        end
+      end
+
+      context "when NO connection_options collection option is set OR falsely" do
+        let(:connection_options)  { { collection: false } }
+
+        it "calls .determined_request_url" do
+          expect(dummy_class).to receive(:determined_request_url).with(connection_options)
+          dummy.send :determined_request_url, connection_options
+        end
+
+        it "does NOT use the id for the request_url" do
+          expect(dummy.send :determined_request_url, connection_options).to eql 'https://foobar.com/dummy'
+        end
+      end
+    end
+  end
+
   describe "#assign_errors" do
     let(:error_data) { JSON.parse json_error_data }
 

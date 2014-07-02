@@ -8,7 +8,6 @@ module RemoteResource
       extend ActiveModel::Translation
       include ActiveModel::Conversion
       include ActiveModel::Validations
-      include InstanceMethods
 
       extend RemoteResource::UrlNaming
       extend RemoteResource::Connection
@@ -82,97 +81,94 @@ module RemoteResource
 
     end
 
-    module InstanceMethods
-
-      def connection_options
-        @connection_options ||= RemoteResource::ConnectionOptions.new(self.class)
-      end
-
-      def persisted?
-        id.present?
-      end
-
-      def new_record?
-        !persisted?
-      end
-
-      def save(connection_options = {})
-        create_or_update params, connection_options
-      end
-
-      def create_or_update(attributes = {}, connection_options = {})
-        root_element = connection_options[:root_element] || self.connection_options.root_element
-
-        if attributes.has_key? :id
-          patch(pack_up_request_body(attributes, root_element), connection_options)
-        else
-          post(pack_up_request_body(attributes, root_element), connection_options)
-        end
-      end
-
-      def post(attributes = {}, connection_options = {})
-        connection_options.reverse_merge! self.connection_options.to_hash
-
-        response = self.class.connection.post determined_request_url(connection_options), body: attributes, headers: connection_options[:default_headers] || self.connection_options.headers.merge(connection_options[:headers])
-        if response.success?
-          true
-        elsif response.response_code == 422
-          assign_errors JSON.parse(response.body), connection_options[:root_element]
-          false
-        else
-          false
-        end
-      end
-
-      def patch(attributes = {}, connection_options = {})
-        connection_options.reverse_merge! self.connection_options.to_hash
-
-        response = self.class.connection.patch determined_request_url(connection_options), body: attributes, headers: connection_options[:default_headers] || self.connection_options.headers.merge(connection_options[:headers])
-        if response.success?
-          true
-        elsif response.response_code == 422
-          assign_errors JSON.parse(response.body), connection_options[:root_element]
-          false
-        else
-          false
-        end
-      end
-
-      private
-
-      def determined_request_url(connection_options = {})
-        if connection_options[:collection] && self.id.present?
-          self.class.send :determined_request_url, connection_options, self.id
-        else
-          self.class.send :determined_request_url, connection_options
-        end
-      end
-
-      def pack_up_request_body(body, root_element = nil)
-        self.class.send :pack_up_request_body, body, root_element
-      end
-
-      def unpack_response_body(body, root_element = nil)
-        self.class.send :unpack_response_body, body, root_element
-      end
-
-      def assign_errors(error_data, root_element = nil)
-        error_messages = find_error_messages error_data, root_element
-        error_messages.each do |attribute, attribute_errors|
-          attribute_errors.each do |error|
-            self.errors.add attribute, error
-          end
-        end
-      end
-
-      def find_error_messages(error_data, root_element = nil)
-        if error_data.has_key? "errors"
-          error_data["errors"]
-        elsif root_element.present?
-          error_data[root_element.to_s]["errors"]
-        end
-      end
-
+    def connection_options
+      @connection_options ||= RemoteResource::ConnectionOptions.new(self.class)
     end
+
+    def persisted?
+      id.present?
+    end
+
+    def new_record?
+      !persisted?
+    end
+
+    def save(connection_options = {})
+      create_or_update params, connection_options
+    end
+
+    def create_or_update(attributes = {}, connection_options = {})
+      root_element = connection_options[:root_element] || self.connection_options.root_element
+
+      if attributes.has_key? :id
+        patch(pack_up_request_body(attributes, root_element), connection_options)
+      else
+        post(pack_up_request_body(attributes, root_element), connection_options)
+      end
+    end
+
+    def post(attributes = {}, connection_options = {})
+      connection_options.reverse_merge! self.connection_options.to_hash
+
+      response = self.class.connection.post determined_request_url(connection_options), body: attributes, headers: connection_options[:default_headers] || self.connection_options.headers.merge(connection_options[:headers])
+      if response.success?
+        true
+      elsif response.response_code == 422
+        assign_errors JSON.parse(response.body), connection_options[:root_element]
+        false
+      else
+        false
+      end
+    end
+
+    def patch(attributes = {}, connection_options = {})
+      connection_options.reverse_merge! self.connection_options.to_hash
+
+      response = self.class.connection.patch determined_request_url(connection_options), body: attributes, headers: connection_options[:default_headers] || self.connection_options.headers.merge(connection_options[:headers])
+      if response.success?
+        true
+      elsif response.response_code == 422
+        assign_errors JSON.parse(response.body), connection_options[:root_element]
+        false
+      else
+        false
+      end
+    end
+
+    private
+
+    def determined_request_url(connection_options = {})
+      if connection_options[:collection] && self.id.present?
+        self.class.send :determined_request_url, connection_options, self.id
+      else
+        self.class.send :determined_request_url, connection_options
+      end
+    end
+
+    def pack_up_request_body(body, root_element = nil)
+      self.class.send :pack_up_request_body, body, root_element
+    end
+
+    def unpack_response_body(body, root_element = nil)
+      self.class.send :unpack_response_body, body, root_element
+    end
+
+    def assign_errors(error_data, root_element = nil)
+      error_messages = find_error_messages error_data, root_element
+      error_messages.each do |attribute, attribute_errors|
+        attribute_errors.each do |error|
+          self.errors.add attribute, error
+        end
+      end
+    end
+
+    def find_error_messages(error_data, root_element = nil)
+      if error_data.has_key? "errors"
+        error_data["errors"]
+      elsif root_element.present?
+        error_data[root_element.to_s]["errors"]
+      end
+    end
+
   end
 end

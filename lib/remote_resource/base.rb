@@ -21,7 +21,8 @@ module RemoteResource
 
     module ClassMethods
 
-      attr_accessor :content_type, :root_element
+      attr_accessor :root_element
+
       def connection_options
         Thread.current['remote_resource.connection_options'] ||= RemoteResource::ConnectionOptions.new(self)
       end

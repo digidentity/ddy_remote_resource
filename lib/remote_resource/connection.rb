@@ -1,6 +1,7 @@
 module RemoteResource
   module Connection
 
+    attr_accessor :content_type
     attr_writer :headers
 
     def connection

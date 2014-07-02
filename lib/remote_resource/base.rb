@@ -26,6 +26,17 @@ module RemoteResource
         Thread.current['remote_resource.connection_options'] ||= RemoteResource::ConnectionOptions.new(self)
       end
 
+      def with_connection_options(connection_options = {})
+        connection_options.reverse_merge! self.connection_options.to_hash
+        connection_options[:headers].merge! self.connection_options.headers
+        begin
+          Thread.current['remote_resource.connection_options'].merge connection_options
+          yield
+        ensure
+          Thread.current['remote_resource.connection_options'] = nil
+        end
+      end
+
       def find(id, connection_options = {})
         connection_options.reverse_merge! self.connection_options.to_hash
 

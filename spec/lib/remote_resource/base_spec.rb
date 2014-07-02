@@ -42,6 +42,61 @@ describe RemoteResource::Base do
     end
   end
 
+  describe ".with_connection_options" do
+    let(:connection_options) { {} }
+
+    let(:block_with_connection_options) do
+      dummy_class.with_connection_options(connection_options) do
+        dummy_class.find_by({ username: 'foobar' }, { content_type: '.json' })
+        dummy_class.find_by({ username: 'bazbar' }, { content_type: '.xml' })
+      end
+    end
+
+    let(:response_mock) { double('response', success?: false).as_null_object }
+
+    before { allow_any_instance_of(Typhoeus::Request).to receive(:run) { response_mock } }
+
+    it "yields the block" do
+      expect(dummy_class).to receive(:find_by).with({ username: 'foobar' }, { content_type: '.json' }).and_call_original
+      expect(dummy_class).to receive(:find_by).with({ username: 'bazbar' }, { content_type: '.xml' }).and_call_original
+      block_with_connection_options
+    end
+
+    it "ensures to set the connection_options Thread variable to nil" do
+      dummy_class.connection_options
+
+      expect{ block_with_connection_options }.to change{ Thread.current['remote_resource.connection_options'] }.from(an_instance_of(RemoteResource::ConnectionOptions)).to nil
+    end
+
+    context "when the connection_options contain the headers" do
+      let(:connection_options) do
+        {
+          headers: { "Foo" => "Bar" }
+        }
+      end
+
+      it "uses the connection_options which are set in the block AND on the class method" do
+        expect(Typhoeus::Request).to receive(:get).with('https://foobar.com/dummy.json', params: { username: 'foobar' }, headers: { "Accept" => "application/json", "Foo" => "Bar" }).and_call_original
+        expect(Typhoeus::Request).to receive(:get).with('https://foobar.com/dummy.xml', params: { username: 'bazbar' }, headers: { "Accept" => "application/json", "Foo" => "Bar" }).and_call_original
+        block_with_connection_options
+      end
+    end
+
+    context "when NO headers are specified in the connection_options" do
+      let(:connection_options) do
+        {
+          base_url: 'https://api.foobar.eu/dummy'
+        }
+      end
+
+      it "uses the connection_options which are set in the block AND on the class method" do
+        expect(Typhoeus::Request).to receive(:get).with('https://api.foobar.eu/dummy.json', params: { username: 'foobar' }, headers: { "Accept" => "application/json" }).and_call_original
+        expect(Typhoeus::Request).to receive(:get).with('https://api.foobar.eu/dummy.xml', params: { username: 'bazbar' }, headers: { "Accept" => "application/json" }).and_call_original
+        block_with_connection_options
+      end
+    end
+  end
+
   describe ".find" do
     let(:id)            { '12' }
     let(:request_url)   { 'https://foobar.com/dummy/12' }

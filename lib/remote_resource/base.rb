@@ -40,7 +40,7 @@ module RemoteResource
       def find(id, connection_options = {})
         connection_options.reverse_merge! self.connection_options.to_hash
 
-        response = connection.get "#{base_url}/#{id}#{connection_options[:content_type].presence}", headers: connection_options[:default_headers] || self.connection_options.headers.merge(connection_options[:headers])
+        response = connection.get self.determined_request_url(connection_options, id), headers: connection_options[:default_headers] || self.connection_options.headers.merge(connection_options[:headers])
         if response.success?
           new JSON.parse(response.body)
         end
@@ -55,7 +55,7 @@ module RemoteResource
       def get(attributes = {}, connection_options = {})
         connection_options.reverse_merge! self.connection_options.to_hash
 
-        response = connection.get "#{base_url}#{connection_options[:content_type].presence}", body: attributes, headers: connection_options[:default_headers] || self.connection_options.headers.merge(connection_options[:headers])
+        response = connection.get self.determined_request_url(connection_options), body: attributes, headers: connection_options[:default_headers] || self.connection_options.headers.merge(connection_options[:headers])
         if response.success?
           unpack_response_body(response.body, connection_options[:root_element])
         end

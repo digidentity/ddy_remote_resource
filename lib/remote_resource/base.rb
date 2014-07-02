@@ -113,7 +113,7 @@ module RemoteResource
       def post(attributes = {}, connection_options = {})
         connection_options.reverse_merge! self.connection_options.to_hash
 
-        response = self.class.connection.post "#{self.class.base_url}#{connection_options[:content_type].presence}", body: attributes, headers: connection_options[:default_headers] || self.connection_options.headers.merge(connection_options[:headers])
+        response = self.class.connection.post determined_request_url(connection_options), body: attributes, headers: connection_options[:default_headers] || self.connection_options.headers.merge(connection_options[:headers])
         if response.success?
           true
         elsif response.response_code == 422
@@ -127,7 +127,7 @@ module RemoteResource
       def patch(attributes = {}, connection_options = {})
         connection_options.reverse_merge! self.connection_options.to_hash
 
-        response = self.class.connection.patch "#{collection_determined_url(connection_options[:collection])}#{connection_options[:content_type].presence}", body: attributes, headers: connection_options[:default_headers] || self.connection_options.headers.merge(connection_options[:headers])
+        response = self.class.connection.patch determined_request_url(connection_options), body: attributes, headers: connection_options[:default_headers] || self.connection_options.headers.merge(connection_options[:headers])
         if response.success?
           true
         elsif response.response_code == 422

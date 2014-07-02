@@ -27,6 +27,16 @@ module RemoteResource
         Thread.current['remote_resource.connection_options'] ||= RemoteResource::ConnectionOptions.new(self)
       end
 
+      def determined_request_url(connection_options = {}, id = nil)
+        connection_options.reverse_merge! self.connection_options.to_hash
+
+        if id.present?
+          "#{connection_options[:base_url]}/#{id}#{connection_options[:content_type]}"
+        else
+          "#{connection_options[:base_url]}#{connection_options[:content_type]}"
+        end
+      end
+
       def find(id, connection_options = {})
         connection_options.reverse_merge! self.connection_options.to_hash
 

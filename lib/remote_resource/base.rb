@@ -148,14 +148,6 @@ module RemoteResource
         end
       end
 
-      def collection_determined_url(collection = nil)
-        if collection
-          "#{self.class.base_url}/#{self.id}"
-        else
-          self.class.base_url
-        end
-      end
-
       def pack_up_request_body(body, root_element = nil)
         self.class.send :pack_up_request_body, body, root_element
       end

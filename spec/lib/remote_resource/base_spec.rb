@@ -206,24 +206,24 @@ describe RemoteResource::Base do
       dummy_class.get attributes
     end
 
-    it "uses the attributes as request body" do
-      expect(Typhoeus::Request).to receive(:get).with(request_url, body: { foo: 'bar' }, headers: headers).and_call_original
+    it "uses the attributes as request params" do
+      expect(Typhoeus::Request).to receive(:get).with(request_url, params: { foo: 'bar' }, headers: headers).and_call_original
       dummy_class.get attributes
     end
 
     it "uses the connection_options headers as request headers" do
-      expect(Typhoeus::Request).to receive(:get).with(request_url, body: attributes, headers: { "Accept" => "application/json" }).and_call_original
+      expect(Typhoeus::Request).to receive(:get).with(request_url, params: attributes, headers: { "Accept" => "application/json" }).and_call_original
       dummy_class.get attributes
     end
 
     context "when custom connection_options are given" do
       it "uses the custom connection_options" do
-        expect(Typhoeus::Request).to receive(:get).with('https://foobar.com/dummy.json', body: attributes, headers: { "Accept" => "application/json", "Baz" => "Bar" }).and_call_original
+        expect(Typhoeus::Request).to receive(:get).with('https://foobar.com/dummy.json', params: attributes, headers: { "Accept" => "application/json", "Baz" => "Bar" }).and_call_original
         dummy_class.get(attributes, { content_type: '.json', headers: { "Baz" => "Bar" } })
       end
 
       it "overrides the connection_options headers with custom connection_options default_headers" do
-        expect(Typhoeus::Request).to receive(:get).with('https://foobar.com/dummy.json', body: attributes, headers: { "Baz" => "Bar" }).and_call_original
+        expect(Typhoeus::Request).to receive(:get).with('https://foobar.com/dummy.json', params: attributes, headers: { "Baz" => "Bar" }).and_call_original
         dummy_class.get(attributes, { content_type: '.json', default_headers: { "Baz" => "Bar" } })
       end
     end

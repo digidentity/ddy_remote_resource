@@ -27,20 +27,10 @@ module RemoteResource
         Thread.current['remote_resource.connection_options'] ||= RemoteResource::ConnectionOptions.new(self)
       end
 
-      def determined_request_url(connection_options = {}, id = nil)
-        connection_options.reverse_merge! self.connection_options.to_hash
-
-        if id.present?
-          "#{connection_options[:base_url]}/#{id}#{connection_options[:content_type]}"
-        else
-          "#{connection_options[:base_url]}#{connection_options[:content_type]}"
-        end
-      end
-
       def find(id, connection_options = {})
         connection_options.reverse_merge! self.connection_options.to_hash
 
-        response = connection.get self.determined_request_url(connection_options, id), headers: connection_options[:default_headers] || self.connection_options.headers.merge(connection_options[:headers])
+        response = connection.get self.send(:determined_request_url, connection_options, id), headers: connection_options[:default_headers] || self.connection_options.headers.merge(connection_options[:headers])
         if response.success?
           new JSON.parse(response.body)
         end
@@ -55,13 +45,24 @@ module RemoteResource
       def get(attributes = {}, connection_options = {})
         connection_options.reverse_merge! self.connection_options.to_hash
 
-        response = connection.get self.determined_request_url(connection_options), body: attributes, headers: connection_options[:default_headers] || self.connection_options.headers.merge(connection_options[:headers])
+        response = connection.get self.send(:determined_request_url, connection_options), body: attributes, headers: connection_options[:default_headers] || self.connection_options.headers.merge(connection_options[:headers])
         if response.success?
           unpack_response_body(response.body, connection_options[:root_element])
         end
       end
 
       private
+
+      def determined_request_url(connection_options = {}, id = nil)
+        base_url     = connection_options[:base_url].presence     || self.connection_options.base_url
+        content_type = connection_options[:content_type].presence || self.connection_options.content_type
+
+        if id.present?
+          "#{base_url}/#{id}#{content_type}"
+        else
+          "#{base_url}#{content_type}"
+        end
+      end
 
       def pack_up_request_body(body, root_element = nil)
         if root_element.present?

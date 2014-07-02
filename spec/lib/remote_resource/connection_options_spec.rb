@@ -3,7 +3,7 @@ require 'spec_helper'
 describe RemoteResource::ConnectionOptions do
 
   module RemoteResource
-    class Dummy
+    class ConnectionOptionsDummy
       include RemoteResource::Base
 
       self.site         = 'https://foobar.com'
@@ -20,7 +20,7 @@ describe RemoteResource::ConnectionOptions do
     end
   end
 
-  let(:dummy_class) { RemoteResource::Dummy }
+  let(:dummy_class) { RemoteResource::ConnectionOptionsDummy }
   let(:dummy)       { dummy_class.new }
 
   let(:connection_options) { described_class.new dummy_class }
@@ -29,7 +29,7 @@ describe RemoteResource::ConnectionOptions do
     it "assigns the given class as #base_class" do
       allow_any_instance_of(described_class).to receive(:initialize_connection_options)
 
-      expect(connection_options.base_class).to eql RemoteResource::Dummy
+      expect(connection_options.base_class).to eql RemoteResource::ConnectionOptionsDummy
     end
 
     context "RemoteResource::Base::OPTIONS" do

@@ -3,7 +3,7 @@ require 'spec_helper'
 describe RemoteResource::Connection do
 
   module RemoteResource
-    class Dummy
+    class ConnectionDummy
       include RemoteResource::Base
 
       self.site = 'https://foobar.com'
@@ -14,7 +14,7 @@ describe RemoteResource::Connection do
     end
   end
 
-  let(:dummy_class) { RemoteResource::Dummy }
+  let(:dummy_class) { RemoteResource::ConnectionDummy }
   let(:dummy)       { dummy_class.new }
 
   describe ".connection" do

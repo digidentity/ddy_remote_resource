@@ -11,6 +11,7 @@ module RemoteResource
 
       extend RemoteResource::UrlNaming
       extend RemoteResource::Connection
+      include RemoteResource::REST
 
       OPTIONS = [:base_url, :site, :headers, :path_prefix, :path_postfix, :content_type, :collection, :collection_name, :root_element]
 
@@ -50,15 +51,6 @@ module RemoteResource
         root_element = connection_options[:root_element] || self.connection_options.root_element
 
         new get(pack_up_request_body(params, root_element), connection_options) || {}
-      end
-
-      def get(attributes = {}, connection_options = {})
-        connection_options.reverse_merge! self.connection_options.to_hash
-
-        response = connection.get determined_request_url(connection_options), params: attributes, headers: connection_options[:default_headers] || self.connection_options.headers.merge(connection_options[:headers])
-        if response.success?
-          unpack_response_body(response.body, connection_options[:root_element])
-        end
       end
 
       private
@@ -123,34 +115,6 @@ module RemoteResource
         patch(pack_up_request_body(attributes, root_element), connection_options)
       else
         post(pack_up_request_body(attributes, root_element), connection_options)
-      end
-    end
-
-    def post(attributes = {}, connection_options = {})
-      connection_options.reverse_merge! self.connection_options.to_hash
-
-      response = self.class.connection.post determined_request_url(connection_options), body: attributes, headers: connection_options[:default_headers] || self.connection_options.headers.merge(connection_options[:headers])
-      if response.success?
-        true
-      elsif response.response_code == 422
-        assign_errors JSON.parse(response.body), connection_options[:root_element]
-        false
-      else
-        false
-      end
-    end
-
-    def patch(attributes = {}, connection_options = {})
-      connection_options.reverse_merge! self.connection_options.to_hash
-
-      response = self.class.connection.patch determined_request_url(connection_options), body: attributes, headers: connection_options[:default_headers] || self.connection_options.headers.merge(connection_options[:headers])
-      if response.success?
-        true
-      elsif response.response_code == 422
-        assign_errors JSON.parse(response.body), connection_options[:root_element]
-        false
-      else
-        false
       end
     end
 

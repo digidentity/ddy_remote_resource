@@ -23,17 +23,17 @@ module RemoteResource
       attr_accessor :root_element
 
       def connection_options
-        Thread.current['remote_resource.connection_options'] ||= RemoteResource::ConnectionOptions.new(self)
+        Thread.current[connection_options_thread_name] ||= RemoteResource::ConnectionOptions.new(self)
       end
 
       def with_connection_options(connection_options = {})
         connection_options.reverse_merge! self.connection_options.to_hash
         connection_options[:headers].merge! self.connection_options.headers
         begin
-          Thread.current['remote_resource.connection_options'].merge connection_options
+          Thread.current[connection_options_thread_name].merge connection_options
           yield
         ensure
-          Thread.current['remote_resource.connection_options'] = nil
+          Thread.current[connection_options_thread_name] = nil
         end
       end
 
@@ -88,6 +88,14 @@ module RemoteResource
         else
           JSON.parse(body)
         end
+      end
+
+      def connection_options_thread_name
+        "remote_resource.#{_module_name}.connection_options"
+      end
+
+      def _module_name
+        self.name.to_s.demodulize.underscore.downcase
       end
 
     end

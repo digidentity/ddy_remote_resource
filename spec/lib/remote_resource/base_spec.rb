@@ -40,6 +40,10 @@ describe RemoteResource::Base do
     it "uses the implemented class as base_class" do
       expect(dummy_class.connection_options.base_class).to be RemoteResource::Dummy
     end
+
+    it "sets the name of Thread variable with the implemented class" do
+      expect(dummy_class.connection_options).to eql Thread.current['remote_resource.dummy.connection_options']
+    end
   end
 
   describe ".with_connection_options" do
@@ -65,7 +69,7 @@ describe RemoteResource::Base do
     it "ensures to set the connection_options Thread variable to nil" do
       dummy_class.connection_options
 
-      expect{ block_with_connection_options }.to change{ Thread.current['remote_resource.connection_options'] }.from(an_instance_of(RemoteResource::ConnectionOptions)).to nil
+      expect{ block_with_connection_options }.to change{ Thread.current['remote_resource.dummy.connection_options'] }.from(an_instance_of(RemoteResource::ConnectionOptions)).to nil
     end
 
     context "when the connection_options contain the headers" do

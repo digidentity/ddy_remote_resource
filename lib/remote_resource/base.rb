@@ -8,10 +8,12 @@ module RemoteResource
       extend ActiveModel::Translation
       include ActiveModel::Conversion
       include ActiveModel::Validations
-      include InstanceMethods
 
       extend RemoteResource::UrlNaming
       extend RemoteResource::Connection
+      include RemoteResource::REST
+
+      OPTIONS = [:base_url, :site, :headers, :path_prefix, :path_postfix, :content_type, :collection, :collection_name, :root_element]
 
       attribute :id
 
@@ -19,35 +21,52 @@ module RemoteResource
 
     module ClassMethods
 
-      attr_accessor :content_type, :root_element
+      attr_accessor :root_element
 
-      def find(id)
-        response = connection.get "#{base_url}/#{id}#{content_type.presence}", headers: headers
+      def connection_options
+        Thread.current[connection_options_thread_name] ||= RemoteResource::ConnectionOptions.new(self)
+      end
+
+      def with_connection_options(connection_options = {})
+        connection_options.reverse_merge! self.connection_options.to_hash
+        connection_options[:headers].merge! self.connection_options.headers
+        begin
+          Thread.current[connection_options_thread_name].merge connection_options
+          yield
+        ensure
+          Thread.current[connection_options_thread_name] = nil
+        end
+      end
+
+      def find(id, connection_options = {})
+        connection_options.reverse_merge! self.connection_options.to_hash
+
+        response = connection.get determined_request_url(connection_options, id), headers: connection_options[:default_headers] || self.connection_options.headers.merge(connection_options[:headers])
         if response.success?
           new JSON.parse(response.body)
         end
       end
 
-      def find_by(params)
-        new get(pack_up_request_body(params)) || {}
-      end
+      def find_by(params, connection_options = {})
+        root_element = connection_options[:root_element] || self.connection_options.root_element
 
-      def get(attributes = {}, &options)
-
-        if block_given?
-          connection_options = OpenStruct.new
-          options.call(connection_options)
-        end
-
-        response = connection.get connection_options.try(:url) || "#{base_url}#{content_type.presence}", body: attributes, headers: headers
-        if response.success?
-          unpack_response_body(response.body)
-        end
+        new get(pack_up_request_body(params, root_element), connection_options) || {}
       end
 
       private
 
-      def pack_up_request_body(body)
+      def determined_request_url(connection_options = {}, id = nil)
+        base_url     = connection_options[:base_url].presence     || self.connection_options.base_url
+        content_type = connection_options[:content_type].presence || self.connection_options.content_type
+
+        if id.present?
+          "#{base_url}/#{id}#{content_type}"
+        else
+          "#{base_url}#{content_type}"
+        end
+      end
+
+      def pack_up_request_body(body, root_element = nil)
         if root_element.present?
           Hash[root_element.to_s, body]
         else
@@ -55,7 +74,7 @@ module RemoteResource
         end
       end
 
-      def unpack_response_body(body)
+      def unpack_response_body(body, root_element = nil)
         if root_element.present?
           JSON.parse(body)[root_element.to_s]
         else
@@ -63,104 +82,76 @@ module RemoteResource
         end
       end
 
-    end
-
-    module InstanceMethods
-
-      THREADED_OPTIONS = [:site, :path_prefix, :path_postfix, :content_type, :collection, :collection_name, :root_element]
-
-      def initialize(*args)
-        super.tap do |resource|
-          resource.thread_safe!
-        end
+      def connection_options_thread_name
+        "remote_resource.#{_module_name}.connection_options"
       end
 
-      def thread_safe!
-        THREADED_OPTIONS.each do |option|
-          self.class.send :attr_accessor, option
-          instance_variable_set "@#{option}", self.class.public_send(option)
-        end
-      end
-
-      def persisted?
-        id.present?
-      end
-
-      def new_record?
-        !persisted?
-      end
-
-      def save
-        create_or_update params
-      end
-
-      def create_or_update(attributes = {})
-        if attributes.has_key? :id
-          patch pack_up_request_body(attributes)
-        else
-          post pack_up_request_body(attributes)
-        end
-      end
-
-      def post(attributes = {})
-        response = self.class.connection.post "#{self.class.base_url}#{self.class.content_type.presence}", body: attributes, headers: self.class.headers
-        if response.success?
-          true
-        elsif response.response_code == 422
-          assign_errors JSON.parse(response.body)
-          false
-        else
-          false
-        end
-      end
-
-      def patch(attributes = {})
-        response = self.class.connection.patch collection_determined_url, body: attributes, headers: self.class.headers
-        if response.success?
-          true
-        elsif response.response_code == 422
-          assign_errors JSON.parse(response.body)
-          false
-        else
-          false
-        end
-      end
-
-      private
-
-      def collection_determined_url
-        if self.class.collection
-          "#{self.class.base_url}/#{self.id}#{self.class.content_type.presence}"
-        else
-          "#{self.class.base_url}#{self.class.content_type.presence}"
-        end
-      end
-
-      def pack_up_request_body(body)
-        self.class.send :pack_up_request_body, body
-      end
-
-      def unpack_response_body(body)
-        self.class.send :unpack_response_body, body
-      end
-
-      def assign_errors(error_data)
-        error_messages = find_error_messages error_data
-        error_messages.each do |attribute, attribute_errors|
-          attribute_errors.each do |error|
-            self.errors.add attribute, error
-          end
-        end
-      end
-
-      def find_error_messages(error_data)
-        if error_data.has_key? "errors"
-          error_data["errors"]
-        elsif self.class.root_element.present?
-          error_data[self.class.root_element.to_s]["errors"]
-        end
+      def _module_name
+        self.name.to_s.demodulize.underscore.downcase
       end
 
     end
+
+    def connection_options
+      @connection_options ||= RemoteResource::ConnectionOptions.new(self.class)
+    end
+
+    def persisted?
+      id.present?
+    end
+
+    def new_record?
+      !persisted?
+    end
+
+    def save(connection_options = {})
+      create_or_update params, connection_options
+    end
+
+    def create_or_update(attributes = {}, connection_options = {})
+      root_element = connection_options[:root_element] || self.connection_options.root_element
+
+      if attributes.has_key? :id
+        patch(pack_up_request_body(attributes, root_element), connection_options)
+      else
+        post(pack_up_request_body(attributes, root_element), connection_options)
+      end
+    end
+
+    private
+
+    def determined_request_url(connection_options = {})
+      if connection_options[:collection] && self.id.present?
+        self.class.send :determined_request_url, connection_options, self.id
+      else
+        self.class.send :determined_request_url, connection_options
+      end
+    end
+
+    def pack_up_request_body(body, root_element = nil)
+      self.class.send :pack_up_request_body, body, root_element
+    end
+
+    def unpack_response_body(body, root_element = nil)
+      self.class.send :unpack_response_body, body, root_element
+    end
+
+    def assign_errors(error_data, root_element = nil)
+      error_messages = find_error_messages error_data, root_element
+      error_messages.each do |attribute, attribute_errors|
+        attribute_errors.each do |error|
+          self.errors.add attribute, error
+        end
+      end
+    end
+
+    def find_error_messages(error_data, root_element = nil)
+      if error_data.has_key? "errors"
+        error_data["errors"]
+      elsif root_element.present?
+        error_data[root_element.to_s]["errors"]
+      end
+    end
+
   end
 end

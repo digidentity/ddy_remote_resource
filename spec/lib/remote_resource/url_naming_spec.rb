@@ -3,7 +3,7 @@ require 'spec_helper'
 describe RemoteResource::UrlNaming do
 
   module RemoteResource
-    class Dummy
+    class UrlNamingDummy
       include RemoteResource::Base
 
       self.site = 'https://foobar.com'
@@ -14,7 +14,7 @@ describe RemoteResource::UrlNaming do
     end
   end
 
-  let(:dummy_class) { RemoteResource::Dummy }
+  let(:dummy_class) { RemoteResource::UrlNamingDummy }
   let(:dummy)       { dummy_class.new }
 
   pending "RemoteResource::CONFIG must be implemented first" ".app_host" do
@@ -38,7 +38,7 @@ describe RemoteResource::UrlNaming do
   describe ".base_url" do
     context "without additional options" do
       it "returns the url" do
-        expect(dummy_class.base_url).to eql 'https://foobar.com/dummy'
+        expect(dummy_class.base_url).to eql 'https://foobar.com/url_naming_dummy'
       end
     end
 
@@ -47,7 +47,7 @@ describe RemoteResource::UrlNaming do
         it "returns the url with the path_prefix" do
           dummy_class.path_prefix = '/api/v2'
 
-          expect(dummy_class.base_url).to eql 'https://foobar.com/api/v2/dummy'
+          expect(dummy_class.base_url).to eql 'https://foobar.com/api/v2/url_naming_dummy'
 
           dummy_class.path_prefix = nil
         end
@@ -57,7 +57,7 @@ describe RemoteResource::UrlNaming do
         it "returns the url with the path_postfix" do
           dummy_class.path_postfix = '/refresh'
 
-          expect(dummy_class.base_url).to eql 'https://foobar.com/dummy/refresh'
+          expect(dummy_class.base_url).to eql 'https://foobar.com/url_naming_dummy/refresh'
 
           dummy_class.path_postfix = nil
         end
@@ -70,7 +70,7 @@ describe RemoteResource::UrlNaming do
       it "returns the url for a plural resource" do
         dummy_class.collection = true
 
-        expect(dummy_class.base_url).to eql 'https://foobar.com/dummies'
+        expect(dummy_class.base_url).to eql 'https://foobar.com/url_naming_dummies'
 
         dummy_class.collection = nil
       end
@@ -80,7 +80,7 @@ describe RemoteResource::UrlNaming do
       it "returns the url for a singular resource" do
         dummy_class.collection = false
 
-        expect(dummy_class.base_url).to eql 'https://foobar.com/dummy'
+        expect(dummy_class.base_url).to eql 'https://foobar.com/url_naming_dummy'
 
         dummy_class.collection = nil
       end
@@ -90,8 +90,8 @@ describe RemoteResource::UrlNaming do
   describe ".relative_name" do
     context "when .collection_name is specified" do
       it "returns the relative name of the class without the module" do
-        expect(dummy_class.relative_name).not_to eql 'RemoteResource::Dummy'
-        expect(dummy_class.relative_name).to eql 'Dummy'
+        expect(dummy_class.relative_name).not_to eql 'RemoteResource::UrlNamingDummy'
+        expect(dummy_class.relative_name).to eql 'UrlNamingDummy'
       end
     end
 

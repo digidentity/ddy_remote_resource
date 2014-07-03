@@ -3,7 +3,7 @@ require 'spec_helper'
 describe RemoteResource::Connection do
 
   module RemoteResource
-    class Dummy
+    class ConnectionDummy
       include RemoteResource::Base
 
       self.site = 'https://foobar.com'
@@ -14,7 +14,7 @@ describe RemoteResource::Connection do
     end
   end
 
-  let(:dummy_class) { RemoteResource::Dummy }
+  let(:dummy_class) { RemoteResource::ConnectionDummy }
   let(:dummy)       { dummy_class.new }
 
   describe ".connection" do
@@ -23,28 +23,18 @@ describe RemoteResource::Connection do
     end
   end
 
-  describe ".headers=" do
-    it "sets the headers as thread variable" do
-      expect(Thread.current['remote_resource.headers']).to eql({})
-
-      dummy_class.headers = { "Foo" => "Bar" }
-
-      expect(Thread.current['remote_resource.headers']).to eql({ "Foo" => "Bar" })
-    end
-  end
-
   describe ".headers" do
-    before { dummy_class.headers = nil }
-
-    context "when headers are given" do
-      it "returns the merged headers with the default headers" do
+    context "when headers are set" do
+      it "returns the default headers merged with the set headers" do
         dummy_class.headers = { "Foo" => "Bar" }
 
-        expect(dummy_class.headers).to eql({ "Foo" => "Bar", "Accept"=>"application/json" })
+        expect(dummy_class.headers).to eql({ "Accept"=>"application/json", "Foo" => "Bar" })
+
+        dummy_class.headers = nil
       end
     end
 
-    context "when NO headers are given" do
+    context "when NO headers are set" do
       it "returns the default headers" do
         expect(dummy_class.headers).to eql({ "Accept"=>"application/json" })
       end

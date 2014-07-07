@@ -20,7 +20,7 @@ Simply include `RemoteResource` in the class you want to enable for the REST ser
 ```ruby
 class ContactPerson
   include RemoteResource::Base
-  
+
   self.site = "https://www.myapp.com"
   self.content_type = '.json'
 end
@@ -64,7 +64,7 @@ To override the `base_url` completely, you can use the `base_url` option. This o
 
 
 #### Request options
-    
+
 Apart from the options which manipulate the `base_url`, there are some more:
 
 * `.headers`: This sets the headers which should be used for the request.
@@ -80,7 +80,7 @@ Apart from the options which manipulate the `base_url`, there are some more:
 Last but not least, you can pack the request body or params in a `root_element`:
 
 * `.root_element`: This sets the `root_element` in which the request body or params should be 'packed' for the request.
-    * *Params:* `{ email_address: "foo@bar.com", phone_number: "0031701234567" }`    
+    * *Params:* `{ email_address: "foo@bar.com", phone_number: "0031701234567" }`
     * *Example:* `.root_element = :contact_person`
     * *Packed params:* `{ "contact_person" => { email_address: "foo@bar.com", phone_number: "0031701234567" } }`
 

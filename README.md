@@ -20,6 +20,9 @@ Simply include `RemoteResource` in the class you want to enable for the REST ser
 ```ruby
 class ContactPerson
   include RemoteResource::Base
+  
+  self.site = "https://www.myapp.com"
+  self.content_type = '.json'
 end
 ```
 

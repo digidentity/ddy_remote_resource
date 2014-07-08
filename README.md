@@ -143,3 +143,20 @@ end
 ```
 
 This will result in two request which use the `{ headers: { "X-Locale" => "en" } }` as `connection_options`, one which will use the `{ headers: { "X-Locale" => "nl" } }` as `connection_options`. And one that will append `.xml` to the request URL.
+
+### Responses
+
+The response body of the request will be 'unpacked' from the `root_element` if necessary and parsed. The resulting `Hash` will be used to assign the attributes of the resource.
+
+However if you want to access the response of the request, you can use the `#_response` method. This returns a `RemoteResource::Response` object with the `#response_body` and `#response_code` methods.
+
+*note: except when using the `.find` method*
+
+```ruby
+contact_person = ContactPerson.find_by((username: 'foobar'), connection_options)
+contact_person._response                 #=> RemoteResource::Response
+contact_person._response.response_code   #=> 200
+contact_person._response.response_body   #=> '{"username":"foobar", "name":"Foo", "surname":"Bar"}'
+```
+
+

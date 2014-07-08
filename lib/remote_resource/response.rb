@@ -2,7 +2,7 @@ module RemoteResource
   class Response
 
     def initialize(response)
-      @orginal_response = response
+      @original_response = response
     end
 
     def response_body
@@ -16,11 +16,11 @@ module RemoteResource
     private
 
     def original_response
-      @orginal_response
+      @original_response
     end
 
     def original_request
-      @orginal_response.request
+      @original_response.request
     end
 
   end

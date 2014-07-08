@@ -60,8 +60,8 @@ describe RemoteResource::REST do
           let(:custom_connection_options) { { root_element: :foobar } }
           let(:response_body)             { '{"foobar":{"id":"12"}}' }
 
-          it "returns the unpacked and parsed response body from the root_element" do
-            expect(dummy_class.get attributes, custom_connection_options).to eql({ "id" => "12" })
+          it "returns the unpacked and parsed response body from the root_element WITH the RemoteResource::Response" do
+            expect(dummy_class.get attributes, custom_connection_options).to match({ "id" => "12", :_response => an_instance_of(RemoteResource::Response) })
           end
         end
 
@@ -70,8 +70,8 @@ describe RemoteResource::REST do
 
           before { dummy_class.connection_options.merge root_element: :foobar  }
 
-          it "returns the unpacked and parsed response body from the root_element" do
-            expect(dummy_class.get attributes).to eql({ "id" => "12" })
+          it "returns the unpacked and parsed response body from the root_element WITH the RemoteResource::Response" do
+            expect(dummy_class.get attributes).to match({ "id" => "12", :_response => an_instance_of(RemoteResource::Response) })
           end
         end
 
@@ -80,8 +80,8 @@ describe RemoteResource::REST do
 
           before { dummy_class.connection_options.merge root_element: nil  }
 
-          it "returns the parsed response body" do
-            expect(dummy_class.get attributes).to eql({ "id" => "12" })
+          it "returns the parsed response body WITH the RemoteResource::Response" do
+            expect(dummy_class.get attributes).to match({ "id" => "12", :_response => an_instance_of(RemoteResource::Response) })
           end
         end
       end
@@ -90,8 +90,8 @@ describe RemoteResource::REST do
     context "when the response is NOT a success" do
       let(:response_mock) { double('response', success?: false) }
 
-      it "returns nil" do
-        expect(dummy_class.get(attributes)).to be_nil
+      it "returns an empty hash WITH the RemoteResource::Response" do
+        expect(dummy_class.get(attributes)).to match({ :_response => an_instance_of(RemoteResource::Response) })
       end
     end
   end
@@ -117,6 +117,14 @@ describe RemoteResource::REST do
     it "uses the connection_options headers as request headers" do
       expect(Typhoeus::Request).to receive(:post).with(request_url, body: attributes, headers: { "Accept" => "application/json" }).and_call_original
       dummy.post attributes
+    end
+
+    it "assigns the _response" do
+      expect(dummy._response).to be_nil
+
+      dummy.post attributes
+
+      expect(dummy._response).to be_a RemoteResource::Response
     end
 
     context "when custom connection_options are given" do
@@ -232,6 +240,14 @@ describe RemoteResource::REST do
     it "uses the connection_options headers as request headers" do
       expect(Typhoeus::Request).to receive(:patch).with(request_url, body: attributes, headers: { "Accept"=>"application/json" }).and_call_original
       dummy.patch attributes
+    end
+
+    it "assigns the _response" do
+      expect(dummy._response).to be_nil
+
+      dummy.patch attributes
+
+      expect(dummy._response).to be_a RemoteResource::Response
     end
 
     context "when custom connection_options are given" do

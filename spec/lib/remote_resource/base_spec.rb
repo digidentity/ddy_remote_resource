@@ -173,6 +173,12 @@ describe RemoteResource::Base do
       dummy_class.find_by params
     end
 
+    it "assigns the _response" do
+      allow(dummy_class).to receive(:get) { { _response: RemoteResource::Response.new(double('response')) } }
+
+      expect(dummy_class.find_by(params)._response).to be_a RemoteResource::Response
+    end
+
     context "when custom connection_options are given" do
       let(:custom_connection_options) do
         {

@@ -9,6 +9,7 @@ require 'remote_resource/url_naming'
 require 'remote_resource/connection'
 require 'remote_resource/connection_options'
 require 'remote_resource/rest'
+require 'remote_resource/response'
 
 
 module RemoteResource

@@ -15,6 +15,17 @@ module RemoteResource
         end
       end
 
+      def post(attributes = {}, connection_options = {})
+        connection_options.reverse_merge! self.connection_options.to_hash
+
+        response = connection.post determined_request_url(connection_options), body: attributes, headers: connection_options[:default_headers] || self.connection_options.headers.merge(connection_options[:headers])
+        if response.success?
+          unpack_response_body(response.body, connection_options[:root_element]).merge! assign_response(response)
+        else
+          assign_response(response)
+        end
+      end
+
       private
 
       def assign_response(response)

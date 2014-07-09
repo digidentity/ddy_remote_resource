@@ -96,6 +96,85 @@ describe RemoteResource::REST do
     end
   end
 
+  describe ".post" do
+    let(:attributes)    { { foo: 'bar' } }
+    let(:request_url)   { 'https://foobar.com/rest_dummy' }
+    let(:headers)       { { "Accept" => "application/json" } }
+    let(:response_mock) { double('response', success?: false).as_null_object }
+
+    before { allow_any_instance_of(Typhoeus::Request).to receive(:run) { response_mock } }
+
+    it "uses the HTTP POST method" do
+      expect(Typhoeus::Request).to receive(:post).and_call_original
+      dummy_class.post attributes
+    end
+
+    it "uses the attributes as request body" do
+      expect(Typhoeus::Request).to receive(:post).with(request_url, body: { foo: 'bar' }, headers: headers).and_call_original
+      dummy_class.post attributes
+    end
+
+    it "uses the connection_options headers as request headers" do
+      expect(Typhoeus::Request).to receive(:post).with(request_url, body: attributes, headers: { "Accept" => "application/json" }).and_call_original
+      dummy_class.post attributes
+    end
+
+    context "when custom connection_options are given" do
+      it "uses the custom connection_options" do
+        expect(Typhoeus::Request).to receive(:post).with('https://foobar.com/rest_dummy.json', body: attributes, headers: { "Accept" => "application/json", "Baz" => "Bar" }).and_call_original
+        dummy_class.post(attributes, { content_type: '.json', headers: { "Baz" => "Bar" } })
+      end
+
+      it "overrides the connection_options headers with custom connection_options default_headers" do
+        expect(Typhoeus::Request).to receive(:post).with('https://foobar.com/rest_dummy.json', body: attributes, headers: { "Baz" => "Bar" }).and_call_original
+        dummy_class.post(attributes, { content_type: '.json', default_headers: { "Baz" => "Bar" } })
+      end
+    end
+
+    context "when the response is a success" do
+      let(:response_mock) { double('response', success?: true, body: response_body) }
+
+      context "root_element" do
+        context "and the given custom connection_options contain a root_element" do
+          let(:custom_connection_options) { { root_element: :foobar } }
+          let(:response_body)             { '{"foobar":{"id":"12"}}' }
+
+          it "returns the unpacked and parsed response body from the root_element WITH the RemoteResource::Response" do
+            expect(dummy_class.post attributes, custom_connection_options).to match({ "id" => "12", :_response => an_instance_of(RemoteResource::Response) })
+          end
+        end
+
+        context "and the connection_options contain a root_element" do
+          let(:response_body) { '{"foobar":{"id":"12"}}' }
+
+          before { dummy_class.connection_options.merge root_element: :foobar  }
+
+          it "returns the unpacked and parsed response body from the root_element WITH the RemoteResource::Response" do
+            expect(dummy_class.post attributes).to match({ "id" => "12", :_response => an_instance_of(RemoteResource::Response) })
+          end
+        end
+
+        context "and NO root_element is specified" do
+          let(:response_body) { '{"id":"12"}' }
+
+          before { dummy_class.connection_options.merge root_element: nil  }
+
+          it "returns the parsed response body WITH the RemoteResource::Response" do
+            expect(dummy_class.post attributes).to match({ "id" => "12", :_response => an_instance_of(RemoteResource::Response) })
+          end
+        end
+      end
+    end
+
+    context "when the response is NOT a success" do
+      let(:response_mock) { double('response', success?: false) }
+
+      it "returns an empty hash WITH the RemoteResource::Response" do
+        expect(dummy_class.post(attributes)).to match({ :_response => an_instance_of(RemoteResource::Response) })
+      end
+    end
+  end
+
   describe "#post" do
     let(:attributes)    { { foo: 'bar' } }
     let(:request_url)   { 'https://foobar.com/rest_dummy' }

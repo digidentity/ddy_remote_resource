@@ -19,6 +19,7 @@ describe RemoteResource::Base do
 
   specify { expect(described_class.const_defined?('RemoteResource::UrlNaming')).to be_truthy }
   specify { expect(described_class.const_defined?('RemoteResource::Connection')).to be_truthy }
+  specify { expect(described_class.const_defined?('RemoteResource::Builder')).to be_truthy }
 
   describe "OPTIONS" do
     let(:options) { [:base_url, :site, :headers, :path_prefix, :path_postfix, :content_type, :collection, :collection_name, :root_element] }
@@ -105,9 +106,14 @@ describe RemoteResource::Base do
     let(:id)            { '12' }
     let(:request_url)   { 'https://foobar.com/dummy/12' }
     let(:headers)       { { "Accept"=>"application/json" } }
-    let(:response_mock) { double('response', success?: false).as_null_object }
 
-    before { allow_any_instance_of(Typhoeus::Request).to receive(:run) { response_mock } }
+    let(:response_mock)           { double('response', success?: false).as_null_object }
+    let(:sanitized_response_body) { nil }
+
+    before do
+      allow_any_instance_of(Typhoeus::Request).to receive(:run) { response_mock }
+      allow_any_instance_of(RemoteResource::Response).to receive(:sanitized_response_body) { sanitized_response_body }
+    end
 
     it "uses the HTTP GET method" do
       expect(Typhoeus::Request).to receive(:get).and_call_original
@@ -136,47 +142,43 @@ describe RemoteResource::Base do
       end
     end
 
-    context "when the response is a success" do
-      let(:response_body)   { '{"id":"12"}' }
-      let(:parsed_response) { JSON.parse response_body }
-      let(:response_mock)   { double('response', success?: true, body: response_body) }
+    context "response" do
+      let(:connection_options)      { dummy_class.connection_options.to_hash }
+      let(:sanitized_response_body) { { id: '12', foo: 'bar' } }
 
-      it "instantiates the resource with the parsed response body" do
-        expect(dummy_class).to receive(:new).with(parsed_response)
+      it "instantiates the RemoteResource::Response with the response AND connection_options" do
+        expect(RemoteResource::Response).to receive(:new).with(response_mock, connection_options).and_call_original
         dummy_class.find id
       end
 
-      it "returns the instantiated resource" do
+      it "builds the resource from the response" do
+        expect(dummy_class).to receive(:build_resource_from_response).with(an_instance_of RemoteResource::Response).and_call_original
+        dummy_class.find id
+      end
+
+      it "assigns the _response" do
+        expect(dummy_class.find(id)._response).to be_a RemoteResource::Response
+      end
+
+      it "returns the build resource" do
         expect(dummy_class.find(id).id).to eql '12'
-      end
-    end
-
-    context "when the response is NOT a success" do
-      let(:response_mock) { double('response', success?: false) }
-
-      it "does NOT instantiate the resource" do
-        expect(dummy_class).not_to receive(:new)
-        dummy_class.find id
-      end
-
-      it "returns nil" do
-        expect(dummy_class.find '15').to be_nil
       end
     end
   end
 
   describe ".find_by" do
-    let(:params) { { id: '12' } }
+    let(:params)                  { { id: '12' } }
+    let(:response_object_mock)    { RemoteResource::Response.new(double('response').as_null_object) }
+    let(:sanitized_response_body) { nil }
+
+    before do
+      allow(dummy_class).to receive(:get) { response_object_mock }
+      allow(response_object_mock).to receive(:sanitized_response_body) { sanitized_response_body }
+    end
 
     it "calls .get" do
       expect(dummy_class).to receive(:get).with(params, {})
       dummy_class.find_by params
-    end
-
-    it "assigns the _response" do
-      allow(dummy_class).to receive(:get) { { _response: RemoteResource::Response.new(double('response')) } }
-
-      expect(dummy_class.find_by(params)._response).to be_a RemoteResource::Response
     end
 
     context "when custom connection_options are given" do
@@ -229,34 +231,23 @@ describe RemoteResource::Base do
       end
     end
 
-    context "when the response is a success" do
-      let(:parsed_response) { { id: '12', foo: 'bar' } }
+    context "response" do
+      let(:sanitized_response_body) { { id: '12', foo: 'bar' } }
 
-      before { allow(dummy_class).to receive(:get) { parsed_response } }
-
-      it "instantiate the resource with the parsed response" do
-        expect(dummy_class).to receive(:new).with parsed_response
+      it "builds the resource from the response" do
+        expect(dummy_class).to receive(:build_resource_from_response).with(response_object_mock).and_call_original
         dummy_class.find_by params
       end
 
-      it "returns the instantiated resource" do
+      it "assigns the _response" do
+        dummy = dummy_class.find_by(params)._response
+
+        expect(dummy).to be_a RemoteResource::Response
+        expect(dummy).to eql response_object_mock
+      end
+
+      it "returns the build resource" do
         expect(dummy_class.find_by(params).id).to eql '12'
-      end
-    end
-
-    context "when the response is NOT a success" do
-      before { allow(dummy_class).to receive(:get) { nil } }
-
-      it "instantiate with a empty Hash" do
-        expect(dummy_class).to receive(:new).with({})
-        dummy_class.find_by params
-      end
-
-      it "returns the instantiated resource" do
-        expect(dummy_class.find_by(params).id).to be_nil
-
-      end
-
       end
     end
   end

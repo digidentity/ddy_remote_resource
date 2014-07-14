@@ -2,6 +2,8 @@ module RemoteResource
   module Base
     extend ActiveSupport::Concern
 
+    OPTIONS = [:base_url, :site, :headers, :path_prefix, :path_postfix, :content_type, :collection, :collection_name, :root_element]
+
     included do
       include Virtus.model
       extend ActiveModel::Naming
@@ -15,8 +17,6 @@ module RemoteResource
       include RemoteResource::REST
 
       attr_accessor :_response
-
-      OPTIONS = [:base_url, :site, :headers, :path_prefix, :path_postfix, :content_type, :collection, :collection_name, :root_element]
 
       attribute :id
 
@@ -45,15 +45,15 @@ module RemoteResource
         connection_options.reverse_merge! self.connection_options.to_hash
 
         response = connection.get determined_request_url(connection_options, id), headers: connection_options[:default_headers] || self.connection_options.headers.merge(connection_options[:headers])
-        if response.success?
-          new JSON.parse(response.body)
-        end
+        response = RemoteResource::Response.new response, connection_options
+        build_resource_from_response response
       end
 
       def find_by(params, connection_options = {})
         root_element = connection_options[:root_element] || self.connection_options.root_element
 
-        new get(pack_up_request_body(params, root_element), connection_options) || {}
+        response = get(pack_up_request_body(params, root_element), connection_options)
+        build_resource_from_response response
       end
 
       private

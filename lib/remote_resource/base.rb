@@ -12,8 +12,8 @@ module RemoteResource
       include ActiveModel::Validations
 
       extend RemoteResource::UrlNaming
-      extend RemoteResource::Connection
       extend RemoteResource::Builder
+      include RemoteResource::Connection
       include RemoteResource::REST
 
       attr_accessor :_response

@@ -10,7 +10,7 @@ module RemoteResource
       when Hash
         new collection.merge response_hash
       when Array
-        collection.each { |element| new element.merge response_hash }
+        collection.map { |element| new element.merge response_hash }
       else
         new response_hash
       end

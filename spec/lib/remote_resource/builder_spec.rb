@@ -67,6 +67,11 @@ describe RemoteResource::Builder do
           expect(dummy_class).to receive(:new).with(collection[2].merge(response_hash)).and_call_original
           dummy_class.build_resource collection, response_hash
         end
+
+        it "returns the resources" do
+          resources = dummy_class.build_resource collection, response_hash
+          resources.each { |resource| expect(resource).to be_a dummy_class }
+        end
       end
 
       context "and NO response_hash is given" do

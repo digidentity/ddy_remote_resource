@@ -2,6 +2,8 @@ module RemoteResource
   module Base
     extend ActiveSupport::Concern
 
+    OPTIONS = [:base_url, :site, :headers, :path_prefix, :path_postfix, :content_type, :collection, :collection_name, :root_element]
+
     included do
       include Virtus.model
       extend ActiveModel::Naming
@@ -10,12 +12,11 @@ module RemoteResource
       include ActiveModel::Validations
 
       extend RemoteResource::UrlNaming
-      extend RemoteResource::Connection
+      extend RemoteResource::Builder
+      include RemoteResource::Connection
       include RemoteResource::REST
 
       attr_accessor :_response
-
-      OPTIONS = [:base_url, :site, :headers, :path_prefix, :path_postfix, :content_type, :collection, :collection_name, :root_element]
 
       attribute :id
 
@@ -44,29 +45,18 @@ module RemoteResource
         connection_options.reverse_merge! self.connection_options.to_hash
 
         response = connection.get determined_request_url(connection_options, id), headers: connection_options[:default_headers] || self.connection_options.headers.merge(connection_options[:headers])
-        if response.success?
-          new JSON.parse(response.body)
-        end
+        response = RemoteResource::Response.new response, connection_options
+        build_resource_from_response response
       end
 
       def find_by(params, connection_options = {})
         root_element = connection_options[:root_element] || self.connection_options.root_element
 
-        new get(pack_up_request_body(params, root_element), connection_options) || {}
+        response = get(pack_up_request_body(params, root_element), connection_options)
+        build_resource_from_response response
       end
 
       private
-
-      def determined_request_url(connection_options = {}, id = nil)
-        base_url     = connection_options[:base_url].presence     || self.connection_options.base_url
-        content_type = connection_options[:content_type].presence || self.connection_options.content_type
-
-        if id.present?
-          "#{base_url}/#{id}#{content_type}"
-        else
-          "#{base_url}#{content_type}"
-        end
-      end
 
       def pack_up_request_body(body, root_element = nil)
         if root_element.present?
@@ -121,14 +111,6 @@ module RemoteResource
     end
 
     private
-
-    def determined_request_url(connection_options = {})
-      if connection_options[:collection] && self.id.present?
-        self.class.send :determined_request_url, connection_options, self.id
-      else
-        self.class.send :determined_request_url, connection_options
-      end
-    end
 
     def pack_up_request_body(body, root_element = nil)
       self.class.send :pack_up_request_body, body, root_element

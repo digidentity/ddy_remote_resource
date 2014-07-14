@@ -11,6 +11,7 @@ module RemoteResource
 
       extend RemoteResource::UrlNaming
       extend RemoteResource::Connection
+      extend RemoteResource::Builder
       include RemoteResource::REST
 
       attr_accessor :_response

@@ -95,6 +95,30 @@ describe RemoteResource::Connection do
     end
   end
 
+  describe ".determined_headers" do
+    context "when given custom connection_options contain a default_headers" do
+      let(:connection_options) { { default_headers: { "Baz" => "Bar" } } }
+
+      it "uses the default_headers" do
+        expect(dummy_class.send :determined_headers, connection_options).to eql({ "Baz" => "Bar" })
+      end
+    end
+
+    context "when given custom connection_options contain a headers" do
+      let(:connection_options) { { headers: { "Baz" => "Bar" } } }
+
+      it "uses the merged the headers with the connection_options headers" do
+        expect(dummy_class.send :determined_headers, connection_options).to eql({ "Accept" => "application/json", "Baz" => "Bar" })
+      end
+    end
+
+    context "when NO custom connection_options headers option is given" do
+      it "uses the headers" do
+        expect(dummy_class.send :determined_headers).to eql({ "Accept" => "application/json" })
+      end
+    end
+  end
+
   describe "#determined_request_url" do
     context "collection" do
       context "when the connection_options collection option is truthy" do
@@ -138,6 +162,15 @@ describe RemoteResource::Connection do
           expect(dummy.send :determined_request_url, connection_options).to eql 'https://foobar.com/connection_dummy'
         end
       end
+    end
+  end
+
+  describe "#determined_headers" do
+    let(:connection_options) { { headers: { "Baz" => "Bar" } } }
+
+    it "calls the .determined_headers" do
+      expect(dummy_class).to receive(:determined_headers).with(connection_options).and_call_original
+      dummy.send :determined_headers, connection_options
     end
   end
 

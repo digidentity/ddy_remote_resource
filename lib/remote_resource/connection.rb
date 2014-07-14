@@ -29,6 +29,10 @@ module RemoteResource
         end
       end
 
+      def determined_headers(connection_options = {})
+        connection_options[:default_headers] || self.connection_options.headers.merge(connection_options[:headers] || {})
+      end
+
     end
 
     private
@@ -39,6 +43,10 @@ module RemoteResource
       else
         self.class.send :determined_request_url, connection_options
       end
+    end
+
+    def determined_headers(connection_options = {})
+      self.class.send :determined_headers, connection_options
     end
 
   end

@@ -6,13 +6,13 @@ module RemoteResource
 
       def get(attributes = {}, connection_options = {})
         connection_options.reverse_merge! self.connection_options.to_hash
-        response = connection.get determined_request_url(connection_options), params: attributes, headers: connection_options[:default_headers] || self.connection_options.headers.merge(connection_options[:headers])
+        response = connection.get determined_request_url(connection_options), params: attributes, headers: determined_headers(connection_options)
         RemoteResource::Response.new response, connection_options
       end
 
       def post(attributes = {}, connection_options = {})
         connection_options.reverse_merge! self.connection_options.to_hash
-        response = connection.post determined_request_url(connection_options), body: attributes, headers: connection_options[:default_headers] || self.connection_options.headers.merge(connection_options[:headers])
+        response = connection.post determined_request_url(connection_options), body: attributes, headers: determined_headers(connection_options)
         RemoteResource::Response.new response, connection_options
       end
 
@@ -20,7 +20,7 @@ module RemoteResource
 
     def post(attributes = {}, connection_options = {})
       connection_options.reverse_merge! self.connection_options.to_hash
-      response = self.class.connection.post determined_request_url(connection_options), body: attributes, headers: connection_options[:default_headers] || self.connection_options.headers.merge(connection_options[:headers])
+      response = self.class.connection.post determined_request_url(connection_options), body: attributes, headers: determined_headers(connection_options)
       response = RemoteResource::Response.new response, connection_options
       assign_response response
       return_response response, connection_options
@@ -28,7 +28,7 @@ module RemoteResource
 
     def patch(attributes = {}, connection_options = {})
       connection_options.reverse_merge! self.connection_options.to_hash
-      response = self.class.connection.patch determined_request_url(connection_options), body: attributes, headers: connection_options[:default_headers] || self.connection_options.headers.merge(connection_options[:headers])
+      response = self.class.connection.patch determined_request_url(connection_options), body: attributes, headers: determined_headers(connection_options)
       response = RemoteResource::Response.new response, connection_options
       assign_response response
       return_response response, connection_options

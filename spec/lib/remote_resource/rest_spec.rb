@@ -52,46 +52,16 @@ describe RemoteResource::REST do
       end
     end
 
-    context "when the response is a success" do
-      let(:response_mock) { double('response', success?: true, body: response_body) }
+    context "response" do
+      let(:connection_options)  { dummy_class.connection_options.to_hash }
 
-      context "root_element" do
-        context "and the given custom connection_options contain a root_element" do
-          let(:custom_connection_options) { { root_element: :foobar } }
-          let(:response_body)             { '{"foobar":{"id":"12"}}' }
-
-          it "returns the unpacked and parsed response body from the root_element WITH the RemoteResource::Response" do
-            expect(dummy_class.get attributes, custom_connection_options).to match({ "id" => "12", :_response => an_instance_of(RemoteResource::Response) })
-          end
-        end
-
-        context "and the connection_options contain a root_element" do
-          let(:response_body) { '{"foobar":{"id":"12"}}' }
-
-          before { dummy_class.connection_options.merge root_element: :foobar  }
-
-          it "returns the unpacked and parsed response body from the root_element WITH the RemoteResource::Response" do
-            expect(dummy_class.get attributes).to match({ "id" => "12", :_response => an_instance_of(RemoteResource::Response) })
-          end
-        end
-
-        context "and NO root_element is specified" do
-          let(:response_body) { '{"id":"12"}' }
-
-          before { dummy_class.connection_options.merge root_element: nil  }
-
-          it "returns the parsed response body WITH the RemoteResource::Response" do
-            expect(dummy_class.get attributes).to match({ "id" => "12", :_response => an_instance_of(RemoteResource::Response) })
-          end
-        end
+      it "instantiates the RemoteResource::Response with the response AND connection_options" do
+        expect(RemoteResource::Response).to receive(:new).with(response_mock, connection_options).and_call_original
+        dummy_class.get attributes
       end
-    end
 
-    context "when the response is NOT a success" do
-      let(:response_mock) { double('response', success?: false) }
-
-      it "returns an empty hash WITH the RemoteResource::Response" do
-        expect(dummy_class.get(attributes)).to match({ :_response => an_instance_of(RemoteResource::Response) })
+      it "returns the RemoteResource::Response" do
+        expect(dummy_class.get(attributes)).to be_an_instance_of RemoteResource::Response
       end
     end
   end
@@ -131,46 +101,70 @@ describe RemoteResource::REST do
       end
     end
 
-    context "when the response is a success" do
-      let(:response_mock) { double('response', success?: true, body: response_body) }
+    context "response" do
+      let(:connection_options)  { dummy_class.connection_options.to_hash }
 
-      context "root_element" do
-        context "and the given custom connection_options contain a root_element" do
-          let(:custom_connection_options) { { root_element: :foobar } }
-          let(:response_body)             { '{"foobar":{"id":"12"}}' }
+      it "instantiates the RemoteResource::Response with the response AND connection_options" do
+        expect(RemoteResource::Response).to receive(:new).with(response_mock, connection_options).and_call_original
+        dummy_class.post attributes
+      end
 
-          it "returns the unpacked and parsed response body from the root_element WITH the RemoteResource::Response" do
-            expect(dummy_class.post attributes, custom_connection_options).to match({ "id" => "12", :_response => an_instance_of(RemoteResource::Response) })
-          end
+      it "returns the RemoteResource::Response" do
+        expect(dummy_class.post(attributes)).to be_an_instance_of RemoteResource::Response
+      end
+    end
+  end
+
+  describe ".determined_request_url" do
+    context "base_url" do
+      context "when the given custom connection_options contain a base_url" do
+        let(:custom_connection_options) { { base_url: 'https://api.baz.eu/' } }
+
+        it "uses the base_url for the request_url" do
+          expect(dummy_class.send :determined_request_url, custom_connection_options).to eql 'https://api.baz.eu/'
         end
+      end
 
-        context "and the connection_options contain a root_element" do
-          let(:response_body) { '{"foobar":{"id":"12"}}' }
+      context "when the connection_options contain a base_url" do
+        before { dummy_class.connection_options.merge base_url: 'https://api.baz.eu/' }
+        after  { dummy_class.connection_options.reload }
 
-          before { dummy_class.connection_options.merge root_element: :foobar  }
-
-          it "returns the unpacked and parsed response body from the root_element WITH the RemoteResource::Response" do
-            expect(dummy_class.post attributes).to match({ "id" => "12", :_response => an_instance_of(RemoteResource::Response) })
-          end
-        end
-
-        context "and NO root_element is specified" do
-          let(:response_body) { '{"id":"12"}' }
-
-          before { dummy_class.connection_options.merge root_element: nil  }
-
-          it "returns the parsed response body WITH the RemoteResource::Response" do
-            expect(dummy_class.post attributes).to match({ "id" => "12", :_response => an_instance_of(RemoteResource::Response) })
-          end
+        it "uses the base_url for the request_url" do
+          expect(dummy_class.send :determined_request_url).to eql 'https://api.baz.eu/'
         end
       end
     end
 
-    context "when the response is NOT a success" do
-      let(:response_mock) { double('response', success?: false) }
+    context "id" do
+      context "when the id is given" do
+        it "uses the id for the request_url" do
+          expect(dummy_class.send :determined_request_url, {}, 12).to eql 'https://foobar.com/rest_dummy/12'
+        end
+      end
 
-      it "returns an empty hash WITH the RemoteResource::Response" do
-        expect(dummy_class.post(attributes)).to match({ :_response => an_instance_of(RemoteResource::Response) })
+      context "when the id is NOT given" do
+        it "does NOT use the id for the request_url" do
+          expect(dummy_class.send :determined_request_url).to eql 'https://foobar.com/rest_dummy'
+        end
+      end
+    end
+
+    context "content_type" do
+      context "when the given custom connection_options contain a content_type" do
+        let(:custom_connection_options) { { content_type: '.xml' } }
+
+        it "uses the content_type for the request_url" do
+          expect(dummy_class.send :determined_request_url, custom_connection_options).to eql 'https://foobar.com/rest_dummy.xml'
+        end
+      end
+
+      context "when the connection_options contain a content_type" do
+        before { dummy_class.connection_options.merge content_type: '.xml' }
+        after  { dummy_class.connection_options.reload }
+
+        it "uses the content_type for the request_url" do
+          expect(dummy_class.send :determined_request_url).to eql 'https://foobar.com/rest_dummy.xml'
+        end
       end
     end
   end
@@ -181,7 +175,10 @@ describe RemoteResource::REST do
     let(:headers)       { { "Accept" => "application/json" } }
     let(:response_mock) { double('response').as_null_object }
 
-    before { allow_any_instance_of(Typhoeus::Request).to receive(:run) { response_mock } }
+    before do
+      allow(response_mock).to receive(:request)
+      allow_any_instance_of(Typhoeus::Request).to receive(:run) { response_mock }
+    end
 
     it "uses the HTTP POST method" do
       expect(Typhoeus::Request).to receive(:post).and_call_original
@@ -300,6 +297,7 @@ describe RemoteResource::REST do
 
     before do
       dummy.id = 10
+      allow(response_mock).to receive(:request)
       allow_any_instance_of(Typhoeus::Request).to receive(:run) { response_mock }
     end
 
@@ -439,6 +437,52 @@ describe RemoteResource::REST do
         it "does NOT assign the errors" do
           dummy.patch attributes
           expect(dummy.errors).to be_empty
+        end
+      end
+    end
+  end
+
+  describe "#determined_request_url" do
+    context "collection" do
+      context "when the connection_options collection option is truthy" do
+        let(:connection_options)  { { collection: true } }
+
+        context "and the id is present" do
+          let(:id)    { 12 }
+          let(:dummy) { dummy_class.new id: id }
+
+          it "calls .determined_request_url" do
+            expect(dummy_class).to receive(:determined_request_url).with(connection_options, id)
+            dummy.send :determined_request_url, connection_options
+          end
+
+          it "uses the id for the request_url" do
+            expect(dummy.send :determined_request_url, connection_options).to eql 'https://foobar.com/rest_dummy/12'
+          end
+        end
+
+        context "and the id is NOT present" do
+          it "calls .determined_request_url" do
+            expect(dummy_class).to receive(:determined_request_url).with(connection_options)
+            dummy.send :determined_request_url, connection_options
+          end
+
+          it "does NOT use the id for the request_url" do
+            expect(dummy.send :determined_request_url, connection_options).to eql 'https://foobar.com/rest_dummy'
+          end
+        end
+      end
+
+      context "when NO connection_options collection option is set OR falsely" do
+        let(:connection_options)  { { collection: false } }
+
+        it "calls .determined_request_url" do
+          expect(dummy_class).to receive(:determined_request_url).with(connection_options)
+          dummy.send :determined_request_url, connection_options
+        end
+
+        it "does NOT use the id for the request_url" do
+          expect(dummy.send :determined_request_url, connection_options).to eql 'https://foobar.com/rest_dummy'
         end
       end
     end

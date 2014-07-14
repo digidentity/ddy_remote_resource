@@ -58,17 +58,6 @@ module RemoteResource
 
       private
 
-      def determined_request_url(connection_options = {}, id = nil)
-        base_url     = connection_options[:base_url].presence     || self.connection_options.base_url
-        content_type = connection_options[:content_type].presence || self.connection_options.content_type
-
-        if id.present?
-          "#{base_url}/#{id}#{content_type}"
-        else
-          "#{base_url}#{content_type}"
-        end
-      end
-
       def pack_up_request_body(body, root_element = nil)
         if root_element.present?
           Hash[root_element.to_s, body]
@@ -122,14 +111,6 @@ module RemoteResource
     end
 
     private
-
-    def determined_request_url(connection_options = {})
-      if connection_options[:collection] && self.id.present?
-        self.class.send :determined_request_url, connection_options, self.id
-      else
-        self.class.send :determined_request_url, connection_options
-      end
-    end
 
     def pack_up_request_body(body, root_element = nil)
       self.class.send :pack_up_request_body, body, root_element

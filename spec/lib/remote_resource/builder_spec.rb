@@ -41,12 +41,20 @@ describe RemoteResource::Builder do
           expect(dummy_class).to receive(:new).with(collection.merge(response_hash)).and_call_original
           dummy_class.build_resource collection, response_hash
         end
+
+        it "returns the resource" do
+          expect(dummy_class.build_resource collection, response_hash).to be_a dummy_class
+        end
       end
 
       context "and NO response_hash is given" do
         it "instantiates the resource with the collection" do
           expect(dummy_class).to receive(:new).with(collection).and_call_original
           dummy_class.build_resource collection
+        end
+
+        it "returns the resource" do
+          expect(dummy_class.build_resource collection).to be_a dummy_class
         end
       end
     end
@@ -81,6 +89,11 @@ describe RemoteResource::Builder do
           expect(dummy_class).to receive(:new).with(collection[2]).and_call_original
           dummy_class.build_resource collection
         end
+
+        it "returns the resources" do
+          resources = dummy_class.build_resource collection
+          resources.each { |resource| expect(resource).to be_a dummy_class }
+        end
       end
     end
 
@@ -92,12 +105,20 @@ describe RemoteResource::Builder do
           expect(dummy_class).to receive(:new).with(response_hash).and_call_original
           dummy_class.build_resource collection, response_hash
         end
+
+        it "returns the resource" do
+          expect(dummy_class.build_resource collection, response_hash).to be_a dummy_class
+        end
       end
 
       context "and NO response_hash is given" do
         it "instantiates the resource with an empty Hash" do
           expect(dummy_class).to receive(:new).with({}).and_call_original
           dummy_class.build_resource collection
+        end
+
+        it "returns the resource" do
+          expect(dummy_class.build_resource collection, response_hash).to be_a dummy_class
         end
       end
     end

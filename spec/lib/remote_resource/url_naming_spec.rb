@@ -18,6 +18,28 @@ describe RemoteResource::UrlNaming do
   let(:dummy_class) { RemoteResource::UrlNamingDummy }
   let(:dummy)       { dummy_class.new }
 
+  describe ".collection" do
+    context "when collection is set" do
+      it "returns the given collection" do
+        dummy_class.collection = true
+
+        expect(dummy_class.collection).to be_truthy
+
+        dummy_class.collection = nil
+      end
+    end
+
+    context "when NO collection is set" do
+      it "returns the default collection" do
+        dummy_class.collection = nil
+
+        expect(dummy_class.collection).to be_falsey
+
+        dummy_class.collection = nil
+      end
+    end
+  end
+
   pending "RemoteResource::CONFIG must be implemented first" ".app_host" do
     context "when the env is given as an argument" do
       it "uses the host specified in the application CONFIG for the given env" do

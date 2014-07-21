@@ -1,7 +1,12 @@
 module RemoteResource
   module UrlNaming
 
-    attr_accessor :site, :path_prefix, :path_postfix, :collection, :collection_name
+    attr_accessor :site, :path_prefix, :path_postfix, :collection_name
+    attr_writer :collection
+
+    def collection
+      @collection ||= false
+    end
 
     def app_host(app, env = 'development')
       CONFIG[env.to_sym][:apps][app.to_sym]

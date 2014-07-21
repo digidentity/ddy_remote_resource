@@ -1,7 +1,7 @@
 module RemoteResource
   module UrlNaming
 
-    attr_accessor :site, :path_prefix, :path_postfix, :collection_name
+    attr_accessor :site, :version, :path_prefix, :path_postfix, :collection_name
     attr_writer :collection
 
     def collection
@@ -13,7 +13,7 @@ module RemoteResource
     end
 
     def base_url
-      "#{self.site}#{self.path_prefix.presence}/#{self.url_safe_relative_name}#{self.path_postfix.presence}"
+      "#{self.site}#{self.version.presence}#{self.path_prefix.presence}/#{self.url_safe_relative_name}#{self.path_postfix.presence}"
     end
 
     def url_safe_relative_name

@@ -9,6 +9,7 @@ describe RemoteResource::ConnectionOptions do
       self.site         = 'https://foobar.com'
       self.content_type = ''
       self.headers      = { "X-Locale" => "nl" }
+      self.version      = '/v1'
       self.path_prefix  = '/prefix'
       self.path_postfix = '/postfix'
       self.content_type = '.json'
@@ -79,9 +80,10 @@ describe RemoteResource::ConnectionOptions do
   describe "#to_hash" do
     let(:connection_options_hash) do
       {
-        base_url:         'https://foobar.com/prefix/connection_options_dummies/postfix',
+        base_url:         'https://foobar.com/v1/prefix/connection_options_dummies/postfix',
         site:             'https://foobar.com',
         headers:          { "Accept" => "application/json", "X-Locale" => "nl" },
+        version:          '/v1',
         path_prefix:      '/prefix',
         path_postfix:     '/postfix',
         content_type:     '.json',

@@ -66,11 +66,21 @@ describe RemoteResource::UrlNaming do
     end
 
     context "with additional options" do
-      context ".path_prefix" do
-        it "returns the url with the path_prefix" do
-          dummy_class.path_prefix = '/api/v2'
+      context ".version" do
+        it "returns the url with the version" do
+          dummy_class.version = '/api/v2'
 
           expect(dummy_class.base_url).to eql 'https://foobar.com/api/v2/url_naming_dummy'
+
+          dummy_class.version = nil
+        end
+      end
+
+      context ".path_prefix" do
+        it "returns the url with the path_prefix" do
+          dummy_class.path_prefix = '/registration'
+
+          expect(dummy_class.base_url).to eql 'https://foobar.com/registration/url_naming_dummy'
 
           dummy_class.path_prefix = nil
         end

@@ -7,6 +7,7 @@ describe RemoteResource::ConnectionOptions do
       include RemoteResource::Base
 
       self.site         = 'https://foobar.com'
+      self.content_type = ''
       self.headers      = { "X-Locale" => "nl" }
       self.path_prefix  = '/prefix'
       self.path_postfix = '/postfix'

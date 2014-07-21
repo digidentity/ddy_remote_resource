@@ -6,7 +6,8 @@ describe RemoteResource::UrlNaming do
     class UrlNamingDummy
       include RemoteResource::Base
 
-      self.site = 'https://foobar.com'
+      self.site         = 'https://foobar.com'
+      self.content_type = ''
 
       def params
         { foo: 'bar' }

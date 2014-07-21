@@ -4,11 +4,14 @@ module RemoteResource
 
     module ClassMethods
 
-      attr_accessor :content_type
-      attr_writer :headers
+      attr_writer :content_type, :headers
 
       def connection
         Typhoeus::Request
+      end
+
+      def content_type
+        @content_type ||= '.json'
       end
 
       def headers

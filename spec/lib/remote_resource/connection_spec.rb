@@ -23,6 +23,28 @@ describe RemoteResource::Connection do
     end
   end
 
+  describe ".content_type" do
+    context "when content_type is set" do
+      it "returns the given content_type" do
+        dummy_class.content_type = '.html'
+
+        expect(dummy_class.content_type).to eql '.html'
+
+        dummy_class.content_type = ''
+      end
+    end
+
+    context "when NO content_type is set" do
+      it "returns the default content_type" do
+        dummy_class.content_type = nil
+
+        expect(dummy_class.content_type).to eql '.json'
+
+        dummy_class.content_type = ''
+      end
+    end
+  end
+
   describe ".headers" do
     context "when headers are set" do
       it "returns the default headers merged with the set headers" do

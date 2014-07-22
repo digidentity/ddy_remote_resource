@@ -6,15 +6,15 @@ describe RemoteResource::ConnectionOptions do
     class ConnectionOptionsDummy
       include RemoteResource::Base
 
-      self.site         = 'https://foobar.com'
-      self.content_type = ''
-      self.headers      = { "X-Locale" => "nl" }
-      self.version      = '/v1'
-      self.path_prefix  = '/prefix'
-      self.path_postfix = '/postfix'
-      self.content_type = '.json'
-      self.collection   = true
-      self.root_element = :test_dummy
+      self.site           = 'https://foobar.com'
+      self.content_type   = ''
+      self.extra_headers  = { "X-Locale" => "nl" }
+      self.version        = '/v1'
+      self.path_prefix    = '/prefix'
+      self.path_postfix   = '/postfix'
+      self.content_type   = '.json'
+      self.collection     = true
+      self.root_element   = :test_dummy
 
       def params
         { foo: 'bar' }

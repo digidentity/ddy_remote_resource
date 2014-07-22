@@ -6,8 +6,7 @@ describe RemoteResource::Connection do
     class ConnectionDummy
       include RemoteResource::Base
 
-      self.site         = 'https://foobar.com'
-      self.content_type = ''
+      self.site = 'https://foobar.com'
 
       def params
         { foo: 'bar' }
@@ -25,46 +24,46 @@ describe RemoteResource::Connection do
   end
 
   describe ".content_type" do
+    let!(:original_content_type) { dummy_class.content_type }
+
     context "when content_type is set" do
       it "returns the given content_type" do
         dummy_class.content_type = '.html'
 
         expect(dummy_class.content_type).to eql '.html'
 
-        dummy_class.content_type = ''
+        dummy_class.content_type = original_content_type
       end
     end
 
     context "when NO content_type is set" do
       it "returns the default content_type" do
-        dummy_class.content_type = nil
-
         expect(dummy_class.content_type).to eql '.json'
-
-        dummy_class.content_type = ''
       end
     end
   end
 
   describe ".headers" do
-    context "when headers are set" do
-      it "returns the default headers merged with the set headers" do
-        dummy_class.headers = { "Foo" => "Bar" }
+    context "when .extra_headers are set" do
+      it "returns the default headers merged with the set .extra_headers" do
+        dummy_class.extra_headers = { "Foo" => "Bar" }
 
-        expect(dummy_class.headers).to eql({ "Accept"=>"application/json", "Foo" => "Bar" })
+        expect(dummy_class.headers).to eql({ "Accept" => "application/json", "Foo" => "Bar" })
 
-        dummy_class.headers = nil
+        dummy_class.extra_headers = nil
       end
     end
 
-    context "when NO headers are set" do
+    context "when NO .extra_headers are set" do
       it "returns the default headers" do
-        expect(dummy_class.headers).to eql({ "Accept"=>"application/json" })
+        expect(dummy_class.headers).to eql({ "Accept" => "application/json" })
       end
     end
   end
 
   describe ".determined_request_url" do
+    before { dummy_class.content_type = '' }
+
     context "base_url" do
       context "when the given custom connection_options contain a base_url" do
         let(:custom_connection_options) { { base_url: 'https://api.baz.eu/' } }
@@ -143,6 +142,8 @@ describe RemoteResource::Connection do
   end
 
   describe "#determined_request_url" do
+    before { dummy_class.content_type = '' }
+
     context "collection" do
       context "when the connection_options collection option is truthy" do
         let(:connection_options)  { { collection: true } }

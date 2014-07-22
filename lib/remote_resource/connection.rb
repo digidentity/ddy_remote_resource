@@ -2,21 +2,21 @@ module RemoteResource
   module Connection
     extend ActiveSupport::Concern
 
-    module ClassMethods
+    included do
+      class_attribute :content_type, :default_headers, :extra_headers, instance_accessor: false
 
-      attr_writer :content_type, :headers
+      self.content_type    = '.json'
+      self.default_headers = { "Accept" => "application/json" }
+    end
+
+    module ClassMethods
 
       def connection
         Typhoeus::Request
       end
 
-      def content_type
-        @content_type ||= '.json'
-      end
-
       def headers
-        @headers ||= {}
-        @headers.merge("Accept" => "application/json")
+        self.default_headers.merge self.extra_headers || {}
       end
 
       private

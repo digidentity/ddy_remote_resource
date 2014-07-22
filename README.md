@@ -21,8 +21,8 @@ Simply include `RemoteResource` in the class you want to enable for the REST ser
 class ContactPerson
   include RemoteResource::Base
 
-  self.site = "https://www.myapp.com"
-  self.content_type = '.json'
+  self.site    = "https://www.myapp.com"
+  self.version = '/v2'
 end
 ```
 
@@ -33,21 +33,24 @@ You can set a few options for the `RemoteResource` enabled class.
 
 #### Base URL options (`base_url`)
 
-The `base_url` is constructed from the `.site`,  `.path_prefix`, `.path_postfix`, `.collection`, and `.collection_name` options. The `.collection_name` is automatically constructed from the relative class name.
+The `base_url` is constructed from the `.site`, `.version`,  `.path_prefix`, `.path_postfix`, `.collection`, and `.collection_name` options. The `.collection_name` is automatically constructed from the relative class name.
 
 We will use the `ContactPerson` class for these examples, with the `.collection_name` of `'contact_person'`:
 
 * `.site`: This sets the URL which should be used to construct the `base_url`.
     * *Example:* `.site = "https://www.myapp.com"`
     * *`base_url`:* `https://www.myapp.com/contact_person`
-* `.path_prefix`: This sets the prefix for the path, after the `.site` and before the `.collection_name` that is used to construct the `base_url`.
-    * *Example:* `.path_prefix = "/api/v1"`
-    * *`base_url`:* `https://www.myapp.com/api/v1/contact_person`
+* `.version`: This sets the API version for the path, after the `.site` and before the `.path_prefix` that is used to construct the `base_url`.
+    * *Example:* `.version = "/api/v2"`
+    * *`base_url`:* `https://www.myapp.com/api/v2/contact_person`
+* `.path_prefix`: This sets the prefix for the path, after the `.version` and before the `.collection_name` that is used to construct the `base_url`.
+    * *Example:* `.path_prefix = "/registration"`
+    * *`base_url`:* `https://www.myapp.com/registration/contact_person`
 * `.path_postfix`: This sets the postfix for the path, after the `.collection_name` that is used to construct the `base_url`.
     * *Example:* `.path_postfix = "/new"`
     * *`base_url`:* `https://www.myapp.com/contact_person/new`
 * `.collection`: This toggles the pluralization of the `collection_name` that is used to construct the `base_url`.
-    * *Default:* `nil`
+    * *Default:* `false`
     * *Example:* `.collection = true`
     * *`base_url`:* `https://www.myapp.com/contact_persons`
 * `.collection_name`: This sets the `collection_name` that is used to construct the `base_url`.
@@ -67,10 +70,12 @@ To override the `base_url` completely, you can use the `base_url` option. This o
 
 Apart from the options which manipulate the `base_url`, there are some more:
 
-* `.headers`: This sets the headers which should be used for the request.
-    * *Default:* `{ "Content-Type" => "application/json" }`
-    * *Example:* `.headers = { "X-Locale" => "en" }`
+* `.extra_headers`: This sets the extra headers which are merged with the `.default_headers` and should be used for the request. *note: you can't set the `.default_headers`*
+    * *Default:* `.default_headers`: `{ "Content-Type" => "application/json" }`
+    * *Example:* `.extra_headers = { "X-Locale" => "en" }`
+    * `.headers`: `{ "Content-Type" => "application/json", "X-Locale" => "en" }`
 * `.content_type`: This sets the content-type which should be used for the request URL. *note: this is appended to the `base_url`*
+    * *Default:* `".json"`
     * *`base_url`:* `https://www.myapp.com/contact_person`
     * *Example:* `.content-type = ".json"`
     * *Request URL:* `https://www.myapp.com/contact_person.json`
@@ -111,6 +116,10 @@ ContactPerson.find(12, connection_options)
 ContactPerson.find_by((username: 'foobar'), connection_options)
 ```
 
+#### REST class methods
+
+You can use the `.get` and `.post` REST class methods.
+
 #### Instance methods
 
 You can use the `#save` method:
@@ -129,6 +138,10 @@ contact_person = ContactPerson.new(id: 12)
 contact_person.username = 'aapmies'
 contact_person.save(connection_options)
 ```
+
+#### REST instance methods
+
+You can use the `#patch` and `#post` REST instance methods.
 
 #### With a `connection_options` block
 
@@ -150,7 +163,6 @@ The response body of the request will be 'unpacked' from the `root_element` if n
 
 However if you want to access the response of the request, you can use the `#_response` method. This returns a `RemoteResource::Response` object with the `#response_body` and `#response_code` methods.
 
-*note: except when using the `.find` method*
 
 ```ruby
 contact_person = ContactPerson.find_by((username: 'foobar'), connection_options)

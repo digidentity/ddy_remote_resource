@@ -19,12 +19,10 @@ module RemoteResource
       attr_accessor :_response
 
       attribute :id
-
+      class_attribute :root_element, instance_accessor: false
     end
 
     module ClassMethods
-
-      attr_accessor :root_element
 
       def connection_options
         Thread.current[connection_options_thread_name] ||= RemoteResource::ConnectionOptions.new(self)

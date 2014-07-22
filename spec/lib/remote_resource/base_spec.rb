@@ -18,9 +18,9 @@ describe RemoteResource::Base do
   let(:dummy_class) { RemoteResource::Dummy }
   let(:dummy)       { dummy_class.new }
 
+  specify { expect(described_class.const_defined?('RemoteResource::Builder')).to be_truthy }
   specify { expect(described_class.const_defined?('RemoteResource::UrlNaming')).to be_truthy }
   specify { expect(described_class.const_defined?('RemoteResource::Connection')).to be_truthy }
-  specify { expect(described_class.const_defined?('RemoteResource::Builder')).to be_truthy }
   specify { expect(described_class.const_defined?('RemoteResource::REST')).to be_truthy }
 
   describe "OPTIONS" do

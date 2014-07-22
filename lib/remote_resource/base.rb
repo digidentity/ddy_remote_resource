@@ -11,8 +11,8 @@ module RemoteResource
       include ActiveModel::Conversion
       include ActiveModel::Validations
 
-      include RemoteResource::UrlNaming
       extend RemoteResource::Builder
+      include RemoteResource::UrlNaming
       include RemoteResource::Connection
       include RemoteResource::REST
 

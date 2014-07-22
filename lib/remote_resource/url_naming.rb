@@ -1,35 +1,39 @@
 module RemoteResource
   module UrlNaming
+    extend ActiveSupport::Concern
 
-    attr_accessor :site, :version, :path_prefix, :path_postfix, :collection_name
-    attr_writer :collection
+    included do
+      class_attribute :site, :version, :path_prefix, :path_postfix, :collection, :collection_name, instance_accessor: false
 
-    def collection
-      @collection ||= false
+      self.collection = false
     end
 
-    def app_host(app, env = 'development')
-      CONFIG[env.to_sym][:apps][app.to_sym]
-    end
+    module ClassMethods
 
-    def base_url
-      "#{self.site}#{self.version.presence}#{self.path_prefix.presence}/#{self.url_safe_relative_name}#{self.path_postfix.presence}"
-    end
-
-    def url_safe_relative_name
-      if self.collection
-        relative_name.underscore.downcase.pluralize
-      else
-        relative_name.underscore.downcase
+      def app_host(app, env = 'development')
+        CONFIG[env.to_sym][:apps][app.to_sym]
       end
-    end
 
-    def relative_name
-      @collection_name.to_s.presence || self.name.to_s.demodulize
-    end
+      def base_url
+        "#{self.site}#{self.version.presence}#{self.path_prefix.presence}/#{self.url_safe_relative_name}#{self.path_postfix.presence}"
+      end
 
-    def use_relative_model_naming?
-      true
+      def url_safe_relative_name
+        if self.collection
+          relative_name.underscore.downcase.pluralize
+        else
+          relative_name.underscore.downcase
+        end
+      end
+
+      def relative_name
+        self.collection_name.to_s.presence || self.name.to_s.demodulize
+      end
+
+      def use_relative_model_naming?
+        true
+      end
+
     end
 
   end

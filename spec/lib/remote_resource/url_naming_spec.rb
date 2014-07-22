@@ -19,23 +19,23 @@ describe RemoteResource::UrlNaming do
   let(:dummy)       { dummy_class.new }
 
   describe ".collection" do
+    let!(:original_collection) { dummy_class.collection }
+
     context "when collection is set" do
       it "returns the given collection" do
         dummy_class.collection = true
 
         expect(dummy_class.collection).to be_truthy
+        expect(dummy_class.collection).to eql(true)
 
-        dummy_class.collection = nil
+        dummy_class.collection = original_collection
       end
     end
 
     context "when NO collection is set" do
       it "returns the default collection" do
-        dummy_class.collection = nil
-
         expect(dummy_class.collection).to be_falsey
-
-        dummy_class.collection = nil
+        expect(dummy_class.collection).to eql(false)
       end
     end
   end

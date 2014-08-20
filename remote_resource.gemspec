@@ -26,7 +26,7 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency 'activesupport'
   spec.add_runtime_dependency 'activemodel'
   spec.add_runtime_dependency 'virtus'
-  spec.add_runtime_dependency 'mime-types', '~> 2.0.0'
+  spec.add_runtime_dependency 'mime-types', '>= 1.16'
   spec.add_runtime_dependency 'ethon', '~> 0.7.1'
   spec.add_runtime_dependency 'typhoeus'
 end

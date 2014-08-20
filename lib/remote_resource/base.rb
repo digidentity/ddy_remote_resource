@@ -16,6 +16,9 @@ module RemoteResource
       include RemoteResource::Connection
       include RemoteResource::REST
 
+      include RemoteResource::Querying::FinderMethods
+      include RemoteResource::Querying::PersistenceMethods
+
       attr_accessor :_response
 
       attribute :id
@@ -37,21 +40,6 @@ module RemoteResource
         ensure
           Thread.current[connection_options_thread_name] = nil
         end
-      end
-
-      def find(id, connection_options = {})
-        connection_options.reverse_merge! self.connection_options.to_hash
-
-        response = connection.get determined_request_url(connection_options, id), headers: connection_options[:default_headers] || self.connection_options.headers.merge(connection_options[:headers])
-        response = RemoteResource::Response.new response, connection_options
-        build_resource_from_response response
-      end
-
-      def find_by(params, connection_options = {})
-        root_element = connection_options[:root_element] || self.connection_options.root_element
-
-        response = get(pack_up_request_body(params, root_element), connection_options)
-        build_resource_from_response response
       end
 
       private
@@ -92,20 +80,6 @@ module RemoteResource
 
     def new_record?
       !persisted?
-    end
-
-    def save(connection_options = {})
-      create_or_update params, connection_options
-    end
-
-    def create_or_update(attributes = {}, connection_options = {})
-      root_element = connection_options[:root_element] || self.connection_options.root_element
-
-      if attributes.has_key? :id
-        patch(pack_up_request_body(attributes, root_element), connection_options)
-      else
-        post(pack_up_request_body(attributes, root_element), connection_options)
-      end
     end
 
     private

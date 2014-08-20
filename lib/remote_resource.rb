@@ -13,6 +13,8 @@ require 'remote_resource/builder'
 require 'remote_resource/connection_options'
 require 'remote_resource/rest'
 require 'remote_resource/response'
+require 'remote_resource/querying/finder_methods'
+require 'remote_resource/querying/persistence_methods'
 require 'remote_resource/request'
 
 

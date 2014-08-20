@@ -13,6 +13,7 @@ require 'remote_resource/builder'
 require 'remote_resource/connection_options'
 require 'remote_resource/rest'
 require 'remote_resource/response'
+require 'remote_resource/request'
 
 
 module RemoteResource

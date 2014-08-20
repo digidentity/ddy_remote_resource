@@ -3,6 +3,13 @@ module RemoteResource
     module PersistenceMethods
       extend ActiveSupport::Concern
 
+      module ClassMethods
+
+        def create(attributes = {}, connection_options = {})
+          RemoteResource::Request.new(self, :post, attributes, connection_options).perform
+        end
+      end
+
       def save(connection_options = {})
         create_or_update params, connection_options
       end

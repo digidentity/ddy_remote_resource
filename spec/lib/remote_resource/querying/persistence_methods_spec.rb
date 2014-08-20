@@ -7,6 +7,8 @@ describe RemoteResource::Querying::PersistenceMethods do
       class PersistenceMethodsDummy
         include RemoteResource::Base
 
+        attr_accessor :name
+
         self.site         = 'https://foobar.com'
         self.content_type = ''
 
@@ -19,6 +21,18 @@ describe RemoteResource::Querying::PersistenceMethods do
 
   let(:dummy_class) { RemoteResource::Querying::PersistenceMethodsDummy }
   let(:dummy)       { dummy_class.new }
+
+  describe '.create' do
+    let(:attributes) do
+      { name: 'Mies' }
+    end
+
+    it 'performs a RemoteResource::Request' do
+      expect(RemoteResource::Request).to receive(:new).with(dummy_class, :post, attributes, {}).and_call_original
+      expect_any_instance_of(RemoteResource::Request).to receive(:perform)
+      dummy_class.create attributes
+    end
+  end
 
   describe "#save" do
     let(:params) { dummy.params }

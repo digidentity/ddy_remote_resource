@@ -3,6 +3,8 @@ require 'active_model'
 require 'virtus'
 require 'typhoeus'
 
+require_relative 'ethon/easy/queryable'
+
 require 'remote_resource/version'
 require 'remote_resource/base'
 require 'remote_resource/url_naming'

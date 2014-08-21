@@ -27,10 +27,20 @@ module RemoteResource
     end
 
     def sanitized_response_body
-      return {} if response_body.blank?
-      return {} if parsed_response_body.blank?
+      return empty_hash if response_body.blank?
+      return empty_hash if parsed_response_body.blank?
 
-      unpack_response_body parsed_response_body
+      unpacked_parsed_response_body
+    end
+
+    def error_messages_response_body
+      return empty_hash if response_body.blank?
+      return empty_hash if parsed_response_body.blank?
+
+      return parsed_response_body["errors"]          if parsed_response_body.try :has_key?, "errors"
+      return unpacked_parsed_response_body["errors"] if unpacked_parsed_response_body.try :has_key?, "errors"
+
+      empty_hash
     end
 
     def parsed_response_body
@@ -41,9 +51,18 @@ module RemoteResource
 
     private
 
-    def unpack_response_body(body)
-      root_element = @connection_options[:root_element]
-      root_element ? body[root_element.to_s] : body
+    def empty_hash
+      {}
+    end
+
+    def unpacked_parsed_response_body
+      root_element = @connection_options[:root_element].presence
+
+      if root_element
+        parsed_response_body[root_element.to_s]
+      else
+        parsed_response_body
+      end
     end
 
   end

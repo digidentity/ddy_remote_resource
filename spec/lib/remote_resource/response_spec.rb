@@ -114,4 +114,85 @@ describe RemoteResource::Response do
     end
   end
 
+  describe '#error_messages_response_body' do
+    let(:response) { described_class.new double.as_null_object }
+
+    before { allow(response).to receive(:response_body) { response_body } }
+
+    context 'when response_body is nil' do
+      let(:response_body) { nil }
+
+      it 'returns an empty Hash' do
+        expect(response.error_messages_response_body).to eql({})
+      end
+    end
+
+    context 'when response_body is empty' do
+      let(:response_body) { '' }
+
+      it 'returns an empty Hash' do
+        expect(response.error_messages_response_body).to eql({})
+      end
+    end
+
+    context 'when response_body is NOT parseable' do
+      let(:response_body) { 'foo' }
+
+      before { allow(JSON).to receive(:parse).and_raise JSON::ParserError }
+
+      it 'returns an empty Hash' do
+        expect(response.error_messages_response_body).to eql({})
+      end
+    end
+
+    context 'when response_body is parseable' do
+      context 'and the connection_options contain a root_element' do
+        let(:connection_options) { { root_element: :foobar } }
+        let(:response)           { described_class.new double.as_null_object, connection_options }
+
+        context 'and the response_body contains an error key' do
+          let(:response_body) { '{"errors":{"foo":["is required"]}}' }
+
+          it 'returns the error_messages in the response_body' do
+            expect(response.error_messages_response_body).to eql({ "foo"=>["is required"] })
+          end
+        end
+
+        context 'and the response_body contains an error key packed in the root_element' do
+          let(:response_body) { '{"foobar":{"errors":{"foo":["is required"]}}}' }
+
+          it 'returns the error_messages in the response_body' do
+            expect(response.error_messages_response_body).to eql({ "foo"=>["is required"] })
+          end
+        end
+
+        context 'and the response_body does NOT contain an error key' do
+          let(:response_body) { '{"id":"12"}' }
+
+          it 'returns an empty Hash' do
+            expect(response.error_messages_response_body).to eql({})
+          end
+        end
+      end
+
+      context 'and the connection_options does NOT contain a root_element' do
+        context 'and the response_body contains an error key' do
+          let(:response_body) { '{"errors":{"foo":["is required"]}}' }
+
+          it 'returns the error_messages in the response_body' do
+            expect(response.error_messages_response_body).to eql({ "foo"=>["is required"] })
+          end
+        end
+
+        context 'and the response_body does NOT contain an error key' do
+          let(:response_body) { '{"id":"12"}' }
+
+          it 'returns an empty Hash' do
+            expect(response.error_messages_response_body).to eql({})
+          end
+        end
+      end
+    end
+  end
+
 end

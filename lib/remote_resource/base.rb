@@ -42,6 +42,20 @@ module RemoteResource
         end
       end
 
+      def handle_response(response)
+        if response.success?
+          build_resource_from_response response
+        elsif response.unprocessable_entity?
+          build_resource_from_response(response).tap do |resource|
+            resource.assign_errors_from_response response
+          end
+        else
+          new.tap do |resource|
+            resource.assign_errors_from_response response
+          end
+        end
+      end
+
       private
 
       def pack_up_request_body(body, root_element = nil)
@@ -67,7 +81,6 @@ module RemoteResource
       def _module_name
         self.name.to_s.demodulize.underscore.downcase
       end
-
     end
 
     def connection_options
@@ -82,6 +95,10 @@ module RemoteResource
       !persisted?
     end
 
+    def assign_errors_from_response(response)
+      assign_errors response.error_messages_response_body
+    end
+
     private
 
     def pack_up_request_body(body, root_element = nil)
@@ -92,20 +109,11 @@ module RemoteResource
       self.class.send :unpack_response_body, body, root_element
     end
 
-    def assign_errors(error_data, root_element = nil)
-      error_messages = find_error_messages error_data, root_element
+    def assign_errors(error_messages)
       error_messages.each do |attribute, attribute_errors|
         attribute_errors.each do |error|
           self.errors.add attribute, error
         end
-      end
-    end
-
-    def find_error_messages(error_data, root_element = nil)
-      if error_data.has_key? "errors"
-        error_data["errors"]
-      elsif root_element.present?
-        error_data[root_element.to_s]["errors"]
       end
     end
 

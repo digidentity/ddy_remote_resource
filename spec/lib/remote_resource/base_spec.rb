@@ -104,6 +104,62 @@ describe RemoteResource::Base do
     end
   end
 
+  describe '.handle_response' do
+    let(:response) { instance_double(RemoteResource::Response) }
+
+    before { allow(dummy_class).to receive(:build_resource_from_response) { dummy } }
+
+    context 'when the response is a success' do
+      before { allow(response).to receive(:success?) { true } }
+
+      it 'builds the resource from the response' do
+        expect(dummy_class).to receive(:build_resource_from_response).with response
+        dummy_class.handle_response response
+      end
+    end
+
+    context 'when the response is a unprocessable_entity' do
+      before do
+        allow(response).to receive(:success?)              { false }
+        allow(response).to receive(:unprocessable_entity?) { true }
+
+        allow(dummy).to receive(:assign_errors_from_response)
+      end
+
+      it 'builds the resource from the response' do
+        expect(dummy_class).to receive(:build_resource_from_response).with response
+        dummy_class.handle_response response
+      end
+
+      it 'assigns the errors from the response to the resource' do
+        expect(dummy).to receive(:assign_errors_from_response).with response
+        dummy_class.handle_response response
+      end
+    end
+
+    context 'when the the response is something else' do
+      let(:dummy) { double('dummy') }
+
+      before do
+        allow(response).to receive(:success?)              { false }
+        allow(response).to receive(:unprocessable_entity?) { false }
+
+        allow(dummy_class).to receive(:new) { dummy }
+        allow(dummy).to receive(:assign_errors_from_response)
+      end
+
+      it 'instantiates the resource' do
+        expect(dummy_class).to receive(:new).with(no_args)
+        dummy_class.handle_response response
+      end
+
+      it 'assigns the errors from the response to the resource' do
+        expect(dummy).to receive(:assign_errors_from_response).with response
+        dummy_class.handle_response response
+      end
+    end
+  end
+
   describe "#connection_options" do
     it "instanties as a RemoteResource::ConnectionOptions" do
       expect(dummy.connection_options).to be_a RemoteResource::ConnectionOptions
@@ -147,24 +203,41 @@ describe RemoteResource::Base do
     end
   end
 
-  describe "#assign_errors" do
-    let(:error_data) { JSON.parse json_error_data }
+  describe '#assign_errors_from_response' do
+    let(:response)                      { instance_double(RemoteResource::Response) }
+    let(:error_messages_response_body)  { double('error_messages_response_body') }
 
-    context "when a root_element is given" do
-      let(:json_error_data) { '{"foobar":{"errors":{"foo":["is required"]}}}' }
+    it 'calls the #assign_errors method with the #error_messages_response_body of the response' do
+      allow(response).to receive(:error_messages_response_body) { error_messages_response_body }
 
-      it "assigns the errors within the root_element" do
-        dummy.send :assign_errors, error_data, :foobar
-        expect(dummy.errors.messages).to eql foo: ["is required"]
+      expect(dummy).to receive(:assign_errors).with error_messages_response_body
+      dummy.assign_errors_from_response response
+    end
+  end
+
+  describe '#assign_errors' do
+    context 'with errors in the error_messages' do
+      let(:error_messages) do
+        {
+          "foo" => ["is required"],
+          "bar" => ["must be greater than 5"]
+        }
+      end
+
+      it 'assigns the error_messages as errors' do
+        dummy.send :assign_errors, error_messages
+        expect(dummy.errors.messages).to eql foo: ["is required"], bar: ["must be greater than 5"]
       end
     end
 
-    context "when NO root_element is given" do
-      let(:json_error_data) { '{"errors":{"foo":["is required"]}}' }
+    context 'with an empty Hash in the error_messages' do
+      let(:error_messages) do
+        {}
+      end
 
-      it "assigns the errors without the root_element" do
-        dummy.send :assign_errors, error_data
-        expect(dummy.errors.messages).to eql foo: ["is required"]
+      it 'does NOT assign the error_messages as errors' do
+        dummy.send :assign_errors, error_messages
+        expect(dummy.errors.messages).to eql({})
       end
     end
   end

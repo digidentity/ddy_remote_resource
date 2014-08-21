@@ -15,7 +15,7 @@ module RemoteResource
 
         def find_by(params, connection_options = {})
           response = RemoteResource::Request.new(self, :get, params, connection_options).perform
-          build_resource_from_response response
+          handle_response response
         end
       end
 

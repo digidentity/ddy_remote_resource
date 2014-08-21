@@ -85,21 +85,24 @@ describe RemoteResource::Querying::FinderMethods do
   end
 
   describe '.find_by' do
+    let(:response) { instance_double(RemoteResource::Response) }
     let(:params) do
       { id: '12' }
     end
 
-    let(:response_object_mock)    { RemoteResource::Response.new(double('response').as_null_object) }
-    let(:sanitized_response_body) { nil }
-
     before do
-      allow_any_instance_of(RemoteResource::Request).to receive(:perform) { response_object_mock }
-      allow(response_object_mock).to receive(:sanitized_response_body) { sanitized_response_body }
+      allow(dummy_class).to receive(:handle_response)                     { dummy }
+      allow_any_instance_of(RemoteResource::Request).to receive(:perform) { response }
     end
 
     it 'performs a RemoteResource::Request' do
       expect(RemoteResource::Request).to receive(:new).with(dummy_class, :get, params, {}).and_call_original
       expect_any_instance_of(RemoteResource::Request).to receive(:perform)
+      dummy_class.find_by params
+    end
+
+    it 'handles the RemoteResource::Response' do
+      expect(dummy_class).to receive(:handle_response).with response
       dummy_class.find_by params
     end
   end

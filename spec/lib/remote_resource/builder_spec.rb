@@ -6,6 +6,8 @@ describe RemoteResource::Builder do
     class BuilderDummy
       include RemoteResource::Base
 
+      attr_accessor :username
+
       self.site         = 'https://foobar.com'
       self.content_type = ''
 
@@ -120,6 +122,112 @@ describe RemoteResource::Builder do
 
         it "returns the resource" do
           expect(dummy_class.build_resource collection, response_hash).to be_a dummy_class
+        end
+      end
+    end
+  end
+
+  describe '#rebuild_resource_from_response' do
+    let(:response)                { RemoteResource::Response.new double.as_null_object }
+    let(:sanitized_response_body) do
+      { "id" => "12", "username" => "foobar" }
+    end
+
+    before { allow(response).to receive(:sanitized_response_body) { sanitized_response_body } }
+
+    it 'calls the #rebuild_resource' do
+      expect(dummy).to receive(:rebuild_resource).with sanitized_response_body, { _response: an_instance_of(RemoteResource::Response) }
+      dummy.rebuild_resource_from_response response
+    end
+  end
+
+  describe '#rebuild_resource' do
+    let(:response)      { RemoteResource::Response.new double.as_null_object }
+    let(:response_hash) { dummy.send :response_hash, response }
+
+    before do
+      dummy.id       = nil
+      dummy.username = "foo"
+    end
+
+    context 'when the collection is a Hash' do
+      let(:collection) do
+        { "id" => "12", "username" => "foobar" }
+      end
+
+      context 'and response_hash is given' do
+        it 'mass-assigns the attributes of the resource with the collection AND with response_hash' do
+          expect(dummy.id).to be_nil
+          expect(dummy.username).to eql "foo"
+          expect(dummy._response).to be_nil
+
+          dummy.rebuild_resource collection, response_hash
+
+          expect(dummy.id).to eql "12"
+          expect(dummy.username).to eql "foobar"
+          expect(dummy._response).to be_a RemoteResource::Response
+        end
+
+        it 'returns the resource' do
+          expect(dummy.rebuild_resource collection, response_hash).to be_a dummy_class
+        end
+      end
+
+      context 'and NO response_hash is given' do
+        it 'mass-assigns the attributes of the resource with the collection' do
+          expect(dummy.id).to be_nil
+          expect(dummy.username).to eql "foo"
+          expect(dummy._response).to be_nil
+
+          dummy.rebuild_resource collection
+
+          expect(dummy.id).to eql "12"
+          expect(dummy.username).to eql "foobar"
+          expect(dummy._response).to be_nil
+        end
+
+        it 'returns the resource' do
+          expect(dummy.rebuild_resource collection).to be_a dummy_class
+        end
+      end
+    end
+
+    context 'when the collection is something else' do
+      let(:collection)  { 'foobar' }
+
+      context 'and response_hash is given' do
+        it 'assigns the response_hash of the resource' do
+          expect(dummy.id).to be_nil
+          expect(dummy.username).to eql "foo"
+          expect(dummy._response).to be_nil
+
+          dummy.rebuild_resource collection, response_hash
+
+          expect(dummy.id).to be_nil
+          expect(dummy.username).to eql "foo"
+          expect(dummy._response).to be_a RemoteResource::Response
+        end
+
+        it 'returns the resource' do
+          expect(dummy.rebuild_resource collection, response_hash).to be_a dummy_class
+        end
+      end
+
+      context 'and NO response_hash is given' do
+        it 'does NOT assign the response_hash of the resource' do
+          expect(dummy.id).to be_nil
+          expect(dummy.username).to eql "foo"
+          expect(dummy._response).to be_nil
+
+          dummy.rebuild_resource collection
+
+          expect(dummy.id).to be_nil
+          expect(dummy.username).to eql "foo"
+          expect(dummy._response).to be_nil
+        end
+
+        it 'returns the resource' do
+          expect(dummy.rebuild_resource collection).to be_a dummy_class
         end
       end
     end

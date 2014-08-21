@@ -45,144 +45,56 @@ describe RemoteResource::Querying::PersistenceMethods do
     end
   end
 
-  describe "#save" do
+  describe '#save' do
     let(:params) { dummy.params }
 
     before { allow(dummy).to receive(:create_or_update) }
 
-    it "calls #create_or_update" do
+    it 'calls #create_or_update with the params' do
       expect(dummy).to receive(:create_or_update).with(params, {})
       dummy.save
     end
-
-    context "when custom connection_options are given" do
-      let(:custom_connection_options) do
-        {
-            content_type: '.xml',
-            headers: { "Foo" => "Bar" }
-        }
-      end
-
-      it "passes the custom connection_options as Hash to the #create_or_update" do
-        expect(dummy).to receive(:create_or_update).with(params, custom_connection_options)
-        dummy.save custom_connection_options
-      end
-    end
-
-    context "when NO custom connection_options are given" do
-      it "passes the connection_options as empty Hash to the #create_or_update" do
-        expect(dummy).to receive(:create_or_update).with(params, {})
-        dummy.save
-      end
-    end
   end
 
-  describe "#create_or_update" do
-    context "when the attributes contain an id" do
-      let(:attributes) { { id: 10, foo: 'bar' } }
+  describe '#create_or_update' do
+    let(:response) { instance_double(RemoteResource::Response) }
 
-      context "and custom connection_options are given" do
-        let(:custom_connection_options) do
-          {
-              content_type: '.xml',
-              headers: { "Foo" => "Bar" }
-          }
-        end
+    before do
+      allow(dummy).to receive(:handle_response)                           { dummy }
+      allow_any_instance_of(RemoteResource::Request).to receive(:perform) { response }
+    end
 
-        it "passes the custom connection_options as Hash to the #patch" do
-          expect(dummy).to receive(:patch).with(attributes, custom_connection_options)
-          dummy.create_or_update attributes, custom_connection_options
-        end
+    context 'when the attributes contain an id' do
+      let(:attributes) do
+        { id: 10, name: 'Kees' }
       end
 
-      context "and NO custom connection_options are given" do
-        it "passes the connection_options as empty Hash to the #patch" do
-          expect(dummy).to receive(:patch).with(attributes, {})
-          dummy.create_or_update attributes
-        end
+      it 'performs a RemoteResource::Request with rest_action :patch' do
+        expect(RemoteResource::Request).to receive(:new).with(dummy, :patch, attributes, {}).and_call_original
+        expect_any_instance_of(RemoteResource::Request).to receive(:perform)
+        dummy.create_or_update attributes
       end
 
-      context "root_element" do
-        context "and the given custom connection_options contain a root_element" do
-          let(:custom_connection_options) { { root_element: :foobar } }
-
-          it "packs the attributes in the root_element and calls the #patch" do
-            expect(dummy).to receive(:patch).with({ 'foobar' => { id: 10, foo: 'bar' } }, custom_connection_options)
-            dummy.create_or_update attributes, custom_connection_options
-          end
-        end
-
-        context "and the connection_options contain a root_element" do
-          before { dummy.connection_options.merge root_element: :foobar  }
-
-          it "packs the attributes in the root_element and calls the #patch" do
-            expect(dummy).to receive(:patch).with({ 'foobar' => { id: 10, foo: 'bar' } }, {})
-            dummy.create_or_update attributes
-          end
-        end
-
-        context "and NO root_element is specified" do
-          before { dummy_class.connection_options.merge root_element: nil  }
-
-          it "does NOT pack the attributes in a root_element and calls the #patch" do
-            expect(dummy).to receive(:patch).with({ id: 10, foo: 'bar' }, {})
-            dummy.create_or_update attributes
-          end
-        end
+      it 'handles the RemoteResource::Response' do
+        expect(dummy).to receive(:handle_response).with response
+        dummy.create_or_update attributes
       end
     end
 
-    context "when the attributes DON'T contain an id" do
-      let(:attributes) { { foo: 'bar' } }
-
-      context "and custom connection_options are given" do
-        let(:custom_connection_options) do
-          {
-              content_type: '.xml',
-              headers: { "Foo" => "Bar" }
-          }
-        end
-
-        it "passes the custom connection_options as Hash to the #post" do
-          expect(dummy).to receive(:post).with(attributes, custom_connection_options)
-          dummy.create_or_update attributes, custom_connection_options
-        end
+    context 'when the attributes do NOT contain an id' do
+      let(:attributes) do
+        { name: 'Mies' }
       end
 
-      context "and NO custom connection_options are given" do
-        it "passes the connection_options as empty Hash to the #post" do
-          expect(dummy).to receive(:post).with(attributes, {})
-          dummy.create_or_update attributes
-        end
+      it 'performs a RemoteResource::Request with rest_action :post' do
+        expect(RemoteResource::Request).to receive(:new).with(dummy, :post, attributes, {}).and_call_original
+        expect_any_instance_of(RemoteResource::Request).to receive(:perform)
+        dummy.create_or_update attributes
       end
 
-      context "root_element" do
-        context "and the given custom connection_options contain a root_element" do
-          let(:custom_connection_options) { { root_element: :foobar } }
-
-          it "packs the attributes in the root_element and calls the #post" do
-            expect(dummy).to receive(:post).with({ 'foobar' => { foo: 'bar' } }, custom_connection_options)
-            dummy.create_or_update attributes, custom_connection_options
-          end
-        end
-
-        context "and the connection_options contain a root_element" do
-          before { dummy.connection_options.merge root_element: :foobar  }
-
-          it "packs the attributes in the root_element and calls the #post" do
-            expect(dummy).to receive(:post).with({ 'foobar' => { foo: 'bar' } }, {})
-            dummy.create_or_update attributes
-          end
-        end
-
-        context "and NO root_element is specified" do
-          before { dummy_class.connection_options.merge root_element: nil  }
-
-          it "does NOT pack the attributes in a root_element and calls the #post" do
-            expect(dummy).to receive(:post).with({ foo: 'bar' }, {})
-            dummy.create_or_update attributes
-          end
-        end
+      it 'handles the RemoteResource::Response' do
+        expect(dummy).to receive(:handle_response).with response
+        dummy.create_or_update attributes
       end
     end
   end

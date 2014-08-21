@@ -79,6 +79,18 @@ module RemoteResource
       !persisted?
     end
 
+    def handle_response(response)
+      if response.success?
+        rebuild_resource_from_response response
+      elsif response.unprocessable_entity?
+        rebuild_resource_from_response(response).tap do |resource|
+          resource.assign_errors_from_response response
+        end
+      else
+        assign_errors_from_response response
+      end
+    end
+
     def assign_errors_from_response(response)
       assign_errors response.error_messages_response_body
     end

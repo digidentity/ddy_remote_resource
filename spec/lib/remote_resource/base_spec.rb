@@ -203,6 +203,54 @@ describe RemoteResource::Base do
     end
   end
 
+  describe '#handle_response' do
+    let(:response) { instance_double(RemoteResource::Response) }
+
+    before { allow(dummy).to receive(:rebuild_resource_from_response) { dummy } }
+
+    context 'when the response is a success' do
+      before { allow(response).to receive(:success?) { true } }
+
+      it 'rebuilds the resource from the response' do
+        expect(dummy).to receive(:rebuild_resource_from_response).with response
+        dummy.handle_response response
+      end
+    end
+
+    context 'when the response is a unprocessable_entity' do
+      before do
+        allow(response).to receive(:success?)              { false }
+        allow(response).to receive(:unprocessable_entity?) { true }
+
+        allow(dummy).to receive(:assign_errors_from_response)
+      end
+
+      it 'rebuilds the resource from the response' do
+        expect(dummy).to receive(:rebuild_resource_from_response).with response
+        dummy.handle_response response
+      end
+
+      it 'assigns the errors from the response to the resource' do
+        expect(dummy).to receive(:assign_errors_from_response).with response
+        dummy.handle_response response
+      end
+    end
+
+    context 'when the the response is something else' do
+      before do
+        allow(response).to receive(:success?)              { false }
+        allow(response).to receive(:unprocessable_entity?) { false }
+
+        allow(dummy).to receive(:assign_errors_from_response)
+      end
+
+      it 'assigns the errors from the response to the resource' do
+        expect(dummy).to receive(:assign_errors_from_response).with response
+        dummy.handle_response response
+      end
+    end
+  end
+
   describe '#assign_errors_from_response' do
     let(:response)                      { instance_double(RemoteResource::Response) }
     let(:error_messages_response_body)  { double('error_messages_response_body') }

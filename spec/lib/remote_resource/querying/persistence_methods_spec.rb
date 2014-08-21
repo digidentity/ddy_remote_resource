@@ -23,13 +23,24 @@ describe RemoteResource::Querying::PersistenceMethods do
   let(:dummy)       { dummy_class.new }
 
   describe '.create' do
+    let(:response) { instance_double(RemoteResource::Response) }
     let(:attributes) do
       { name: 'Mies' }
+    end
+
+    before do
+      allow(dummy_class).to receive(:handle_response)                     { dummy }
+      allow_any_instance_of(RemoteResource::Request).to receive(:perform) { response }
     end
 
     it 'performs a RemoteResource::Request' do
       expect(RemoteResource::Request).to receive(:new).with(dummy_class, :post, attributes, {}).and_call_original
       expect_any_instance_of(RemoteResource::Request).to receive(:perform)
+      dummy_class.create attributes
+    end
+
+    it 'handles the RemoteResource::Response' do
+      expect(dummy_class).to receive(:handle_response).with response
       dummy_class.create attributes
     end
   end

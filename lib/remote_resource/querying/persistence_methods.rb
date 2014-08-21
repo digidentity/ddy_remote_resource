@@ -6,7 +6,8 @@ module RemoteResource
       module ClassMethods
 
         def create(attributes = {}, connection_options = {})
-          RemoteResource::Request.new(self, :post, attributes, connection_options).perform
+          response = RemoteResource::Request.new(self, :post, attributes, connection_options).perform
+          handle_response response
         end
       end
 

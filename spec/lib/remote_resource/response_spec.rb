@@ -91,24 +91,22 @@ describe RemoteResource::Response do
     end
 
     context "when response_body is parseable" do
-      context "root_element" do
-        context "and the connection_options contain a root_element" do
-          let(:connection_options) { { root_element: :foobar } }
-          let(:response)           { described_class.new double.as_null_object, connection_options }
+      context "and the connection_options contain a root_element" do
+        let(:connection_options) { { root_element: :foobar } }
+        let(:response)           { described_class.new double.as_null_object, connection_options }
 
-          let(:response_body)      { '{"foobar":{"id":"12"}}' }
+        let(:response_body)      { '{"foobar":{"id":"12"}}' }
 
-          it "returns the parsed response_body unpacked from the root_element" do
-            expect(response.sanitized_response_body).to match({ "id" => "12" })
-          end
+        it "returns the parsed response_body unpacked from the root_element" do
+          expect(response.sanitized_response_body).to match({ "id" => "12" })
         end
+      end
 
-        context "and NO root_element is specified" do
-          let(:response_body) { '{"id":"12"}' }
+      context "and the connection_options do NOT contain a root_element" do
+        let(:response_body) { '{"id":"12"}' }
 
-          it "returns the parsed response_body" do
-            expect(response.sanitized_response_body).to match({ "id" => "12" })
-          end
+        it "returns the parsed response_body" do
+          expect(response.sanitized_response_body).to match({ "id" => "12" })
         end
       end
     end
@@ -153,7 +151,7 @@ describe RemoteResource::Response do
         context 'and the response_body contains an error key' do
           let(:response_body) { '{"errors":{"foo":["is required"]}}' }
 
-          it 'returns the error_messages in the response_body' do
+          it 'returns the error_messages in the parsed response_body' do
             expect(response.error_messages_response_body).to eql({ "foo"=>["is required"] })
           end
         end
@@ -161,7 +159,7 @@ describe RemoteResource::Response do
         context 'and the response_body contains an error key packed in the root_element' do
           let(:response_body) { '{"foobar":{"errors":{"foo":["is required"]}}}' }
 
-          it 'returns the error_messages in the response_body' do
+          it 'returns the error_messages in the parsed response_body unpacked from the root_element' do
             expect(response.error_messages_response_body).to eql({ "foo"=>["is required"] })
           end
         end
@@ -175,11 +173,11 @@ describe RemoteResource::Response do
         end
       end
 
-      context 'and the connection_options does NOT contain a root_element' do
+      context 'and the connection_options do NOT contain a root_element' do
         context 'and the response_body contains an error key' do
           let(:response_body) { '{"errors":{"foo":["is required"]}}' }
 
-          it 'returns the error_messages in the response_body' do
+          it 'returns the error_messages in the parsed response_body' do
             expect(response.error_messages_response_body).to eql({ "foo"=>["is required"] })
           end
         end

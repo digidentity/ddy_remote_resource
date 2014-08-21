@@ -167,6 +167,22 @@ describe RemoteResource::Request do
   end
 
   describe '#determined_attributes' do
+    context 'the given connection_options contain no_params' do
+      let(:connection_options) do
+        { no_params: true }
+      end
+
+      it 'returns an empty Hash' do
+        expect(request.determined_attributes).to eql({})
+      end
+    end
+
+    context 'the given connection_options do NOT contain a no_params' do
+      it 'does NOT return an empty Hash' do
+        expect(request.determined_attributes).not_to eql({})
+      end
+    end
+
     context 'the given connection_options contain a root_element' do
       let(:connection_options) do
         { root_element: 'foobar' }

@@ -42,9 +42,12 @@ module RemoteResource
     end
 
     def determined_attributes
+      no_params    = connection_options[:no_params].eql? true
       root_element = connection_options[:root_element].presence || resource.connection_options.root_element.presence
 
-      if root_element
+      if no_params
+        {}
+      elsif root_element
         pack_up_attributes attributes, root_element
       else
         attributes

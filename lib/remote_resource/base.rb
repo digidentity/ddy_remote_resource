@@ -58,22 +58,6 @@ module RemoteResource
 
       private
 
-      def pack_up_request_body(body, root_element = nil)
-        if root_element.present?
-          Hash[root_element.to_s, body]
-        else
-          body
-        end
-      end
-
-      def unpack_response_body(body, root_element = nil)
-        if root_element.present?
-          JSON.parse(body)[root_element.to_s]
-        else
-          JSON.parse(body)
-        end
-      end
-
       def connection_options_thread_name
         "remote_resource.#{_module_name}.connection_options"
       end
@@ -100,14 +84,6 @@ module RemoteResource
     end
 
     private
-
-    def pack_up_request_body(body, root_element = nil)
-      self.class.send :pack_up_request_body, body, root_element
-    end
-
-    def unpack_response_body(body, root_element = nil)
-      self.class.send :unpack_response_body, body, root_element
-    end
 
     def assign_errors(error_messages)
       error_messages.each do |attribute, attribute_errors|

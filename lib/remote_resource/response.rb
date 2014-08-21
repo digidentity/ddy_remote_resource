@@ -14,6 +14,10 @@ module RemoteResource
       original_response.success?
     end
 
+    def unprocessable_entity?
+      response_code == 422
+    end
+
     def response_body
       original_response.body
     end

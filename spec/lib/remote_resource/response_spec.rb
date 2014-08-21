@@ -39,6 +39,26 @@ describe RemoteResource::Response do
     end
   end
 
+  describe "#unprocessable_entity?" do
+    let(:response) { described_class.new double.as_null_object }
+
+    context "when the response code is 422" do
+      it "returns true" do
+        allow(response).to receive(:response_code) { 422 }
+
+        expect(response.unprocessable_entity?).to be_truthy
+      end
+    end
+
+    context "when the response code is NOT 422" do
+      it "returns false" do
+        allow(response).to receive(:response_code) { 200 }
+
+        expect(response.unprocessable_entity?).to be_falsey
+      end
+    end
+  end
+
   describe "#sanitized_response_body" do
     let(:response) { described_class.new double.as_null_object }
 

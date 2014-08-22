@@ -3,13 +3,22 @@ module RemoteResource
 
     RESTActionUnknown = Class.new(StandardError)
 
-    attr_reader :resource, :rest_action, :attributes, :connection_options
+    attr_reader :resource, :rest_action, :attributes, :original_connection_options
 
     def initialize(resource, rest_action, attributes = {}, connection_options = {})
       @resource           = resource
       @rest_action        = rest_action.to_sym
       @attributes         = attributes
       @connection_options = connection_options
+      @original_connection_options = connection_options.dup
+    end
+
+    def connection
+      resource_klass.connection
+    end
+
+    def connection_options
+      @connection_options.reverse_merge! resource.connection_options.to_hash
     end
 
     def perform
@@ -25,14 +34,10 @@ module RemoteResource
       RemoteResource::Response.new response, connection_options
     end
 
-    def connection
-      Typhoeus::Request
-    end
-
     def determined_request_url
       id           = attributes[:id].presence
-      base_url     = connection_options[:base_url].presence || resource.connection_options.base_url.presence
-      content_type = connection_options[:content_type]      || resource.connection_options.content_type.presence
+      base_url     = original_connection_options[:base_url].presence || determined_url_naming.base_url
+      content_type = connection_options[:content_type]
 
       if id
         "#{base_url}/#{id}#{content_type}"
@@ -43,7 +48,7 @@ module RemoteResource
 
     def determined_attributes
       no_params    = connection_options[:no_params].eql? true
-      root_element = connection_options[:root_element].presence || resource.connection_options.root_element.presence
+      root_element = connection_options[:root_element].presence
 
       if no_params
         {}
@@ -55,12 +60,20 @@ module RemoteResource
     end
 
     def determined_headers
-      headers = connection_options[:headers].presence || {}
+      headers = original_connection_options[:headers].presence || {}
 
-      connection_options[:default_headers].presence || resource.connection_options.headers.merge(headers)
+      connection_options[:default_headers].presence || resource.connection_options.headers.merge!(headers)
     end
 
     private
+
+    def determined_url_naming
+      RemoteResource::UrlNamingDetermination.new resource_klass, original_connection_options
+    end
+
+    def resource_klass
+      resource.is_a?(Class) ? resource : resource.class
+    end
 
     def pack_up_attributes(attributes, root_element)
       Hash[root_element.to_s, attributes]

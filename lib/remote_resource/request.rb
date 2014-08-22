@@ -3,7 +3,7 @@ module RemoteResource
 
     RESTActionUnknown = Class.new(StandardError)
 
-    attr_reader :resource, :rest_action, :attributes, :original_connection_options
+    attr_reader :resource, :rest_action, :attributes
 
     def initialize(resource, rest_action, attributes = {}, connection_options = {})
       @resource           = resource
@@ -18,7 +18,12 @@ module RemoteResource
     end
 
     def connection_options
+      @connection_options.reverse_merge! threaded_connection_options
       @connection_options.reverse_merge! resource.connection_options.to_hash
+    end
+
+    def original_connection_options
+      @original_connection_options.reverse_merge! threaded_connection_options
     end
 
     def perform
@@ -62,10 +67,14 @@ module RemoteResource
     def determined_headers
       headers = original_connection_options[:headers].presence || {}
 
-      connection_options[:default_headers].presence || resource.connection_options.headers.merge!(headers)
+      connection_options[:default_headers].presence || resource.connection_options.headers.merge(headers)
     end
 
     private
+
+    def threaded_connection_options
+      resource.try(:threaded_connection_options) || {}
+    end
 
     def determined_url_naming
       RemoteResource::UrlNamingDetermination.new resource_klass, original_connection_options

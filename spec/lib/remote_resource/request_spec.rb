@@ -32,7 +32,12 @@ describe RemoteResource::Request do
   end
 
   describe '#connection_options' do
-    context 'when the given connection_options contain other values than the resource connection_options' do
+    let(:threaded_connection_options_thread_name) { 'remote_resource.request_dummy.threaded_connection_options' }
+
+    before { Thread.current[threaded_connection_options_thread_name] = threaded_connection_options }
+    after  { Thread.current[threaded_connection_options_thread_name] = nil }
+
+    context 'when the given connection_options contain other values than the resource threaded_connection_options or connection_options' do
       let(:connection_options) do
         {
           site: 'http://www.barbaz.com',
@@ -42,15 +47,25 @@ describe RemoteResource::Request do
         }
       end
 
-      it 'merges the given connection_options with the resource connection_options while taking precedence over the resource connection_options' do
+      let(:threaded_connection_options) do
+        {
+          site: 'http://www.bazbazbaz.com',
+          path_prefix: '/registration',
+          path_postfix: '/promotion',
+          root_element: :bazbazbaz
+        }
+      end
+
+      it 'merges the given connection_options with the resource connection_options while taking precedence over the resource connection_options after the threaded_connection_options' do
         expect(request.connection_options[:site]).to eql 'http://www.barbaz.com'
         expect(request.connection_options[:collection]).to eql true
         expect(request.connection_options[:path_prefix]).to eql '/api'
+        expect(request.connection_options[:path_postfix]).to eql '/promotion'
         expect(request.connection_options[:root_element]).to eql :bazbar
       end
     end
 
-    context 'when the given connection_options do NOT contain other values than the resource connection_options' do
+    context 'when the given connection_options do NOT contain other values than the resource threaded_connection_options or connection_options' do
       let(:connection_options) do
         {
           collection: true,
@@ -59,11 +74,81 @@ describe RemoteResource::Request do
         }
       end
 
-      it 'merges the given connection_options with the resource connection_options' do
-        expect(request.connection_options[:site]).to eql 'http://www.foobar.com'
+      let(:threaded_connection_options) do
+        {
+          site: 'http://www.bazbazbaz.com',
+          path_prefix: '/api',
+          path_postfix: '/promotion'
+        }
+      end
+
+      it 'merges the given connection_options with the resource threaded_connection_options and connection_options' do
+        expect(request.connection_options[:site]).to eql 'http://www.bazbazbaz.com'
         expect(request.connection_options[:collection]).to eql true
         expect(request.connection_options[:path_prefix]).to eql '/api'
+        expect(request.connection_options[:path_postfix]).to eql '/promotion'
         expect(request.connection_options[:root_element]).to eql :bazbar
+      end
+    end
+  end
+
+  describe '#original_connection_options' do
+    let(:threaded_connection_options_thread_name) { 'remote_resource.request_dummy.threaded_connection_options' }
+
+    before { Thread.current[threaded_connection_options_thread_name] = threaded_connection_options }
+    after  { Thread.current[threaded_connection_options_thread_name] = nil }
+
+    context 'when the given connection_options (original_connection_options) contain other values than the resource threaded_connection_options' do
+      let(:connection_options) do
+        {
+          site: 'http://www.barbaz.com',
+          collection: true,
+          path_prefix: '/api',
+          root_element: :bazbar
+        }
+      end
+
+      let(:threaded_connection_options) do
+        {
+          site: 'http://www.bazbazbaz.com',
+          path_prefix: '/registration',
+          path_postfix: '/promotion',
+          root_element: :bazbazbaz
+        }
+      end
+
+      it 'merges the given connection_options (original_connection_options) with the resource threaded_connection_options while taking precedence over the resource threaded_connection_options' do
+        expect(request.original_connection_options[:site]).to eql 'http://www.barbaz.com'
+        expect(request.original_connection_options[:collection]).to eql true
+        expect(request.original_connection_options[:path_prefix]).to eql '/api'
+        expect(request.original_connection_options[:path_postfix]).to eql '/promotion'
+        expect(request.original_connection_options[:root_element]).to eql :bazbar
+      end
+    end
+
+    context 'when the given connection_options (original_connection_options) do NOT contain other values than the resource threaded_connection_options' do
+      let(:connection_options) do
+        {
+          collection: true,
+          path_prefix: '/api',
+          root_element: :bazbar
+        }
+      end
+
+      let(:threaded_connection_options) do
+        {
+          site: 'http://www.bazbazbaz.com',
+          path_prefix: '/api',
+          path_postfix: '/promotion'
+        }
+      end
+
+      it 'merges the given connection_options (original_connection_options) with the resource threaded_connection_options' do
+        expect(request.original_connection_options[:site]).to eql 'http://www.bazbazbaz.com'
+        expect(request.original_connection_options[:collection]).to eql true
+        expect(request.original_connection_options[:path_prefix]).to eql '/api'
+        expect(request.original_connection_options[:path_postfix]).to eql '/promotion'
+        expect(request.original_connection_options[:root_element]).to eql :bazbar
       end
     end
   end
@@ -214,6 +299,16 @@ describe RemoteResource::Request do
     context 'the given connection_options (original_connection_options) do NOT contain a base_url' do
       it 'does NOT use the base_url for the request url' do
         expect(request.determined_request_url).to eql 'http://www.foobar.com/request_dummy.json'
+      end
+    end
+
+    context 'the given connection_options contain a collection' do
+      let(:connection_options) do
+        { collection: true }
+      end
+
+      it 'uses the collection to determine the base_url for the request url' do
+        expect(request.determined_request_url).to eql 'http://www.foobar.com/request_dummies.json'
       end
     end
 

@@ -52,6 +52,16 @@ describe RemoteResource::Base do
     end
   end
 
+  describe '.threaded_connection_options' do
+    it 'instantiates as a Hash' do
+      expect(dummy_class.threaded_connection_options).to be_a Hash
+    end
+
+    it 'sets the name of Thread variable with the implemented class' do
+      expect(dummy_class.threaded_connection_options).to eql Thread.current['remote_resource.dummy.threaded_connection_options']
+    end
+  end
+
   describe '.with_connection_options' do
     let(:connection_options) { {} }
 
@@ -62,9 +72,9 @@ describe RemoteResource::Base do
       end
     end
 
-    let(:response_mock) { double('response', success?: false).as_null_object }
+    # let(:response_mock) { double('response', success?: false).as_null_object }
 
-    before { allow_any_instance_of(Typhoeus::Request).to receive(:run) { response_mock } }
+    before { allow_any_instance_of(Typhoeus::Request).to receive(:run) { double.as_null_object } }
 
     it 'yields the block' do
       expect(dummy_class).to receive(:find_by).with({ username: 'foobar' }, { content_type: '.json' }).and_call_original
@@ -72,36 +82,52 @@ describe RemoteResource::Base do
       block_with_connection_options
     end
 
-    it 'ensures to set the connection_options Thread variable to nil' do
-      dummy_class.connection_options
+    it 'ensures to set the threaded_connection_options Thread variable to nil' do
+      dummy_class.threaded_connection_options
 
-      expect{ block_with_connection_options }.to change{ Thread.current['remote_resource.dummy.connection_options'] }.from(an_instance_of(RemoteResource::ConnectionOptions)).to nil
+      expect{ block_with_connection_options }.to change{ Thread.current['remote_resource.dummy.threaded_connection_options'] }.from(an_instance_of(Hash)).to nil
     end
 
-    context 'when the connection_options contain the headers' do
+    context 'when the given connection_options contain headers' do
       let(:connection_options) do
         {
           headers: { "Foo" => "Bar" }
         }
       end
 
-      it 'uses the connection_options which are set in the block AND on the class method' do
+      it 'uses the headers of the given connection_options' do
         expect(Typhoeus::Request).to receive(:get).with('https://foobar.com/dummy.json', params: { username: 'foobar' }, headers: { "Accept" => "application/json", "Foo" => "Bar" }).and_call_original
         expect(Typhoeus::Request).to receive(:get).with('https://foobar.com/dummy.xml', params: { username: 'bazbar' }, headers: { "Accept" => "application/json", "Foo" => "Bar" }).and_call_original
         block_with_connection_options
       end
     end
 
-    context 'when NO headers are specified in the connection_options' do
+    context 'when the given connection_options contain base_url' do
       let(:connection_options) do
         {
           base_url: 'https://api.foobar.eu/dummy'
         }
       end
 
-      it 'uses the connection_options which are set in the block AND on the class method' do
+      it 'uses the base_url of the given connection_options' do
         expect(Typhoeus::Request).to receive(:get).with('https://api.foobar.eu/dummy.json', params: { username: 'foobar' }, headers: { "Accept" => "application/json" }).and_call_original
         expect(Typhoeus::Request).to receive(:get).with('https://api.foobar.eu/dummy.xml', params: { username: 'bazbar' }, headers: { "Accept" => "application/json" }).and_call_original
+        block_with_connection_options
+      end
+    end
+
+    context 'when the given connection_options contain something else' do
+      let(:connection_options) do
+        {
+          collection: true,
+          path_prefix: '/api',
+          root_element: :bazbar
+        }
+      end
+
+      it 'uses the given connection_options' do
+        expect(Typhoeus::Request).to receive(:get).with('https://foobar.com/api/dummies.json', params: { 'bazbar' => { username: 'foobar' } }, headers: { "Accept" => "application/json" }).and_call_original
+        expect(Typhoeus::Request).to receive(:get).with('https://foobar.com/api/dummies.xml', params:  { 'bazbar' => { username: 'bazbar' } }, headers: { "Accept" => "application/json" }).and_call_original
         block_with_connection_options
       end
     end

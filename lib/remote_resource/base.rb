@@ -31,14 +31,17 @@ module RemoteResource
         Thread.current[connection_options_thread_name] ||= RemoteResource::ConnectionOptions.new(self)
       end
 
+      def threaded_connection_options
+        Thread.current[threaded_connection_options_thread_name] ||= {}
+      end
+
       def with_connection_options(connection_options = {})
-        connection_options.reverse_merge! self.connection_options.to_hash
-        connection_options[:headers].merge! self.connection_options.headers
         begin
-          Thread.current[connection_options_thread_name].merge connection_options
+          threaded_connection_options
+          Thread.current[threaded_connection_options_thread_name].merge! connection_options
           yield
         ensure
-          Thread.current[connection_options_thread_name] = nil
+          Thread.current[threaded_connection_options_thread_name] = nil
         end
       end
 
@@ -58,6 +61,10 @@ module RemoteResource
       end
 
       private
+
+      def threaded_connection_options_thread_name
+        "remote_resource.#{_module_name}.threaded_connection_options"
+      end
 
       def connection_options_thread_name
         "remote_resource.#{_module_name}.connection_options"

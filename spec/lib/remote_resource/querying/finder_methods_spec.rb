@@ -8,7 +8,7 @@ describe RemoteResource::Querying::FinderMethods do
         include RemoteResource::Base
 
         self.site = 'https://foobar.com'
-        
+
       end
     end
   end

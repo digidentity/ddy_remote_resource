@@ -23,6 +23,9 @@ describe RemoteResource::Base do
   specify { expect(described_class.const_defined?('RemoteResource::Connection')).to be_truthy }
   specify { expect(described_class.const_defined?('RemoteResource::REST')).to be_truthy }
 
+  specify { expect(described_class.const_defined?('RemoteResource::Querying::FinderMethods')).to be_truthy }
+  specify { expect(described_class.const_defined?('RemoteResource::Querying::PersistenceMethods')).to be_truthy }
+
   describe "OPTIONS" do
     let(:options) { [:base_url, :site, :headers, :version, :path_prefix, :path_postfix, :content_type, :collection, :collection_name, :root_element] }
 

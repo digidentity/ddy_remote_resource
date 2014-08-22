@@ -15,6 +15,12 @@ module RemoteResource
           response = RemoteResource::Request.new(self, :get, params, connection_options).perform
           handle_response response
         end
+
+        def all(connection_options = {})
+          connection_options.merge! collection: true
+          response = RemoteResource::Request.new(self, :get, {}, connection_options).perform
+          handle_response response
+        end
       end
 
     end

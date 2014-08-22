@@ -34,20 +34,20 @@ describe RemoteResource::UrlNaming do
     end
   end
 
-  pending 'RemoteResource::CONFIG must be implemented first' '.app_host' do
+  describe '.app_host' do
     context 'when the env is given as an argument' do
-      it 'uses the host specified in the application CONFIG for the given env' do
-        stub_const("CONFIG", { development: { apps: { dummy: 'https://foobar.development.com' } } })
+      it 'uses the host specified in the CONFIG constant for the given env' do
+        stub_const("CONFIG", { test: { apps: { dummy: 'https://foobar.test.com' } } })
 
-        expect(dummy_class.app_host 'dummy', 'development').to eql 'https://foobar.development.com'
+        expect(dummy_class.app_host 'dummy', 'test').to eql 'https://foobar.test.com'
       end
     end
 
     context 'when the env is NOT given as an argument' do
-      it 'uses the host specified in the application CONFIG' do
-        stub_const("CONFIG", { test: { apps: { dummy: 'https://foobar.test.com' } } })
+      it 'uses the host specified in the CONFIG constant for the development env' do
+        stub_const("CONFIG", { development: { apps: { dummy: 'https://foobar.development.com' } } })
 
-        expect(dummy_class.app_host 'dummy').to eql 'https://foobar.test.com'
+        expect(dummy_class.app_host 'dummy').to eql 'https://foobar.development.com'
       end
     end
   end

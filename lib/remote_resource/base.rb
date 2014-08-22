@@ -51,6 +51,7 @@ module RemoteResource
           end
         else
           new.tap do |resource|
+            resource.assign_response response
             resource.assign_errors_from_response response
           end
         end

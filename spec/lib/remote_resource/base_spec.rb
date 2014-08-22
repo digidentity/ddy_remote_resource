@@ -148,11 +148,17 @@ describe RemoteResource::Base do
         allow(response).to receive(:unprocessable_entity?) { false }
 
         allow(dummy_class).to receive(:new) { dummy }
+        allow(dummy).to receive(:assign_response)
         allow(dummy).to receive(:assign_errors_from_response)
       end
 
       it 'instantiates the resource' do
         expect(dummy_class).to receive(:new).with(no_args)
+        dummy_class.handle_response response
+      end
+
+      it 'assigns the response to the resource' do
+        expect(dummy).to receive(:assign_response).with response
         dummy_class.handle_response response
       end
 

@@ -6,14 +6,10 @@ describe RemoteResource::Builder do
     class BuilderDummy
       include RemoteResource::Base
 
+      self.site = 'https://foobar.com'
+
       attr_accessor :username
 
-      self.site         = 'https://foobar.com'
-      self.content_type = ''
-
-      def params
-        { foo: 'bar' }
-      end
     end
   end
 

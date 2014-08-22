@@ -7,10 +7,9 @@ describe RemoteResource::Querying::PersistenceMethods do
       class PersistenceMethodsDummy
         include RemoteResource::Base
 
-        attr_accessor :name
+        self.site = 'https://foobar.com'
 
-        self.site         = 'https://foobar.com'
-        self.content_type = ''
+        attr_accessor :name
 
         def params
           { foo: 'bar' }

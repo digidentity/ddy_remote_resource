@@ -16,9 +16,6 @@ describe RemoteResource::ConnectionOptions do
       self.collection     = true
       self.root_element   = :test_dummy
 
-      def params
-        { foo: 'bar' }
-      end
     end
   end
 

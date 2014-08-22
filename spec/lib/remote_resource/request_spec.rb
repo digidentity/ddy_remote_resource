@@ -6,9 +6,9 @@ describe RemoteResource::Request do
     class RequestDummy
       include RemoteResource::Base
 
-      attr_accessor :name
-
       self.site = 'http://www.foobar.com'
+
+      attr_accessor :name
 
     end
   end

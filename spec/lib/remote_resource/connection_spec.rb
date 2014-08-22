@@ -8,9 +8,6 @@ describe RemoteResource::Connection do
 
       self.site = 'https://foobar.com'
 
-      def params
-        { foo: 'bar' }
-      end
     end
   end
 

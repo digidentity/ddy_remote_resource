@@ -6,12 +6,8 @@ describe RemoteResource::Base do
     class Dummy
       include RemoteResource::Base
 
-      self.site         = 'https://foobar.com'
-      self.content_type = ''
+      self.site = 'https://foobar.com'
 
-      def params
-        { foo: 'bar' }
-      end
     end
   end
 

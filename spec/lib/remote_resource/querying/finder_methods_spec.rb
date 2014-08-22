@@ -7,12 +7,8 @@ describe RemoteResource::Querying::FinderMethods do
       class FinderMethodsDummy
         include RemoteResource::Base
 
-        self.site         = 'https://foobar.com'
-        self.content_type = ''
-
-        def params
-          { foo: 'bar' }
-        end
+        self.site = 'https://foobar.com'
+        
       end
     end
   end

@@ -68,8 +68,6 @@ describe RemoteResource::Base do
       end
     end
 
-    # let(:response_mock) { double('response', success?: false).as_null_object }
-
     before { allow_any_instance_of(Typhoeus::Request).to receive(:run) { double.as_null_object } }
 
     it 'yields the block' do

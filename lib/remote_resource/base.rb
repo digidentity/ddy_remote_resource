@@ -91,6 +91,10 @@ module RemoteResource
       end
     end
 
+    def assign_response(response)
+      @_response = response
+    end
+
     def assign_errors_from_response(response)
       assign_errors response.error_messages_response_body
     end

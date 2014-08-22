@@ -254,6 +254,14 @@ describe RemoteResource::Base do
     end
   end
 
+  describe '#assign_response' do
+    let(:response) { instance_double(RemoteResource::Response) }
+
+    it 'assigns the #_response' do
+      expect{ dummy.assign_response response }.to change{ dummy._response }.from(nil).to response
+    end
+  end
+
   describe '#assign_errors_from_response' do
     let(:response)                      { instance_double(RemoteResource::Response) }
     let(:error_messages_response_body)  { double('error_messages_response_body') }

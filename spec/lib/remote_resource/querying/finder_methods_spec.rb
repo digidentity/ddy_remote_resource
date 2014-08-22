@@ -28,7 +28,7 @@ describe RemoteResource::Querying::FinderMethods do
       allow_any_instance_of(RemoteResource::Request).to receive(:perform) { response }
     end
 
-    it 'performs a RemoteResource::Request' do
+    it 'performs a RemoteResource::Request with the connection_options no_params' do
       expect(RemoteResource::Request).to receive(:new).with(dummy_class, :get, { id: '12' }, { no_params: true }).and_call_original
       expect_any_instance_of(RemoteResource::Request).to receive(:perform)
       dummy_class.find '12'
@@ -71,7 +71,7 @@ describe RemoteResource::Querying::FinderMethods do
       allow_any_instance_of(RemoteResource::Request).to receive(:perform) { response }
     end
 
-    it 'performs a RemoteResource::Request' do
+    it 'performs a RemoteResource::Request with the connection_options collection' do
       expect(RemoteResource::Request).to receive(:new).with(dummy_class, :get, {}, { collection: true }).and_call_original
       expect_any_instance_of(RemoteResource::Request).to receive(:perform)
       dummy_class.all

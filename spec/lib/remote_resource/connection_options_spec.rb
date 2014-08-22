@@ -24,27 +24,27 @@ describe RemoteResource::ConnectionOptions do
 
   let(:connection_options) { described_class.new dummy_class }
 
-  describe "#initialize" do
-    it "assigns the given class as #base_class" do
+  describe '#initialize' do
+    it 'assigns the given class as #base_class' do
       allow_any_instance_of(described_class).to receive(:initialize_connection_options)
 
       expect(connection_options.base_class).to eql RemoteResource::ConnectionOptionsDummy
     end
 
-    context "RemoteResource::Base::OPTIONS" do
-      it "calls #initialize_connection_options" do
+    context 'RemoteResource::Base::OPTIONS' do
+      it 'calls #initialize_connection_options' do
         expect_any_instance_of(described_class).to receive(:initialize_connection_options)
         connection_options
       end
 
-      it "sets the accessor of the option from the RemoteResource::Base::OPTIONS" do
+      it 'sets the accessor of the option from the RemoteResource::Base::OPTIONS' do
         RemoteResource::Base::OPTIONS.each do |option|
           expect(connection_options).to respond_to "#{option}"
           expect(connection_options).to respond_to "#{option}="
         end
       end
 
-      it "assigns the value of the option from the RemoteResource::Base::OPTIONS" do
+      it 'assigns the value of the option from the RemoteResource::Base::OPTIONS' do
         RemoteResource::Base::OPTIONS.each do |option|
           expect(connection_options.public_send(option)).to eql dummy_class.public_send(option)
         end
@@ -52,7 +52,7 @@ describe RemoteResource::ConnectionOptions do
     end
   end
 
-  describe "#merge" do
+  describe '#merge' do
     let(:custom_connection_options) do
       {
         site: 'https://dummy.foobar.com',
@@ -61,7 +61,7 @@ describe RemoteResource::ConnectionOptions do
       }
     end
 
-    it "merges the custom connection_options in the connection_options" do
+    it 'merges the custom connection_options in the connection_options' do
       connection_options.merge custom_connection_options
 
       expect(connection_options.site).to eql 'https://dummy.foobar.com'
@@ -69,12 +69,12 @@ describe RemoteResource::ConnectionOptions do
       expect(connection_options.root_element).to eql :test_dummy_api
     end
 
-    it "returns self" do
+    it 'returns self' do
       expect(connection_options.merge custom_connection_options).to eql connection_options
     end
   end
 
-  describe "#to_hash" do
+  describe '#to_hash' do
     let(:connection_options_hash) do
       {
         base_url:         'https://foobar.com/v1/prefix/connection_options_dummies/postfix',
@@ -90,31 +90,31 @@ describe RemoteResource::ConnectionOptions do
       }
     end
 
-    it "returns the connection_options as Hash" do
+    it 'returns the connection_options as Hash' do
       expect(connection_options.to_hash).to eql connection_options_hash
     end
   end
 
-  describe "#reload" do
-    it "does NOT return self" do
+  describe '#reload' do
+    it 'does NOT return self' do
       expect(connection_options.reload).not_to eql connection_options
     end
 
-    context "RemoteResource::Base::OPTIONS" do
-      it "calls #initialize_connection_options" do
+    context 'RemoteResource::Base::OPTIONS' do
+      it 'calls #initialize_connection_options' do
         expect_any_instance_of(described_class).to receive(:initialize_connection_options).twice
         connection_options.reload
       end
     end
   end
 
-  describe "#reload!" do
-    it "returns self" do
+  describe '#reload!' do
+    it 'returns self' do
       expect(connection_options.reload!).to eql connection_options
     end
 
-    context "RemoteResource::Base::OPTIONS" do
-      it "calls #initialize_connection_options" do
+    context 'RemoteResource::Base::OPTIONS' do
+      it 'calls #initialize_connection_options' do
         expect_any_instance_of(described_class).to receive(:initialize_connection_options).twice
         connection_options.reload!
       end

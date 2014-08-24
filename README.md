@@ -10,12 +10,14 @@ To replace `ActiveResource` by providing a dynamic and customizable API interfac
 
 Add this line to your application's Gemfile:
 
-    gem 'remote_resource', git: 'git@lab.digidentity.eu:jvanderpas/remote_resource.git'
+```ruby
+gem 'remote_resource', git: 'git@lab.digidentity.eu:jvanderpas/remote_resource.git'
+```
 
 
 ## Usage
 
-Simply include `RemoteResource` in the class you want to enable for the REST services.
+Simply include the `RemoteResource::Base` module in the class you want to enable for the REST services.
 
 ```ruby
 class ContactPerson
@@ -90,11 +92,11 @@ Last but not least, you can pack the request body or params in a `root_element`:
     * *Packed params:* `{ "contact_person" => { email_address: "foo@bar.com", phone_number: "0031701234567" } }`
 
 
-### Requests
+### Querying
 
-#### Class methods
+#### Finder methods
 
-You can use the `.find` and `.find_by` class methods:
+You can use the `.find`, `.find_by` and `.all` class methods:
 
 ```ruby
 # use the `id` as argument
@@ -114,17 +116,21 @@ ContactPerson.find(12, connection_options)
 
 # use a conditions `Hash` as argument
 ContactPerson.find_by((username: 'foobar'), connection_options)
+
+# just the whole collection
+ContactPerson.all
 ```
 
-#### REST class methods
+#### Persistence methods
 
-You can use the `.get` and `.post` REST class methods.
+You can use the `.create` class method and the `#save` instance method:
 
-#### Instance methods
-
-You can use the `#save` method:
 
 ```ruby
+# .create
+ContactPerson.create(username: 'aapmies', first_name: 'Mies')
+
+# #save
 contact_person = ContactPerson.new(id: 12)
 contact_person.username = 'aapmies'
 contact_person.save
@@ -139,9 +145,11 @@ contact_person.username = 'aapmies'
 contact_person.save(connection_options)
 ```
 
-#### REST instance methods
+#### REST methods
 
-You can use the `#patch` and `#post` REST instance methods.
+You can use the `.get`, `.put`, `.patch` and `.post` class methods  and the `
+#get`, `#put`, `#patch` and `#post` instance methods.
+
 
 #### With a `connection_options` block
 

@@ -104,6 +104,9 @@ ContactPerson.find(12)
 
 # use a conditions `Hash` as argument
 ContactPerson.find_by(username: 'foobar')
+
+# just the whole collection
+ContactPerson.all
 ```
 
 To override the given `options`, you can pass in a `connection_options` hash:
@@ -116,9 +119,6 @@ ContactPerson.find(12, connection_options)
 
 # use a conditions `Hash` as argument
 ContactPerson.find_by((username: 'foobar'), connection_options)
-
-# just the whole collection
-ContactPerson.all
 ```
 
 #### Persistence methods

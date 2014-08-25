@@ -15,23 +15,17 @@ module RemoteResource
       end
 
       def base_url
-        "#{self.site}#{self.version.presence}#{self.path_prefix.presence}/#{self.url_safe_relative_name}#{self.path_postfix.presence}"
-      end
-
-      def url_safe_relative_name
-        if self.collection
-          relative_name.underscore.downcase.pluralize
-        else
-          relative_name.underscore.downcase
-        end
-      end
-
-      def relative_name
-        self.collection_name.to_s.presence || self.name.to_s.demodulize
+        determined_url_naming.base_url
       end
 
       def use_relative_model_naming?
         true
+      end
+
+      private
+
+      def determined_url_naming
+        RemoteResource::UrlNamingDetermination.new self
       end
 
     end

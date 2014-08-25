@@ -6,12 +6,8 @@ describe RemoteResource::Base do
     class Dummy
       include RemoteResource::Base
 
-      self.site         = 'https://foobar.com'
-      self.content_type = ''
+      self.site = 'https://foobar.com'
 
-      def params
-        { foo: 'bar' }
-      end
     end
   end
 
@@ -23,33 +19,46 @@ describe RemoteResource::Base do
   specify { expect(described_class.const_defined?('RemoteResource::Connection')).to be_truthy }
   specify { expect(described_class.const_defined?('RemoteResource::REST')).to be_truthy }
 
-  describe "OPTIONS" do
+  specify { expect(described_class.const_defined?('RemoteResource::Querying::FinderMethods')).to be_truthy }
+  specify { expect(described_class.const_defined?('RemoteResource::Querying::PersistenceMethods')).to be_truthy }
+
+  describe 'OPTIONS' do
     let(:options) { [:base_url, :site, :headers, :version, :path_prefix, :path_postfix, :content_type, :collection, :collection_name, :root_element] }
 
     specify { expect(described_class::OPTIONS).to eql options }
   end
 
-  describe "attributes" do
-    it "#id" do
+  describe 'attributes' do
+    it '#id' do
       expect(dummy.attributes).to have_key :id
     end
   end
 
-  describe ".connection_options" do
-    it "instantiates as a RemoteResource::ConnectionOptions" do
+  describe '.connection_options' do
+    it 'instantiates as a RemoteResource::ConnectionOptions' do
       expect(dummy_class.connection_options).to be_a RemoteResource::ConnectionOptions
     end
 
-    it "uses the implemented class as base_class" do
+    it 'uses the implemented class as base_class' do
       expect(dummy_class.connection_options.base_class).to be RemoteResource::Dummy
     end
 
-    it "sets the name of Thread variable with the implemented class" do
+    it 'sets the name of Thread variable with the implemented class' do
       expect(dummy_class.connection_options).to eql Thread.current['remote_resource.dummy.connection_options']
     end
   end
 
-  describe ".with_connection_options" do
+  describe '.threaded_connection_options' do
+    it 'instantiates as a Hash' do
+      expect(dummy_class.threaded_connection_options).to be_a Hash
+    end
+
+    it 'sets the name of Thread variable with the implemented class' do
+      expect(dummy_class.threaded_connection_options).to eql Thread.current['remote_resource.dummy.threaded_connection_options']
+    end
+  end
+
+  describe '.with_connection_options' do
     let(:connection_options) { {} }
 
     let(:block_with_connection_options) do
@@ -59,404 +68,261 @@ describe RemoteResource::Base do
       end
     end
 
-    let(:response_mock) { double('response', success?: false).as_null_object }
+    before { allow_any_instance_of(Typhoeus::Request).to receive(:run) { double.as_null_object } }
 
-    before { allow_any_instance_of(Typhoeus::Request).to receive(:run) { response_mock } }
-
-    it "yields the block" do
+    it 'yields the block' do
       expect(dummy_class).to receive(:find_by).with({ username: 'foobar' }, { content_type: '.json' }).and_call_original
       expect(dummy_class).to receive(:find_by).with({ username: 'bazbar' }, { content_type: '.xml' }).and_call_original
       block_with_connection_options
     end
 
-    it "ensures to set the connection_options Thread variable to nil" do
-      dummy_class.connection_options
+    it 'ensures to set the threaded_connection_options Thread variable to nil' do
+      dummy_class.threaded_connection_options
 
-      expect{ block_with_connection_options }.to change{ Thread.current['remote_resource.dummy.connection_options'] }.from(an_instance_of(RemoteResource::ConnectionOptions)).to nil
+      expect{ block_with_connection_options }.to change{ Thread.current['remote_resource.dummy.threaded_connection_options'] }.from(an_instance_of(Hash)).to nil
     end
 
-    context "when the connection_options contain the headers" do
+    context 'when the given connection_options contain headers' do
       let(:connection_options) do
         {
           headers: { "Foo" => "Bar" }
         }
       end
 
-      it "uses the connection_options which are set in the block AND on the class method" do
+      it 'uses the headers of the given connection_options' do
         expect(Typhoeus::Request).to receive(:get).with('https://foobar.com/dummy.json', params: { username: 'foobar' }, headers: { "Accept" => "application/json", "Foo" => "Bar" }).and_call_original
         expect(Typhoeus::Request).to receive(:get).with('https://foobar.com/dummy.xml', params: { username: 'bazbar' }, headers: { "Accept" => "application/json", "Foo" => "Bar" }).and_call_original
         block_with_connection_options
       end
     end
 
-    context "when NO headers are specified in the connection_options" do
+    context 'when the given connection_options contain base_url' do
       let(:connection_options) do
         {
           base_url: 'https://api.foobar.eu/dummy'
         }
       end
 
-      it "uses the connection_options which are set in the block AND on the class method" do
+      it 'uses the base_url of the given connection_options' do
         expect(Typhoeus::Request).to receive(:get).with('https://api.foobar.eu/dummy.json', params: { username: 'foobar' }, headers: { "Accept" => "application/json" }).and_call_original
         expect(Typhoeus::Request).to receive(:get).with('https://api.foobar.eu/dummy.xml', params: { username: 'bazbar' }, headers: { "Accept" => "application/json" }).and_call_original
         block_with_connection_options
       end
     end
-  end
 
-  describe ".find" do
-    let(:id)            { '12' }
-    let(:request_url)   { 'https://foobar.com/dummy/12' }
-    let(:headers)       { { "Accept"=>"application/json" } }
-
-    let(:response_mock)           { double('response', success?: false).as_null_object }
-    let(:sanitized_response_body) { nil }
-
-    before do
-      allow_any_instance_of(Typhoeus::Request).to receive(:run) { response_mock }
-      allow_any_instance_of(RemoteResource::Response).to receive(:sanitized_response_body) { sanitized_response_body }
-    end
-
-    it "uses the HTTP GET method" do
-      expect(Typhoeus::Request).to receive(:get).and_call_original
-      dummy_class.find id
-    end
-
-    it "uses the id in the request url" do
-      expect(Typhoeus::Request).to receive(:get).with('https://foobar.com/dummy/12', headers: headers).and_call_original
-      dummy_class.find id
-    end
-
-    it "uses the connection_options headers as request headers" do
-      expect(Typhoeus::Request).to receive(:get).with(request_url, headers: { "Accept"=>"application/json" }).and_call_original
-      dummy_class.find id
-    end
-
-    context "when custom connection_options are given" do
-      it "uses the custom connection_options" do
-        expect(Typhoeus::Request).to receive(:get).with('https://foobar.com/dummy/12.json', headers: { "Accept" => "application/json", "Baz" => "Bar" }).and_call_original
-        dummy_class.find(id, { content_type: '.json', headers: { "Baz" => "Bar" } })
-      end
-
-      it "overrides the connection_options headers with custom connection_options default_headers" do
-        expect(Typhoeus::Request).to receive(:get).with('https://foobar.com/dummy/12.json', headers: { "Baz" => "Bar" }).and_call_original
-        dummy_class.find(id, { content_type: '.json', default_headers: { "Baz" => "Bar" } })
-      end
-    end
-
-    context "response" do
-      let(:connection_options)      { dummy_class.connection_options.to_hash }
-      let(:sanitized_response_body) { { id: '12', foo: 'bar' } }
-
-      it "instantiates the RemoteResource::Response with the response AND connection_options" do
-        expect(RemoteResource::Response).to receive(:new).with(response_mock, connection_options).and_call_original
-        dummy_class.find id
-      end
-
-      it "builds the resource from the response" do
-        expect(dummy_class).to receive(:build_resource_from_response).with(an_instance_of RemoteResource::Response).and_call_original
-        dummy_class.find id
-      end
-
-      it "assigns the _response" do
-        expect(dummy_class.find(id)._response).to be_a RemoteResource::Response
-      end
-
-      it "returns the build resource" do
-        expect(dummy_class.find(id).id).to eql '12'
-      end
-    end
-  end
-
-  describe ".find_by" do
-    let(:params)                  { { id: '12' } }
-    let(:response_object_mock)    { RemoteResource::Response.new(double('response').as_null_object) }
-    let(:sanitized_response_body) { nil }
-
-    before do
-      allow(dummy_class).to receive(:get) { response_object_mock }
-      allow(response_object_mock).to receive(:sanitized_response_body) { sanitized_response_body }
-    end
-
-    it "calls .get" do
-      expect(dummy_class).to receive(:get).with(params, {})
-      dummy_class.find_by params
-    end
-
-    context "when custom connection_options are given" do
-      let(:custom_connection_options) do
+    context 'when the given connection_options contain something else' do
+      let(:connection_options) do
         {
-          content_type: '.xml',
-          headers: { "Foo" => "Bar" }
+          collection: true,
+          path_prefix: '/api',
+          root_element: :bazbar
         }
       end
 
-      it "passes the custom connection_options as Hash to the .get" do
-        expect(dummy_class).to receive(:get).with(params, custom_connection_options)
-        dummy_class.find_by params, custom_connection_options
-      end
-    end
-
-    context "when NO custom connection_options are given" do
-      it "passes the connection_options as empty Hash to the .get" do
-        expect(dummy_class).to receive(:get).with(params, {})
-        dummy_class.find_by params
-      end
-    end
-
-    context "root_element" do
-      context "when the given custom connection_options contain a root_element" do
-        let(:custom_connection_options) { { root_element: :foobar } }
-
-        it "packs the params in the root_element and calls the .get" do
-          expect(dummy_class).to receive(:get).with({ 'foobar' => { id: '12' } }, custom_connection_options)
-          dummy_class.find_by params, custom_connection_options
-        end
-      end
-
-      context "when the connection_options contain a root_element" do
-        before { dummy_class.connection_options.merge root_element: :foobar  }
-
-        it "packs the params in the root_element and calls the .get" do
-          expect(dummy_class).to receive(:get).with({ 'foobar' => { id: '12' } }, {})
-          dummy_class.find_by params
-        end
-      end
-
-      context "when NO root_element is specified" do
-        before { dummy_class.connection_options.merge root_element: nil  }
-
-        it "does NOT pack the params in a root_element and calls the .get" do
-          expect(dummy_class).to receive(:get).with({ id: '12' }, {})
-          dummy_class.find_by params
-        end
-      end
-    end
-
-    context "response" do
-      let(:sanitized_response_body) { { id: '12', foo: 'bar' } }
-
-      it "builds the resource from the response" do
-        expect(dummy_class).to receive(:build_resource_from_response).with(response_object_mock).and_call_original
-        dummy_class.find_by params
-      end
-
-      it "assigns the _response" do
-        dummy = dummy_class.find_by(params)._response
-
-        expect(dummy).to be_a RemoteResource::Response
-        expect(dummy).to eql response_object_mock
-      end
-
-      it "returns the build resource" do
-        expect(dummy_class.find_by(params).id).to eql '12'
+      it 'uses the given connection_options' do
+        expect(Typhoeus::Request).to receive(:get).with('https://foobar.com/api/dummies.json', params: { 'bazbar' => { username: 'foobar' } }, headers: { "Accept" => "application/json" }).and_call_original
+        expect(Typhoeus::Request).to receive(:get).with('https://foobar.com/api/dummies.xml', params:  { 'bazbar' => { username: 'bazbar' } }, headers: { "Accept" => "application/json" }).and_call_original
+        block_with_connection_options
       end
     end
   end
 
-  describe "#connection_options" do
-    it "instanties as a RemoteResource::ConnectionOptions" do
+  describe '.handle_response' do
+    let(:response) { instance_double(RemoteResource::Response) }
+
+    before { allow(dummy_class).to receive(:build_resource_from_response) { dummy } }
+
+    context 'when the response is a success' do
+      before { allow(response).to receive(:success?) { true } }
+
+      it 'builds the resource from the response' do
+        expect(dummy_class).to receive(:build_resource_from_response).with response
+        dummy_class.handle_response response
+      end
+    end
+
+    context 'when the response is a unprocessable_entity' do
+      before do
+        allow(response).to receive(:success?)              { false }
+        allow(response).to receive(:unprocessable_entity?) { true }
+
+        allow(dummy).to receive(:assign_errors_from_response)
+      end
+
+      it 'builds the resource from the response' do
+        expect(dummy_class).to receive(:build_resource_from_response).with response
+        dummy_class.handle_response response
+      end
+
+      it 'assigns the errors from the response to the resource' do
+        expect(dummy).to receive(:assign_errors_from_response).with response
+        dummy_class.handle_response response
+      end
+    end
+
+    context 'when the the response is something else' do
+      let(:dummy) { double('dummy') }
+
+      before do
+        allow(response).to receive(:success?)              { false }
+        allow(response).to receive(:unprocessable_entity?) { false }
+
+        allow(dummy_class).to receive(:new) { dummy }
+        allow(dummy).to receive(:assign_response)
+        allow(dummy).to receive(:assign_errors_from_response)
+      end
+
+      it 'instantiates the resource' do
+        expect(dummy_class).to receive(:new).with(no_args)
+        dummy_class.handle_response response
+      end
+
+      it 'assigns the response to the resource' do
+        expect(dummy).to receive(:assign_response).with response
+        dummy_class.handle_response response
+      end
+
+      it 'assigns the errors from the response to the resource' do
+        expect(dummy).to receive(:assign_errors_from_response).with response
+        dummy_class.handle_response response
+      end
+    end
+  end
+
+  describe '#connection_options' do
+    it 'instanties as a RemoteResource::ConnectionOptions' do
       expect(dummy.connection_options).to be_a RemoteResource::ConnectionOptions
     end
 
-    it "uses the implemented class as base_class" do
+    it 'uses the implemented class as base_class' do
       expect(dummy.connection_options.base_class).to be RemoteResource::Dummy
     end
   end
 
-  describe "#persisted?" do
-    context "when id is present" do
-      it "returns true" do
+  describe '#persisted?' do
+    context 'when id is present' do
+      it 'returns true' do
         dummy.id = 10
-        expect(dummy.persisted?).to be_truthy
+        expect(dummy.persisted?).to eql true
       end
     end
 
-    context "when is is NOT present" do
-      it "returns false" do
-        expect(dummy.persisted?).to be_falsey
+    context 'when is is NOT present' do
+      it 'returns false' do
+        expect(dummy.persisted?).to eql false
       end
     end
   end
 
-  describe "#new_record?" do
-    context "when instance persisted" do
-      it "returns false" do
+  describe '#new_record?' do
+    context 'when instance persisted' do
+      it 'returns false' do
         allow(dummy).to receive(:persisted?) { true }
 
-        expect(dummy.new_record?).to be_falsey
+        expect(dummy.new_record?).to eql false
       end
     end
 
-    context "when instance does NOT persist" do
-      it "returns true" do
+    context 'when instance does NOT persist' do
+      it 'returns true' do
         allow(dummy).to receive(:persisted?) { false }
 
-        expect(dummy.new_record?).to be_truthy
+        expect(dummy.new_record?).to eql true
       end
     end
   end
 
-  describe "#save" do
-    let(:params) { dummy.params }
+  describe '#handle_response' do
+    let(:response) { instance_double(RemoteResource::Response) }
 
-    before { allow(dummy).to receive(:create_or_update) }
+    before { allow(dummy).to receive(:rebuild_resource_from_response) { dummy } }
 
-    it "calls #create_or_update" do
-      expect(dummy).to receive(:create_or_update).with(params, {})
-      dummy.save
+    context 'when the response is a success' do
+      before { allow(response).to receive(:success?) { true } }
+
+      it 'rebuilds the resource from the response' do
+        expect(dummy).to receive(:rebuild_resource_from_response).with response
+        dummy.handle_response response
+      end
     end
 
-    context "when custom connection_options are given" do
-      let(:custom_connection_options) do
+    context 'when the response is a unprocessable_entity' do
+      before do
+        allow(response).to receive(:success?)              { false }
+        allow(response).to receive(:unprocessable_entity?) { true }
+
+        allow(dummy).to receive(:assign_errors_from_response)
+      end
+
+      it 'rebuilds the resource from the response' do
+        expect(dummy).to receive(:rebuild_resource_from_response).with response
+        dummy.handle_response response
+      end
+
+      it 'assigns the errors from the response to the resource' do
+        expect(dummy).to receive(:assign_errors_from_response).with response
+        dummy.handle_response response
+      end
+    end
+
+    context 'when the the response is something else' do
+      before do
+        allow(response).to receive(:success?)              { false }
+        allow(response).to receive(:unprocessable_entity?) { false }
+
+        allow(dummy).to receive(:assign_errors_from_response)
+      end
+
+      it 'assigns the errors from the response to the resource' do
+        expect(dummy).to receive(:assign_errors_from_response).with response
+        dummy.handle_response response
+      end
+    end
+  end
+
+  describe '#assign_response' do
+    let(:response) { instance_double(RemoteResource::Response) }
+
+    it 'assigns the #_response' do
+      expect{ dummy.assign_response response }.to change{ dummy._response }.from(nil).to response
+    end
+  end
+
+  describe '#assign_errors_from_response' do
+    let(:response)                      { instance_double(RemoteResource::Response) }
+    let(:error_messages_response_body)  { double('error_messages_response_body') }
+
+    it 'calls the #assign_errors method with the #error_messages_response_body of the response' do
+      allow(response).to receive(:error_messages_response_body) { error_messages_response_body }
+
+      expect(dummy).to receive(:assign_errors).with error_messages_response_body
+      dummy.assign_errors_from_response response
+    end
+  end
+
+  describe '#assign_errors' do
+    context 'with errors in the error_messages' do
+      let(:error_messages) do
         {
-          content_type: '.xml',
-          headers: { "Foo" => "Bar" }
+          "foo" => ["is required"],
+          "bar" => ["must be greater than 5"]
         }
       end
 
-      it "passes the custom connection_options as Hash to the #create_or_update" do
-        expect(dummy).to receive(:create_or_update).with(params, custom_connection_options)
-        dummy.save custom_connection_options
+      it 'assigns the error_messages as errors' do
+        dummy.send :assign_errors, error_messages
+        expect(dummy.errors.messages).to eql foo: ["is required"], bar: ["must be greater than 5"]
       end
     end
 
-    context "when NO custom connection_options are given" do
-      it "passes the connection_options as empty Hash to the #create_or_update" do
-        expect(dummy).to receive(:create_or_update).with(params, {})
-        dummy.save
-      end
-    end
-  end
-
-  describe "#create_or_update" do
-    context "when the attributes contain an id" do
-      let(:attributes) { { id: 10, foo: 'bar' } }
-
-      context "and custom connection_options are given" do
-        let(:custom_connection_options) do
-          {
-            content_type: '.xml',
-            headers: { "Foo" => "Bar" }
-          }
-        end
-
-        it "passes the custom connection_options as Hash to the #patch" do
-          expect(dummy).to receive(:patch).with(attributes, custom_connection_options)
-          dummy.create_or_update attributes, custom_connection_options
-        end
+    context 'with an empty Hash in the error_messages' do
+      let(:error_messages) do
+        {}
       end
 
-      context "and NO custom connection_options are given" do
-        it "passes the connection_options as empty Hash to the #patch" do
-          expect(dummy).to receive(:patch).with(attributes, {})
-          dummy.create_or_update attributes
-        end
-      end
-
-      context "root_element" do
-        context "and the given custom connection_options contain a root_element" do
-          let(:custom_connection_options) { { root_element: :foobar } }
-
-          it "packs the attributes in the root_element and calls the #patch" do
-            expect(dummy).to receive(:patch).with({ 'foobar' => { id: 10, foo: 'bar' } }, custom_connection_options)
-            dummy.create_or_update attributes, custom_connection_options
-          end
-        end
-
-        context "and the connection_options contain a root_element" do
-          before { dummy.connection_options.merge root_element: :foobar  }
-
-          it "packs the attributes in the root_element and calls the #patch" do
-            expect(dummy).to receive(:patch).with({ 'foobar' => { id: 10, foo: 'bar' } }, {})
-            dummy.create_or_update attributes
-          end
-        end
-
-        context "and NO root_element is specified" do
-          before { dummy_class.connection_options.merge root_element: nil  }
-
-          it "does NOT pack the attributes in a root_element and calls the #patch" do
-            expect(dummy).to receive(:patch).with({ id: 10, foo: 'bar' }, {})
-            dummy.create_or_update attributes
-          end
-        end
-      end
-    end
-
-    context "when the attributes DON'T contain an id" do
-      let(:attributes) { { foo: 'bar' } }
-
-      context "and custom connection_options are given" do
-        let(:custom_connection_options) do
-          {
-              content_type: '.xml',
-              headers: { "Foo" => "Bar" }
-          }
-        end
-
-        it "passes the custom connection_options as Hash to the #post" do
-          expect(dummy).to receive(:post).with(attributes, custom_connection_options)
-          dummy.create_or_update attributes, custom_connection_options
-        end
-      end
-
-      context "and NO custom connection_options are given" do
-        it "passes the connection_options as empty Hash to the #post" do
-          expect(dummy).to receive(:post).with(attributes, {})
-          dummy.create_or_update attributes
-        end
-      end
-
-      context "root_element" do
-        context "and the given custom connection_options contain a root_element" do
-          let(:custom_connection_options) { { root_element: :foobar } }
-
-          it "packs the attributes in the root_element and calls the #post" do
-            expect(dummy).to receive(:post).with({ 'foobar' => { foo: 'bar' } }, custom_connection_options)
-            dummy.create_or_update attributes, custom_connection_options
-          end
-        end
-
-        context "and the connection_options contain a root_element" do
-          before { dummy.connection_options.merge root_element: :foobar  }
-
-          it "packs the attributes in the root_element and calls the #post" do
-            expect(dummy).to receive(:post).with({ 'foobar' => { foo: 'bar' } }, {})
-            dummy.create_or_update attributes
-          end
-        end
-
-        context "and NO root_element is specified" do
-          before { dummy_class.connection_options.merge root_element: nil  }
-
-          it "does NOT pack the attributes in a root_element and calls the #post" do
-            expect(dummy).to receive(:post).with({ foo: 'bar' }, {})
-            dummy.create_or_update attributes
-          end
-        end
-      end
-    end
-  end
-
-  describe "#assign_errors" do
-    let(:error_data) { JSON.parse json_error_data }
-
-    context "when a root_element is given" do
-      let(:json_error_data) { '{"foobar":{"errors":{"foo":["is required"]}}}' }
-
-      it "assigns the errors within the root_element" do
-        dummy.send :assign_errors, error_data, :foobar
-        expect(dummy.errors.messages).to eql foo: ["is required"]
-      end
-    end
-
-    context "when NO root_element is given" do
-      let(:json_error_data) { '{"errors":{"foo":["is required"]}}' }
-
-      it "assigns the errors without the root_element" do
-        dummy.send :assign_errors, error_data
-        expect(dummy.errors.messages).to eql foo: ["is required"]
+      it 'does NOT assign the error_messages as errors' do
+        dummy.send :assign_errors, error_messages
+        expect(dummy.errors.messages).to eql({})
       end
     end
   end

@@ -1,5 +1,5 @@
 require 'ethon'
-require_relative '../../../../lib/ethon/easy/queryable'
+require_relative '../../../../../lib/extensions/ethon/easy/queryable'
 
 describe Ethon::Easy::Queryable do
 

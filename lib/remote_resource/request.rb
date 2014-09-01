@@ -29,7 +29,7 @@ module RemoteResource
     def perform
       case rest_action
       when :get
-        response = connection.public_send rest_action, determined_request_url, params: determined_attributes, headers: determined_headers
+        response = connection.public_send rest_action, determined_request_url, params: determined_params, headers: determined_headers
       when :put, :patch, :post
         response = connection.public_send rest_action, determined_request_url, body: determined_attributes, headers: determined_headers
       else
@@ -51,11 +51,25 @@ module RemoteResource
       end
     end
 
-    def determined_attributes
-      no_params    = connection_options[:no_params].eql? true
-      root_element = connection_options[:root_element].presence
+    def determined_params
+      no_params     = connection_options[:no_params].eql? true
+      no_attributes = connection_options[:no_attributes].eql? true
+      params        = connection_options[:params].presence || {}
 
       if no_params
+        nil
+      elsif no_attributes
+        params
+      else
+        attributes.merge! params
+      end
+    end
+
+    def determined_attributes
+      no_attributes = connection_options[:no_attributes].eql? true
+      root_element  = connection_options[:root_element].presence
+
+      if no_attributes
         {}
       elsif root_element
         pack_up_attributes attributes, root_element

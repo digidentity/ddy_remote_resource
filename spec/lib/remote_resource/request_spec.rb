@@ -156,6 +156,7 @@ describe RemoteResource::Request do
   describe '#perform' do
     let(:connection)             { Typhoeus::Request }
     let(:determined_request_url) { 'http://www.foobar.com/request_dummy.json' }
+    let(:determined_params)      { attributes }
     let(:determined_attributes)  { attributes }
     let(:determined_headers)     { { "Accept"=>"application/json" } }
 
@@ -174,7 +175,7 @@ describe RemoteResource::Request do
       let(:rest_action) { 'get' }
 
       it 'makes a GET request with the attributes as params' do
-        expect(connection).to receive(:get).with(determined_request_url, params: determined_attributes, headers: determined_headers).and_call_original
+        expect(connection).to receive(:get).with(determined_request_url, params: determined_params, headers: determined_headers).and_call_original
         request.perform
       end
 
@@ -329,10 +330,55 @@ describe RemoteResource::Request do
     end
   end
 
-  describe '#determined_attributes' do
+  describe '#determined_params' do
     context 'the connection_options contain no_params' do
       let(:connection_options) do
-        { no_params: true }
+        {
+          params: { page: 5, limit: 15 },
+          no_params: true
+        }
+      end
+
+      it 'returns nil' do
+        expect(request.determined_params).to be_nil
+      end
+    end
+
+    context 'the connection_options do NOT contain a no_params' do
+      context 'and the connection_options contain no_attributes' do
+        let(:connection_options) do
+          {
+            params: { page: 5, limit: 15 },
+            no_params: false,
+            no_attributes: true
+          }
+        end
+
+        it 'returns the params' do
+          expect(request.determined_params).to eql({ page: 5, limit: 15 })
+        end
+      end
+
+      context 'and the connection_options do NOT contain no_attributes' do
+        let(:connection_options) do
+          {
+            params: { page: 5, limit: 15 },
+            no_params: false,
+            no_attributes: false
+          }
+        end
+
+        it 'returns the params merge with the attributes' do
+          expect(request.determined_params).to eql({ name: 'Mies', page: 5, limit: 15 })
+        end
+      end
+    end
+  end
+
+  describe '#determined_attributes' do
+    context 'the connection_options contain no_attributes' do
+      let(:connection_options) do
+        { no_attributes: true }
       end
 
       it 'returns an empty Hash' do
@@ -340,7 +386,7 @@ describe RemoteResource::Request do
       end
     end
 
-    context 'the connection_options do NOT contain a no_params' do
+    context 'the connection_options do NOT contain a no_attributes' do
       it 'does NOT return an empty Hash' do
         expect(request.determined_attributes).not_to eql({})
       end

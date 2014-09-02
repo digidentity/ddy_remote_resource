@@ -232,6 +232,54 @@ describe RemoteResource::Base do
     end
   end
 
+  describe '#success?' do
+    let(:response) { instance_double(RemoteResource::Response) }
+
+    before { allow(dummy).to receive(:_response) { response } }
+
+    context 'when response is successful' do
+      before { allow(response).to receive(:success?) { true } }
+
+      context 'and the resource has NO errors present' do
+        it 'returns true' do
+          expect(dummy.success?).to eql true
+        end
+      end
+
+      context 'and the resource has errors present' do
+        it 'returns false' do
+          dummy.errors.add :id, 'must be present'
+
+          expect(dummy.success?).to eql false
+        end
+      end
+    end
+
+    context 'when response is NOT successful' do
+      before { allow(response).to receive(:success?) { false } }
+
+      it 'returns false' do
+        expect(dummy.success?).to eql false
+      end
+    end
+  end
+
+  describe '#errors?' do
+    context 'when resource has errors present' do
+      it 'returns true' do
+        dummy.errors.add :id, 'must be present'
+
+        expect(dummy.errors?).to eql true
+      end
+    end
+
+    context 'when resource has NO errors present' do
+      it 'returns false' do
+        expect(dummy.errors?).to eql false
+      end
+    end
+  end
+
   describe '#handle_response' do
     let(:response) { instance_double(RemoteResource::Response) }
 

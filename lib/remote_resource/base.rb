@@ -87,6 +87,14 @@ module RemoteResource
       !persisted?
     end
 
+    def success?
+      _response.success? && !errors?
+    end
+
+    def errors?
+      errors.present?
+    end
+
     def handle_response(response)
       if response.success?
         rebuild_resource_from_response response

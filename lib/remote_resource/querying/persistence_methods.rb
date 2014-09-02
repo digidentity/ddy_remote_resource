@@ -13,6 +13,7 @@ module RemoteResource
 
       def save(connection_options = {})
         create_or_update params, connection_options
+        success?
       end
 
       def create_or_update(attributes = {}, connection_options = {})

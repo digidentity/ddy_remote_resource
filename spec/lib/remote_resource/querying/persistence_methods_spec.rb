@@ -47,11 +47,30 @@ describe RemoteResource::Querying::PersistenceMethods do
   describe '#save' do
     let(:params) { dummy.params }
 
-    before { allow(dummy).to receive(:create_or_update) }
+    before do
+      allow(dummy).to receive(:create_or_update) { dummy }
+      allow(dummy).to receive(:success?)
+    end
 
     it 'calls #create_or_update with the params' do
       expect(dummy).to receive(:create_or_update).with(params, {})
       dummy.save
+    end
+
+    context 'when the save was successful' do
+      it 'returns true' do
+        allow(dummy).to receive(:success?) { true }
+
+        expect(dummy.save).to eql true
+      end
+    end
+
+    context 'when the save was NOT successful' do
+      it 'returns false' do
+        allow(dummy).to receive(:success?) { false }
+
+        expect(dummy.save).to eql false
+      end
     end
   end
 

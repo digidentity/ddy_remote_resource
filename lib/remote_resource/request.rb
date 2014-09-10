@@ -41,14 +41,10 @@ module RemoteResource
 
     def determined_request_url
       id           = attributes[:id].presence
-      base_url     = original_connection_options[:base_url].presence || determined_url_naming.base_url
+      base_url     = original_connection_options[:base_url].presence || determined_url_naming.base_url(id)
       content_type = connection_options[:content_type]
 
-      if id
-        "#{base_url}/#{id}#{content_type}"
-      else
-        "#{base_url}#{content_type}"
-      end
+      "#{base_url}#{content_type}"
     end
 
     def determined_params

@@ -95,14 +95,34 @@ describe RemoteResource::UrlNamingDetermination do
       end
     end
 
+    context 'id' do
+      context 'when an id is specified' do
+        it 'uses that id in the base url' do
+          expect(url_naming_determination.base_url(:id)).to eql 'http://www.foobar.com/url_naming_determination_dummy/id'
+        end
+      end
+
+      context 'when an id is NOT specified' do
+        it 'creates a base url without it' do
+          expect(url_naming_determination.base_url).to eql 'http://www.foobar.com/url_naming_determination_dummy'
+        end
+      end
+    end
+
     context 'path_postfix' do
       context 'when the connection_options contain a path_postfix' do
         let(:connection_options) do
-          { path_postfix: '/index' }
+          { path_postfix: '/custom' }
         end
 
         it 'uses the path_postfix of the connection_options' do
-          expect(url_naming_determination.base_url).to eql 'http://www.foobar.com/url_naming_determination_dummy/index'
+          expect(url_naming_determination.base_url).to eql 'http://www.foobar.com/url_naming_determination_dummy/custom'
+        end
+
+        context 'and an id is specified' do
+          it 'uses the path_postfix of the connection_options and places the id before it' do
+            expect(url_naming_determination.base_url(:id)).to eql 'http://www.foobar.com/url_naming_determination_dummy/id/custom'
+          end
         end
       end
 
@@ -115,11 +135,27 @@ describe RemoteResource::UrlNamingDetermination do
 
             dummy_class.path_postfix = nil
           end
+
+          context 'and an id is specified' do
+            it 'uses the path_postfix of the resource_klass and places the id before it' do
+              dummy_class.path_postfix = '/cancel'
+
+              expect(url_naming_determination.base_url(:id)).to eql 'http://www.foobar.com/url_naming_determination_dummy/id/cancel'
+
+              dummy_class.path_postfix = nil
+            end
+          end
         end
 
         context 'and the resource_klass does NOT contain a path_postfix' do
           it 'does NOT use the path_postfix' do
             expect(url_naming_determination.base_url).to eql 'http://www.foobar.com/url_naming_determination_dummy'
+          end
+
+          context 'and an id is specified' do
+            it 'places the id after the url safe relative name' do
+              expect(url_naming_determination.base_url(:id)).to eql 'http://www.foobar.com/url_naming_determination_dummy/id'
+            end
           end
         end
       end

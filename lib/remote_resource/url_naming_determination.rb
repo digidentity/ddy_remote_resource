@@ -8,13 +8,15 @@ module RemoteResource
       @connection_options = connection_options
     end
 
-    def base_url
+    def base_url(id = nil)
       site         = connection_options.fetch(:site, resource_klass.site)
       version      = connection_options.fetch(:version, resource_klass.version)
       path_prefix  = connection_options.fetch(:path_prefix, resource_klass.path_prefix)
       path_postfix = connection_options.fetch(:path_postfix, resource_klass.path_postfix)
 
-      "#{site}#{version.presence}#{path_prefix.presence}/#{url_safe_relative_name}#{path_postfix.presence}"
+      id           = "/#{id}" if id.present?
+
+      "#{site}#{version.presence}#{path_prefix.presence}/#{url_safe_relative_name}#{id}#{path_postfix.presence}"
     end
 
     def url_safe_relative_name

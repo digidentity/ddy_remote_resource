@@ -44,6 +44,53 @@ describe RemoteResource::Querying::PersistenceMethods do
     end
   end
 
+  describe '#update_attributes' do
+    let(:dummy) { dummy_class.new id: 10 }
+
+    let(:attributes) do
+      { name: 'Noot' }
+    end
+
+    before do
+      allow(dummy).to receive(:create_or_update) { dummy }
+      allow(dummy).to receive(:success?)
+    end
+
+    context 'when the id is given in the attributes' do
+      let(:attributes) do
+        { id: 14, name: 'Noot' }
+      end
+
+      it 'calls #create_or_update with the attributes and given id' do
+        expect(dummy).to receive(:create_or_update).with(attributes.merge(id: 14), {})
+        dummy.update_attributes attributes
+      end
+    end
+
+    context 'when the id is NOT given in the attributes' do
+      it 'calls #create_or_update with the attributes and #id of resource' do
+        expect(dummy).to receive(:create_or_update).with(attributes.merge(id: dummy.id), {})
+        dummy.update_attributes attributes
+      end
+    end
+
+    context 'when the save was successful' do
+      it 'returns true' do
+        allow(dummy).to receive(:success?) { true }
+
+        expect(dummy.update_attributes attributes).to eql true
+      end
+    end
+
+    context 'when the save was NOT successful' do
+      it 'returns false' do
+        allow(dummy).to receive(:success?) { false }
+
+        expect(dummy.update_attributes attributes).to eql false
+      end
+    end
+  end
+
   describe '#save' do
     let(:params) { dummy.params }
 

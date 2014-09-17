@@ -11,6 +11,12 @@ module RemoteResource
         end
       end
 
+      def update_attributes(attributes = {}, connection_options = {})
+        attributes.reverse_merge! id: id
+        create_or_update attributes, connection_options
+        success?
+      end
+
       def save(connection_options = {})
         create_or_update params, connection_options
         success?

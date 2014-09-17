@@ -75,10 +75,10 @@ describe RemoteResource::Querying::PersistenceMethods do
     end
 
     context 'when the save was successful' do
-      it 'returns true' do
+      it 'returns the resource' do
         allow(dummy).to receive(:success?) { true }
 
-        expect(dummy.update_attributes attributes).to eql true
+        expect(dummy.update_attributes attributes).to eql dummy
       end
     end
 
@@ -105,10 +105,10 @@ describe RemoteResource::Querying::PersistenceMethods do
     end
 
     context 'when the save was successful' do
-      it 'returns true' do
+      it 'returns the resource' do
         allow(dummy).to receive(:success?) { true }
 
-        expect(dummy.save).to eql true
+        expect(dummy.save).to eql dummy
       end
     end
 

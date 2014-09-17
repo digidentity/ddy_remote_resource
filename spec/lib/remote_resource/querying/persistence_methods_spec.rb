@@ -9,11 +9,8 @@ describe RemoteResource::Querying::PersistenceMethods do
 
         self.site = 'https://foobar.com'
 
-        attr_accessor :name
+        attribute :name
 
-        def params
-          { foo: 'bar' }
-        end
       end
     end
   end
@@ -44,24 +41,71 @@ describe RemoteResource::Querying::PersistenceMethods do
     end
   end
 
-  describe '#save' do
-    let(:params) { dummy.params }
+  describe '#update_attributes' do
+    let(:dummy) { dummy_class.new id: 10 }
+
+    let(:attributes) do
+      { name: 'Noot' }
+    end
 
     before do
       allow(dummy).to receive(:create_or_update) { dummy }
       allow(dummy).to receive(:success?)
     end
 
-    it 'calls #create_or_update with the params' do
-      expect(dummy).to receive(:create_or_update).with(params, {})
+    context 'when the id is given in the attributes' do
+      let(:attributes) do
+        { id: 14, name: 'Noot' }
+      end
+
+      it 'calls #create_or_update with the attributes and given id' do
+        expect(dummy).to receive(:create_or_update).with(attributes, {})
+        dummy.update_attributes attributes
+      end
+    end
+
+    context 'when the id is NOT given in the attributes' do
+      it 'calls #create_or_update with the attributes and #id of resource' do
+        expect(dummy).to receive(:create_or_update).with(attributes.merge(id: dummy.id), {})
+        dummy.update_attributes attributes
+      end
+    end
+
+    context 'when the save was successful' do
+      it 'returns the resource' do
+        allow(dummy).to receive(:success?) { true }
+
+        expect(dummy.update_attributes attributes).to eql dummy
+      end
+    end
+
+    context 'when the save was NOT successful' do
+      it 'returns false' do
+        allow(dummy).to receive(:success?) { false }
+
+        expect(dummy.update_attributes attributes).to eql false
+      end
+    end
+  end
+
+  describe '#save' do
+    let(:attributes) { dummy.attributes }
+
+    before do
+      allow(dummy).to receive(:create_or_update) { dummy }
+      allow(dummy).to receive(:success?)
+    end
+
+    it 'calls #create_or_update with the attributes' do
+      expect(dummy).to receive(:create_or_update).with(attributes, {})
       dummy.save
     end
 
     context 'when the save was successful' do
-      it 'returns true' do
+      it 'returns the resource' do
         allow(dummy).to receive(:success?) { true }
 
-        expect(dummy.save).to eql true
+        expect(dummy.save).to eql dummy
       end
     end
 

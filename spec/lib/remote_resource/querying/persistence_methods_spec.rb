@@ -59,7 +59,7 @@ describe RemoteResource::Querying::PersistenceMethods do
       end
 
       it 'calls #create_or_update with the attributes and given id' do
-        expect(dummy).to receive(:create_or_update).with(attributes.merge(id: 14), {})
+        expect(dummy).to receive(:create_or_update).with(attributes, {})
         dummy.update_attributes attributes
       end
     end

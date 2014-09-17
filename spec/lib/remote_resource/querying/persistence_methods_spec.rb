@@ -9,11 +9,8 @@ describe RemoteResource::Querying::PersistenceMethods do
 
         self.site = 'https://foobar.com'
 
-        attr_accessor :name
+        attribute :name
 
-        def params
-          { foo: 'bar' }
-        end
       end
     end
   end
@@ -92,15 +89,15 @@ describe RemoteResource::Querying::PersistenceMethods do
   end
 
   describe '#save' do
-    let(:params) { dummy.params }
+    let(:attributes) { dummy.attributes }
 
     before do
       allow(dummy).to receive(:create_or_update) { dummy }
       allow(dummy).to receive(:success?)
     end
 
-    it 'calls #create_or_update with the params' do
-      expect(dummy).to receive(:create_or_update).with(params, {})
+    it 'calls #create_or_update with the attributes' do
+      expect(dummy).to receive(:create_or_update).with(attributes, {})
       dummy.save
     end
 

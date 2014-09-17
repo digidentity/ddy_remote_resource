@@ -18,7 +18,7 @@ module RemoteResource
       end
 
       def save(connection_options = {})
-        create_or_update params, connection_options
+        create_or_update self.attributes, connection_options
         success? ? self : false
       end
 

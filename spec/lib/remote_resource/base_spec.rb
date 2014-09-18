@@ -373,6 +373,17 @@ describe RemoteResource::Base do
         expect(dummy.errors.messages).to eql({})
       end
     end
+
+    context 'with a String in the error_messages' do
+      let(:error_messages) do
+        "unauthorized"
+      end
+
+      it 'does NOT assign the error_messages as errors' do
+        dummy.send :assign_errors, error_messages
+        expect(dummy.errors.messages).to eql({})
+      end
+    end
   end
 
 end

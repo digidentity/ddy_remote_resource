@@ -118,6 +118,8 @@ module RemoteResource
     private
 
     def assign_errors(error_messages)
+      return unless error_messages.respond_to?(:each)
+
       error_messages.each do |attribute, attribute_errors|
         attribute_errors.each do |error|
           self.errors.add attribute, error

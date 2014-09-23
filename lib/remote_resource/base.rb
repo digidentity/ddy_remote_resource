@@ -81,14 +81,12 @@ module RemoteResource
     end
 
     def handle_response(response)
-      if response.success?
-        rebuild_resource_from_response response
-      elsif response.unprocessable_entity?
+      if response.unprocessable_entity?
         rebuild_resource_from_response(response).tap do |resource|
           resource.assign_errors_from_response response
         end
       else
-        assign_errors_from_response response
+        rebuild_resource_from_response(response)
       end
     end
 

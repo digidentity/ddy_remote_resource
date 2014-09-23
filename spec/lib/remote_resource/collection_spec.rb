@@ -55,6 +55,14 @@ describe RemoteResource::Collection do
     end
   end
 
+  describe '#size' do
+    let(:to_a) { collection.dup.to_a }
+
+    it 'delegates to the #to_a' do
+      expect(collection.size).to eql to_a.size
+    end
+  end
+
   describe '#each' do
     context 'when the resources_collection is an Array' do
       it 'instantiates each element in the resources_collection as resource' do

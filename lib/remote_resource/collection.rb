@@ -2,7 +2,7 @@ module RemoteResource
   class Collection
     include Enumerable
 
-    delegate :[], :at, :reverse, to: :to_a
+    delegate :[], :at, :reverse, :size, to: :to_a
 
     attr_reader :resource_klass, :resources_collection, :_response
 

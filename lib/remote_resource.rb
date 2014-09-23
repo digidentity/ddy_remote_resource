@@ -7,6 +7,7 @@ require_relative 'extensions/ethon/easy/queryable'
 
 require 'remote_resource/version'
 require 'remote_resource/base'
+require 'remote_resource/collection'
 require 'remote_resource/url_naming_determination'
 require 'remote_resource/url_naming'
 require 'remote_resource/connection'

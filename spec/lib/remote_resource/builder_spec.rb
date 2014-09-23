@@ -18,7 +18,9 @@ describe RemoteResource::Builder do
 
   describe '.build_resource_from_response' do
     let(:response)                { RemoteResource::Response.new double.as_null_object }
-    let(:sanitized_response_body) { { "id" => "12", "username" => "foobar" } }
+    let(:sanitized_response_body) do
+      { "id" => "12", "username" => "foobar" }
+    end
 
     before { allow(response).to receive(:sanitized_response_body) { sanitized_response_body } }
 
@@ -32,11 +34,13 @@ describe RemoteResource::Builder do
     let(:response)      { RemoteResource::Response.new double.as_null_object }
     let(:response_hash) { dummy_class.send :response_hash, response }
 
-    context 'when the collection is a Hash' do
-      let(:collection)  { { "id" => "12", "username" => "foobar" } }
+    context 'when collection is a Hash' do
+      let(:collection) do
+        { "id" => "12", "username" => "foobar" }
+      end
 
       context 'and response_hash is given' do
-        it 'instantiates the resource with the collection AND with response_hash' do
+        it 'instantiates the resource with the collection AND response_hash' do
           expect(dummy_class).to receive(:new).with(collection.merge(response_hash)).and_call_original
           dummy_class.build_resource collection, response_hash
         end
@@ -58,7 +62,38 @@ describe RemoteResource::Builder do
       end
     end
 
-    context 'when the collection is an Array' do
+    context 'when collection is NOT a Hash' do
+      let(:collection) { [] }
+
+      it 'returns nil' do
+        expect(dummy_class.build_resource collection, response_hash).to be_nil
+      end
+    end
+  end
+
+  describe '.build_collection_from_response' do
+    let(:response)                { RemoteResource::Response.new double.as_null_object }
+    let(:sanitized_response_body) do
+      [
+        { "id" => "10", "username" => "foobar" },
+        { "id" => "11", "username" => "bazbar" },
+        { "id" => "12", "username" => "aapmies" }
+      ]
+    end
+
+    before { allow(response).to receive(:sanitized_response_body) { sanitized_response_body } }
+
+    it 'calls the .build_collection' do
+      expect(dummy_class).to receive(:build_collection).with sanitized_response_body, { _response: an_instance_of(RemoteResource::Response) }
+      dummy_class.build_collection_from_response response
+    end
+  end
+
+  describe '.build_collection' do
+    let(:response)      { RemoteResource::Response.new double.as_null_object }
+    let(:response_hash) { dummy_class.send :response_hash, response }
+
+    context 'when collection is an Array' do
       let(:collection) do
         [
           { "id" => "10", "username" => "foobar" },
@@ -68,57 +103,35 @@ describe RemoteResource::Builder do
       end
 
       context 'and response_hash is given' do
-        it 'instantiates each element in the collection as resource AND with response_hash' do
-          expect(dummy_class).to receive(:new).with(collection[0].merge(response_hash)).and_call_original
-          expect(dummy_class).to receive(:new).with(collection[1].merge(response_hash)).and_call_original
-          expect(dummy_class).to receive(:new).with(collection[2].merge(response_hash)).and_call_original
-          dummy_class.build_resource collection, response_hash
+        it 'instantiates a RemoteResource::Collection with the class, collection AND response_hash' do
+          expect(RemoteResource::Collection).to receive(:new).with(dummy_class, collection, response_hash).and_call_original
+          dummy_class.build_collection collection, response_hash
         end
 
         it 'returns the resources' do
-          resources = dummy_class.build_resource collection, response_hash
+          resources = dummy_class.build_collection collection, response_hash
           resources.each { |resource| expect(resource).to be_a dummy_class }
         end
       end
 
       context 'and NO response_hash is given' do
-        it 'instantiates each element in the collection as resource' do
-          expect(dummy_class).to receive(:new).with(collection[0]).and_call_original
-          expect(dummy_class).to receive(:new).with(collection[1]).and_call_original
-          expect(dummy_class).to receive(:new).with(collection[2]).and_call_original
-          dummy_class.build_resource collection
+        it 'instantiates a RemoteResource::Collection with the class and collection' do
+          expect(RemoteResource::Collection).to receive(:new).with(dummy_class, collection, {}).and_call_original
+          dummy_class.build_collection collection
         end
 
         it 'returns the resources' do
-          resources = dummy_class.build_resource collection
+          resources = dummy_class.build_collection collection
           resources.each { |resource| expect(resource).to be_a dummy_class }
         end
       end
     end
 
-    context 'when the collection is something else' do
-      let(:collection)  { 'foobar' }
+    context 'when collection is NOT an Array' do
+      let(:collection) { {} }
 
-      context 'and response_hash is given' do
-        it 'instantiates the resource with the response_hash' do
-          expect(dummy_class).to receive(:new).with(response_hash).and_call_original
-          dummy_class.build_resource collection, response_hash
-        end
-
-        it 'returns the resource' do
-          expect(dummy_class.build_resource collection, response_hash).to be_a dummy_class
-        end
-      end
-
-      context 'and NO response_hash is given' do
-        it 'instantiates the resource with an empty Hash' do
-          expect(dummy_class).to receive(:new).with({}).and_call_original
-          dummy_class.build_resource collection
-        end
-
-        it 'returns the resource' do
-          expect(dummy_class.build_resource collection, response_hash).to be_a dummy_class
-        end
+      it 'returns nil' do
+        expect(dummy_class.build_collection collection, response_hash).to be_nil
       end
     end
   end

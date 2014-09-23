@@ -127,68 +127,6 @@ describe RemoteResource::Base do
     end
   end
 
-  describe '.handle_response' do
-    let(:response) { instance_double(RemoteResource::Response) }
-
-    before { allow(dummy_class).to receive(:build_resource_from_response) { dummy } }
-
-    context 'when the response is a success' do
-      before { allow(response).to receive(:success?) { true } }
-
-      it 'builds the resource from the response' do
-        expect(dummy_class).to receive(:build_resource_from_response).with response
-        dummy_class.handle_response response
-      end
-    end
-
-    context 'when the response is a unprocessable_entity' do
-      before do
-        allow(response).to receive(:success?)              { false }
-        allow(response).to receive(:unprocessable_entity?) { true }
-
-        allow(dummy).to receive(:assign_errors_from_response)
-      end
-
-      it 'builds the resource from the response' do
-        expect(dummy_class).to receive(:build_resource_from_response).with response
-        dummy_class.handle_response response
-      end
-
-      it 'assigns the errors from the response to the resource' do
-        expect(dummy).to receive(:assign_errors_from_response).with response
-        dummy_class.handle_response response
-      end
-    end
-
-    context 'when the the response is something else' do
-      let(:dummy) { double('dummy') }
-
-      before do
-        allow(response).to receive(:success?)              { false }
-        allow(response).to receive(:unprocessable_entity?) { false }
-
-        allow(dummy_class).to receive(:new) { dummy }
-        allow(dummy).to receive(:assign_response)
-        allow(dummy).to receive(:assign_errors_from_response)
-      end
-
-      it 'instantiates the resource' do
-        expect(dummy_class).to receive(:new).with(no_args)
-        dummy_class.handle_response response
-      end
-
-      it 'assigns the response to the resource' do
-        expect(dummy).to receive(:assign_response).with response
-        dummy_class.handle_response response
-      end
-
-      it 'assigns the errors from the response to the resource' do
-        expect(dummy).to receive(:assign_errors_from_response).with response
-        dummy_class.handle_response response
-      end
-    end
-  end
-
   describe '#connection_options' do
     it 'instanties as a RemoteResource::ConnectionOptions' do
       expect(dummy.connection_options).to be_a RemoteResource::ConnectionOptions

@@ -167,13 +167,13 @@ describe RemoteResource::Builder do
       context 'and response_hash is given' do
         it 'mass-assigns the attributes of the resource with the collection AND with response_hash' do
           expect(dummy.id).to be_nil
-          expect(dummy.username).to eql "foo"
+          expect(dummy.username).to eql 'foo'
           expect(dummy._response).to be_nil
 
           dummy.rebuild_resource collection, response_hash
 
-          expect(dummy.id).to eql "12"
-          expect(dummy.username).to eql "foobar"
+          expect(dummy.id).to eql '12'
+          expect(dummy.username).to eql 'foobar'
           expect(dummy._response).to be_a RemoteResource::Response
         end
 
@@ -185,13 +185,13 @@ describe RemoteResource::Builder do
       context 'and NO response_hash is given' do
         it 'mass-assigns the attributes of the resource with the collection' do
           expect(dummy.id).to be_nil
-          expect(dummy.username).to eql "foo"
+          expect(dummy.username).to eql 'foo'
           expect(dummy._response).to be_nil
 
           dummy.rebuild_resource collection
 
-          expect(dummy.id).to eql "12"
-          expect(dummy.username).to eql "foobar"
+          expect(dummy.id).to eql '12'
+          expect(dummy.username).to eql 'foobar'
           expect(dummy._response).to be_nil
         end
 
@@ -207,13 +207,13 @@ describe RemoteResource::Builder do
       context 'and response_hash is given' do
         it 'assigns the response_hash of the resource' do
           expect(dummy.id).to be_nil
-          expect(dummy.username).to eql "foo"
+          expect(dummy.username).to eql 'foo'
           expect(dummy._response).to be_nil
 
           dummy.rebuild_resource collection, response_hash
 
           expect(dummy.id).to be_nil
-          expect(dummy.username).to eql "foo"
+          expect(dummy.username).to eql 'foo'
           expect(dummy._response).to be_a RemoteResource::Response
         end
 
@@ -225,13 +225,13 @@ describe RemoteResource::Builder do
       context 'and NO response_hash is given' do
         it 'does NOT assign the response_hash of the resource' do
           expect(dummy.id).to be_nil
-          expect(dummy.username).to eql "foo"
+          expect(dummy.username).to eql 'foo'
           expect(dummy._response).to be_nil
 
           dummy.rebuild_resource collection
 
           expect(dummy.id).to be_nil
-          expect(dummy.username).to eql "foo"
+          expect(dummy.username).to eql 'foo'
           expect(dummy._response).to be_nil
         end
 

@@ -36,21 +36,14 @@ module RemoteResource
     end
 
     def rebuild_resource(collection, response_hash = {})
-      case collection
-      when Hash
-        rebuild collection.merge response_hash
+      if collection.is_a? Hash
+        self.attributes = collection.merge(response_hash)
       else
-        rebuild response_hash
+        self.attributes = response_hash
       end and self
     end
 
     private
-
-    def rebuild(attributes)
-      attributes.each do |attribute, value|
-        self.public_send "#{attribute}=", value
-      end if attributes
-    end
 
     def response_hash(response_object)
       self.class.send :response_hash, response_object

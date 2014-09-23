@@ -488,71 +488,71 @@ describe RemoteResource::Request do
   end
 
   describe '#raise_http_errors' do
-    let(:response)              { double.as_null_object }
+    let(:response)          { instance_double Typhoeus::Response }
     let(:raise_http_errors) { request.send :raise_http_errors, response }
 
-    context 'when the response status is 301, 302, 303 or 307' do
-      response_statuses = [301, 302, 303, 307]
-      response_statuses.each do |response_status|
+    context 'when the response code is 301, 302, 303 or 307' do
+      response_codes = [301, 302, 303, 307]
+      response_codes.each do |response_code|
 
-        before { allow(response).to receive(:status) { response_status } }
+        before { allow(response).to receive(:response_code) { response_code } }
 
-        it "raises a RemoteResource::HTTPRedirectionError with response status #{response_status}" do
+        it "raises a RemoteResource::HTTPRedirectionError with response code #{response_code}" do
           expect{ raise_http_errors }.to raise_error RemoteResource::HTTPRedirectionError
         end
       end
     end
 
-    context 'when the response status is 400' do
-      before { allow(response).to receive(:status) { 400 } }
+    context 'when the response code is 400' do
+      before { allow(response).to receive(:response_code) { 400 } }
 
       it 'raises a RemoteResource::HTTPBadRequest' do
         expect{ raise_http_errors }.to raise_error RemoteResource::HTTPBadRequest
       end
     end
 
-    context 'when the response status is 401' do
-      before { allow(response).to receive(:status) { 401 } }
+    context 'when the response code is 401' do
+      before { allow(response).to receive(:response_code) { 401 } }
 
       it 'raises a RemoteResource::HTTPUnauthorized' do
         expect{ raise_http_errors }.to raise_error RemoteResource::HTTPUnauthorized
       end
     end
 
-    context 'when the response status is 403' do
-      before { allow(response).to receive(:status) { 403 } }
+    context 'when the response code is 403' do
+      before { allow(response).to receive(:response_code) { 403 } }
 
       it 'raises a RemoteResource::HTTPForbidden' do
         expect{ raise_http_errors }.to raise_error RemoteResource::HTTPForbidden
       end
     end
 
-    context 'when the response status is 404' do
-      before { allow(response).to receive(:status) { 404 } }
+    context 'when the response code is 404' do
+      before { allow(response).to receive(:response_code) { 404 } }
 
       it 'raises a RemoteResource::HTTPNotFound' do
         expect{ raise_http_errors }.to raise_error RemoteResource::HTTPNotFound
       end
     end
 
-    context 'when the response status is 405' do
-      before { allow(response).to receive(:status) { 405 } }
+    context 'when the response code is 405' do
+      before { allow(response).to receive(:response_code) { 405 } }
 
       it 'raises a RemoteResource::HTTPMethodNotAllowed' do
         expect{ raise_http_errors }.to raise_error RemoteResource::HTTPMethodNotAllowed
       end
     end
 
-    context 'when the response status is 406' do
-      before { allow(response).to receive(:status) { 406 } }
+    context 'when the response code is 406' do
+      before { allow(response).to receive(:response_code) { 406 } }
 
       it 'raises a RemoteResource::HTTPNotAcceptable' do
         expect{ raise_http_errors }.to raise_error RemoteResource::HTTPNotAcceptable
       end
     end
 
-    context 'when the response status is 408' do
-      before { allow(response).to receive(:status) { 408 } }
+    context 'when the response code is 408' do
+      before { allow(response).to receive(:response_code) { 408 } }
 
       it 'raises a RemoteResource::HTTPRequestTimeout' do
         expect{ raise_http_errors }.to raise_error RemoteResource::HTTPRequestTimeout
@@ -560,96 +560,96 @@ describe RemoteResource::Request do
     end
 
 
-    context 'when the response status is 409' do
-      before { allow(response).to receive(:status) { 409 } }
+    context 'when the response code is 409' do
+      before { allow(response).to receive(:response_code) { 409 } }
 
       it 'raises a RemoteResource::HTTPConflict' do
         expect{ raise_http_errors }.to raise_error RemoteResource::HTTPConflict
       end
     end
 
-    context 'when the response status is 410' do
-      before { allow(response).to receive(:status) { 410 } }
+    context 'when the response code is 410' do
+      before { allow(response).to receive(:response_code) { 410 } }
 
       it 'raises a RemoteResource::HTTPGone' do
         expect{ raise_http_errors }.to raise_error RemoteResource::HTTPGone
       end
     end
 
-    context 'when the response status is 418' do
-      before { allow(response).to receive(:status) { 418 } }
+    context 'when the response code is 418' do
+      before { allow(response).to receive(:response_code) { 418 } }
 
       it 'raises a RemoteResource::HTTPTeapot' do
         expect{ raise_http_errors }.to raise_error RemoteResource::HTTPTeapot
       end
     end
 
-    context 'when the response status is 444' do
-      before { allow(response).to receive(:status) { 444 } }
+    context 'when the response code is 444' do
+      before { allow(response).to receive(:response_code) { 444 } }
 
       it 'raises a RemoteResource::HTTPNoResponse' do
         expect{ raise_http_errors }.to raise_error RemoteResource::HTTPNoResponse
       end
     end
 
-    context 'when the response status is 494' do
-      before { allow(response).to receive(:status) { 494 } }
+    context 'when the response code is 494' do
+      before { allow(response).to receive(:response_code) { 494 } }
 
       it 'raises a RemoteResource::HTTPRequestHeaderTooLarge' do
         expect{ raise_http_errors }.to raise_error RemoteResource::HTTPRequestHeaderTooLarge
       end
     end
 
-    context 'when the response status is 495' do
-      before { allow(response).to receive(:status) { 495 } }
+    context 'when the response code is 495' do
+      before { allow(response).to receive(:response_code) { 495 } }
 
       it 'raises a RemoteResource::HTTPCertError' do
         expect{ raise_http_errors }.to raise_error RemoteResource::HTTPCertError
       end
     end
 
-    context 'when the response status is 496' do
-      before { allow(response).to receive(:status) { 496 } }
+    context 'when the response code is 496' do
+      before { allow(response).to receive(:response_code) { 496 } }
 
       it 'raises a RemoteResource::HTTPNoCert' do
         expect{ raise_http_errors }.to raise_error RemoteResource::HTTPNoCert
       end
     end
 
-    context 'when the response status is 497' do
-      before { allow(response).to receive(:status) { 497 } }
+    context 'when the response code is 497' do
+      before { allow(response).to receive(:response_code) { 497 } }
 
       it 'raises a RemoteResource::HTTPToHTTPS' do
         expect{ raise_http_errors }.to raise_error RemoteResource::HTTPToHTTPS
       end
     end
 
-    context 'when the response status is 499' do
-      before { allow(response).to receive(:status) { 499 } }
+    context 'when the response code is 499' do
+      before { allow(response).to receive(:response_code) { 499 } }
 
       it 'raises a RemoteResource::HTTPClientClosedRequest' do
         expect{ raise_http_errors }.to raise_error RemoteResource::HTTPClientClosedRequest
       end
     end
 
-    context 'when the response status is in the 4xx range and no other error is raised' do
-      before { allow(response).to receive(:status) { 430 } }
+    context 'when the response code is in the 4xx range and no other error is raised' do
+      before { allow(response).to receive(:response_code) { 430 } }
 
       it 'raises a RemoteResource::HTTPClientError' do
         expect{ raise_http_errors }.to raise_error RemoteResource::HTTPClientError
       end
     end
 
-    context 'when the response status is in the 5xx range and no other error is raised' do
-      before { allow(response).to receive(:status) { 501 } }
+    context 'when the response code is in the 5xx range and no other error is raised' do
+      before { allow(response).to receive(:response_code) { 501 } }
 
       it 'raises a RemoteResource::HTTPServerError' do
         expect{ raise_http_errors }.to raise_error RemoteResource::HTTPServerError
       end
     end
 
-    context 'when the response status is nothing and no other error is raised' do
-      before { allow(response).to receive(:status) { 501 } }
+    context 'when the response code is nothing and no other error is raised' do
+      before { allow(response).to receive(:response_code) { 501 } }
 
       it 'raises a RemoteResource::HTTPError' do
         expect{ raise_http_errors }.to raise_error RemoteResource::HTTPError

@@ -25,7 +25,17 @@ module RemoteResource
   RemoteResourceError = Class.new StandardError
 
   RESTActionUnknown = Class.new RemoteResourceError # REST action
-  HTTPError = Class.new RemoteResourceError # HTTP errors
+
+  class HTTPError < RemoteResourceError # HTTP errors
+
+    def initialize(response)
+      if response.try :response_code
+        super "with HTTP response status: #{response.response_code} and response: #{response}"
+      else
+        super "with HTTP response: #{response}"
+      end
+    end
+  end
 
   HTTPRedirectionError = Class.new HTTPError # HTTP 3xx
   HTTPClientError      = Class.new HTTPError # HTTP 4xx

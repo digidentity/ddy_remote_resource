@@ -25,6 +25,8 @@ describe RemoteResource::Request do
 
   let(:request) { described_class.new resource, rest_action, attributes, connection_options.dup }
 
+  specify { expect(described_class).to include RemoteResource::HTTPErrors }
+
   describe '#connection' do
     it 'uses the connection of the resource_klass' do
       expect(request.connection).to eql Typhoeus::Request
@@ -169,7 +171,32 @@ describe RemoteResource::Request do
 
     let(:determined_connection_options) { request.connection_options }
 
-    before { allow_any_instance_of(Typhoeus::Request).to receive(:run) { typhoeus_response } }
+    before do
+      allow_any_instance_of(Typhoeus::Request).to receive(:run) { typhoeus_response }
+      allow(typhoeus_response).to receive(:success?) { true }
+    end
+
+    shared_examples 'a conditional construct for the response' do
+      context 'when the response is successful' do
+        it 'makes a RemoteResource::Response object with the Typhoeus::Response object and the connection_options' do
+          expect(RemoteResource::Response).to receive(:new).with(typhoeus_response, determined_connection_options).and_call_original
+          request.perform
+        end
+
+        it 'returns a RemoteResource::Response object' do
+          expect(request.perform).to be_a RemoteResource::Response
+        end
+      end
+
+      context 'when the response is NOT successful' do
+        before { allow(typhoeus_response).to receive(:success?) { false } }
+
+        it 'calls #raise_http_errors to raise an error' do
+          expect(request).to receive(:raise_http_errors).with typhoeus_response
+          request.perform
+        end
+      end
+    end
 
     context 'when the rest_action is :get' do
       let(:rest_action) { 'get' }
@@ -179,14 +206,7 @@ describe RemoteResource::Request do
         request.perform
       end
 
-      it 'makes a RemoteResource::Response object with the Typhoeus::Response object and the connection_options' do
-        expect(RemoteResource::Response).to receive(:new).with(typhoeus_response, determined_connection_options).and_call_original
-        request.perform
-      end
-
-      it 'returns a RemoteResource::Response object' do
-        expect(request.perform).to be_a RemoteResource::Response
-      end
+      it_behaves_like 'a conditional construct for the response'
     end
 
     context 'when the rest_action is :put' do
@@ -197,14 +217,7 @@ describe RemoteResource::Request do
         request.perform
       end
 
-      it 'makes a RemoteResource::Response object with the Typhoeus::Response object and the connection_options' do
-        expect(RemoteResource::Response).to receive(:new).with(typhoeus_response, determined_connection_options).and_call_original
-        request.perform
-      end
-
-      it 'returns a RemoteResource::Response object' do
-        expect(request.perform).to be_a RemoteResource::Response
-      end
+      it_behaves_like 'a conditional construct for the response'
     end
 
     context 'when the rest_action is :put' do
@@ -215,14 +228,7 @@ describe RemoteResource::Request do
         request.perform
       end
 
-      it 'makes a RemoteResource::Response object with the Typhoeus::Response object and the connection_options' do
-        expect(RemoteResource::Response).to receive(:new).with(typhoeus_response, determined_connection_options).and_call_original
-        request.perform
-      end
-
-      it 'returns a RemoteResource::Response object' do
-        expect(request.perform).to be_a RemoteResource::Response
-      end
+      it_behaves_like 'a conditional construct for the response'
     end
 
     context 'when the rest_action is :patch' do
@@ -233,14 +239,7 @@ describe RemoteResource::Request do
         request.perform
       end
 
-      it 'makes a RemoteResource::Response object with the Typhoeus::Response object and the connection_options' do
-        expect(RemoteResource::Response).to receive(:new).with(typhoeus_response, determined_connection_options).and_call_original
-        request.perform
-      end
-
-      it 'returns a RemoteResource::Response object' do
-        expect(request.perform).to be_a RemoteResource::Response
-      end
+      it_behaves_like 'a conditional construct for the response'
     end
 
     context 'when the rest_action is :post' do
@@ -251,21 +250,14 @@ describe RemoteResource::Request do
         request.perform
       end
 
-      it 'makes a RemoteResource::Response object with the Typhoeus::Response object and the connection_options' do
-        expect(RemoteResource::Response).to receive(:new).with(typhoeus_response, determined_connection_options).and_call_original
-        request.perform
-      end
-
-      it 'returns a RemoteResource::Response object' do
-        expect(request.perform).to be_a RemoteResource::Response
-      end
+      it_behaves_like 'a conditional construct for the response'
     end
 
     context 'when the rest_action is unknown' do
       let(:rest_action) { 'foo' }
 
-      it 'raises the RemoteResource::Request::RESTActionUnknown error' do
-        expect{ request.perform }.to raise_error RemoteResource::Request::RESTActionUnknown, "for action: 'foo'"
+      it 'raises the RemoteResource::RESTActionUnknown error' do
+        expect{ request.perform }.to raise_error RemoteResource::RESTActionUnknown, "for action: 'foo'"
       end
     end
   end
@@ -491,6 +483,176 @@ describe RemoteResource::Request do
 
       it 'returns the Class of the resource' do
         expect(request.send :resource_klass).to eql RemoteResource::RequestDummy
+      end
+    end
+  end
+
+  describe '#raise_http_errors' do
+    let(:response)              { double.as_null_object }
+    let(:raise_http_errors) { request.send :raise_http_errors, response }
+
+    context 'when the response status is 301, 302, 303 or 307' do
+      response_statuses = [301, 302, 303, 307]
+      response_statuses.each do |response_status|
+
+        before { allow(response).to receive(:status) { response_status } }
+
+        it "raises a RemoteResource::HTTPRedirectionError with response status #{response_status}" do
+          expect{ raise_http_errors }.to raise_error RemoteResource::HTTPRedirectionError
+        end
+      end
+    end
+
+    context 'when the response status is 400' do
+      before { allow(response).to receive(:status) { 400 } }
+
+      it 'raises a RemoteResource::HTTPBadRequest' do
+        expect{ raise_http_errors }.to raise_error RemoteResource::HTTPBadRequest
+      end
+    end
+
+    context 'when the response status is 401' do
+      before { allow(response).to receive(:status) { 401 } }
+
+      it 'raises a RemoteResource::HTTPUnauthorized' do
+        expect{ raise_http_errors }.to raise_error RemoteResource::HTTPUnauthorized
+      end
+    end
+
+    context 'when the response status is 403' do
+      before { allow(response).to receive(:status) { 403 } }
+
+      it 'raises a RemoteResource::HTTPForbidden' do
+        expect{ raise_http_errors }.to raise_error RemoteResource::HTTPForbidden
+      end
+    end
+
+    context 'when the response status is 404' do
+      before { allow(response).to receive(:status) { 404 } }
+
+      it 'raises a RemoteResource::HTTPNotFound' do
+        expect{ raise_http_errors }.to raise_error RemoteResource::HTTPNotFound
+      end
+    end
+
+    context 'when the response status is 405' do
+      before { allow(response).to receive(:status) { 405 } }
+
+      it 'raises a RemoteResource::HTTPMethodNotAllowed' do
+        expect{ raise_http_errors }.to raise_error RemoteResource::HTTPMethodNotAllowed
+      end
+    end
+
+    context 'when the response status is 406' do
+      before { allow(response).to receive(:status) { 406 } }
+
+      it 'raises a RemoteResource::HTTPNotAcceptable' do
+        expect{ raise_http_errors }.to raise_error RemoteResource::HTTPNotAcceptable
+      end
+    end
+
+    context 'when the response status is 408' do
+      before { allow(response).to receive(:status) { 408 } }
+
+      it 'raises a RemoteResource::HTTPRequestTimeout' do
+        expect{ raise_http_errors }.to raise_error RemoteResource::HTTPRequestTimeout
+      end
+    end
+
+
+    context 'when the response status is 409' do
+      before { allow(response).to receive(:status) { 409 } }
+
+      it 'raises a RemoteResource::HTTPConflict' do
+        expect{ raise_http_errors }.to raise_error RemoteResource::HTTPConflict
+      end
+    end
+
+    context 'when the response status is 410' do
+      before { allow(response).to receive(:status) { 410 } }
+
+      it 'raises a RemoteResource::HTTPGone' do
+        expect{ raise_http_errors }.to raise_error RemoteResource::HTTPGone
+      end
+    end
+
+    context 'when the response status is 418' do
+      before { allow(response).to receive(:status) { 418 } }
+
+      it 'raises a RemoteResource::HTTPTeapot' do
+        expect{ raise_http_errors }.to raise_error RemoteResource::HTTPTeapot
+      end
+    end
+
+    context 'when the response status is 444' do
+      before { allow(response).to receive(:status) { 444 } }
+
+      it 'raises a RemoteResource::HTTPNoResponse' do
+        expect{ raise_http_errors }.to raise_error RemoteResource::HTTPNoResponse
+      end
+    end
+
+    context 'when the response status is 494' do
+      before { allow(response).to receive(:status) { 494 } }
+
+      it 'raises a RemoteResource::HTTPRequestHeaderTooLarge' do
+        expect{ raise_http_errors }.to raise_error RemoteResource::HTTPRequestHeaderTooLarge
+      end
+    end
+
+    context 'when the response status is 495' do
+      before { allow(response).to receive(:status) { 495 } }
+
+      it 'raises a RemoteResource::HTTPCertError' do
+        expect{ raise_http_errors }.to raise_error RemoteResource::HTTPCertError
+      end
+    end
+
+    context 'when the response status is 496' do
+      before { allow(response).to receive(:status) { 496 } }
+
+      it 'raises a RemoteResource::HTTPNoCert' do
+        expect{ raise_http_errors }.to raise_error RemoteResource::HTTPNoCert
+      end
+    end
+
+    context 'when the response status is 497' do
+      before { allow(response).to receive(:status) { 497 } }
+
+      it 'raises a RemoteResource::HTTPToHTTPS' do
+        expect{ raise_http_errors }.to raise_error RemoteResource::HTTPToHTTPS
+      end
+    end
+
+    context 'when the response status is 499' do
+      before { allow(response).to receive(:status) { 499 } }
+
+      it 'raises a RemoteResource::HTTPClientClosedRequest' do
+        expect{ raise_http_errors }.to raise_error RemoteResource::HTTPClientClosedRequest
+      end
+    end
+
+    context 'when the response status is in the 4xx range and no other error is raised' do
+      before { allow(response).to receive(:status) { 430 } }
+
+      it 'raises a RemoteResource::HTTPClientError' do
+        expect{ raise_http_errors }.to raise_error RemoteResource::HTTPClientError
+      end
+    end
+
+    context 'when the response status is in the 5xx range and no other error is raised' do
+      before { allow(response).to receive(:status) { 501 } }
+
+      it 'raises a RemoteResource::HTTPServerError' do
+        expect{ raise_http_errors }.to raise_error RemoteResource::HTTPServerError
+      end
+    end
+
+    context 'when the response status is nothing and no other error is raised' do
+      before { allow(response).to receive(:status) { 501 } }
+
+      it 'raises a RemoteResource::HTTPError' do
+        expect{ raise_http_errors }.to raise_error RemoteResource::HTTPError
       end
     end
   end

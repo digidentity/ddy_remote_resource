@@ -6,12 +6,14 @@ module RemoteResource
       module ClassMethods
 
         def create(attributes = {}, connection_options = {})
+          resource = new attributes
           response = RemoteResource::Request.new(self, :post, attributes, connection_options).perform
-          handle_response response
+          resource.handle_response response
         end
       end
 
       def update_attributes(attributes = {}, connection_options = {})
+        rebuild_resource attributes
         attributes.reverse_merge! id: id
         create_or_update attributes, connection_options
         success? ? self : false

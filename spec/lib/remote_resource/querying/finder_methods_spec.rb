@@ -79,4 +79,27 @@ describe RemoteResource::Querying::FinderMethods do
     end
   end
 
+  describe '.where' do
+    let(:response) { instance_double(RemoteResource::Response) }
+    let(:params) do
+      { username: 'mies' }
+    end
+
+    before do
+      allow(dummy_class).to receive(:build_collection_from_response)      { dummy }
+      allow_any_instance_of(RemoteResource::Request).to receive(:perform) { response }
+    end
+
+    it 'performs a RemoteResource::Request with the connection_options collection' do
+      expect(RemoteResource::Request).to receive(:new).with(dummy_class, :get, params, { collection: true }).and_call_original
+      expect_any_instance_of(RemoteResource::Request).to receive(:perform)
+      dummy_class.where params
+    end
+
+    it 'builds the resources from the RemoteResource::Response' do
+      expect(dummy_class).to receive(:build_collection_from_response).with response
+      dummy_class.where params
+    end
+  end
+
 end

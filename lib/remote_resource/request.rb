@@ -1,7 +1,6 @@
 module RemoteResource
   class Request
-
-    RESTActionUnknown = Class.new(StandardError)
+    include RemoteResource::HTTPErrors
 
     attr_reader :resource, :rest_action, :attributes
 
@@ -33,10 +32,14 @@ module RemoteResource
       when :put, :patch, :post
         response = connection.public_send rest_action, determined_request_url, body: determined_attributes, headers: determined_headers
       else
-        raise RESTActionUnknown, "for action: '#{rest_action}'"
+        raise RemoteResource::RESTActionUnknown, "for action: '#{rest_action}'"
       end
 
-      RemoteResource::Response.new response, connection_options
+      if response.success? || response.response_code == 422
+        RemoteResource::Response.new response, connection_options
+      else
+        raise_http_errors response
+      end
     end
 
     def determined_request_url

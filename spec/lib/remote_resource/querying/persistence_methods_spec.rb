@@ -25,8 +25,13 @@ describe RemoteResource::Querying::PersistenceMethods do
     end
 
     before do
-      allow(dummy_class).to receive(:handle_response)                     { dummy }
+      allow_any_instance_of(dummy_class).to receive(:handle_response)
       allow_any_instance_of(RemoteResource::Request).to receive(:perform) { response }
+    end
+
+    it 'instantiates the resource with the attributes' do
+      expect(dummy_class).to receive(:new).with(attributes).and_call_original
+      dummy_class.create attributes
     end
 
     it 'performs a RemoteResource::Request' do
@@ -36,7 +41,7 @@ describe RemoteResource::Querying::PersistenceMethods do
     end
 
     it 'handles the RemoteResource::Response' do
-      expect(dummy_class).to receive(:handle_response).with response
+      expect_any_instance_of(dummy_class).to receive(:handle_response).with response
       dummy_class.create attributes
     end
   end
@@ -51,6 +56,11 @@ describe RemoteResource::Querying::PersistenceMethods do
     before do
       allow(dummy).to receive(:create_or_update) { dummy }
       allow(dummy).to receive(:success?)
+    end
+
+    it 'rebuilds the resource with the attributes' do
+      expect(dummy).to receive(:rebuild_resource).with(attributes).and_call_original
+      dummy.update_attributes attributes
     end
 
     context 'when the id is given in the attributes' do

@@ -45,21 +45,6 @@ module RemoteResource
         end
       end
 
-      def handle_response(response)
-        if response.success?
-          build_resource_from_response response
-        elsif response.unprocessable_entity?
-          build_resource_from_response(response).tap do |resource|
-            resource.assign_errors_from_response response
-          end
-        else
-          new.tap do |resource|
-            resource.assign_response response
-            resource.assign_errors_from_response response
-          end
-        end
-      end
-
       private
 
       def threaded_connection_options_thread_name
@@ -96,14 +81,12 @@ module RemoteResource
     end
 
     def handle_response(response)
-      if response.success?
-        rebuild_resource_from_response response
-      elsif response.unprocessable_entity?
+      if response.unprocessable_entity?
         rebuild_resource_from_response(response).tap do |resource|
           resource.assign_errors_from_response response
         end
       else
-        assign_errors_from_response response
+        rebuild_resource_from_response(response)
       end
     end
 

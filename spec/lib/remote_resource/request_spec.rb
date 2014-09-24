@@ -173,11 +173,25 @@ describe RemoteResource::Request do
 
     before do
       allow_any_instance_of(Typhoeus::Request).to receive(:run) { typhoeus_response }
+      allow(typhoeus_response).to receive(:response_code)
       allow(typhoeus_response).to receive(:success?) { true }
     end
 
     shared_examples 'a conditional construct for the response' do
       context 'when the response is successful' do
+        it 'makes a RemoteResource::Response object with the Typhoeus::Response object and the connection_options' do
+          expect(RemoteResource::Response).to receive(:new).with(typhoeus_response, determined_connection_options).and_call_original
+          request.perform
+        end
+
+        it 'returns a RemoteResource::Response object' do
+          expect(request.perform).to be_a RemoteResource::Response
+        end
+      end
+
+      context 'when the response_code of the response is 422' do
+        before { allow(typhoeus_response).to receive(:response_code) { 422 } }
+
         it 'makes a RemoteResource::Response object with the Typhoeus::Response object and the connection_options' do
           expect(RemoteResource::Response).to receive(:new).with(typhoeus_response, determined_connection_options).and_call_original
           request.perform

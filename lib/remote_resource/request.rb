@@ -35,7 +35,7 @@ module RemoteResource
         raise RemoteResource::RESTActionUnknown, "for action: '#{rest_action}'"
       end
 
-      if response.success?
+      if response.success? || response.response_code == 422
         RemoteResource::Response.new response, connection_options
       else
         raise_http_errors response

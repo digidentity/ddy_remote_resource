@@ -519,132 +519,32 @@ describe RemoteResource::Request do
       end
     end
 
-    context 'when the response code is 400' do
-      let(:response_code) { 400 }
+    context 'when the response code is in the 4xx range' do
+      response_codes_with_error_class = {
+        400 => RemoteResource::HTTPBadRequest,
+        401 => RemoteResource::HTTPUnauthorized,
+        403 => RemoteResource::HTTPForbidden,
+        404 => RemoteResource::HTTPNotFound,
+        405 => RemoteResource::HTTPMethodNotAllowed,
+        406 => RemoteResource::HTTPNotAcceptable,
+        408 => RemoteResource::HTTPRequestTimeout,
+        409 => RemoteResource::HTTPConflict,
+        410 => RemoteResource::HTTPGone,
+        418 => RemoteResource::HTTPTeapot,
+        444 => RemoteResource::HTTPNoResponse,
+        494 => RemoteResource::HTTPRequestHeaderTooLarge,
+        495 => RemoteResource::HTTPCertError,
+        496 => RemoteResource::HTTPNoCert,
+        497 => RemoteResource::HTTPToHTTPS,
+        499 => RemoteResource::HTTPClientClosedRequest,
+      }
+      response_codes_with_error_class.each do |response_code, error_class|
 
-      it 'raises a RemoteResource::HTTPBadRequest' do
-        expect{ raise_http_errors }.to raise_error RemoteResource::HTTPBadRequest, "with HTTP response status: #{response_code} and response: #{response}"
-      end
-    end
+        it "raises a #{error_class} with response code #{response_code}" do
+          allow(response).to receive(:response_code) { response_code }
 
-    context 'when the response code is 401' do
-      let(:response_code) { 401 }
-
-      it 'raises a RemoteResource::HTTPUnauthorized' do
-        expect{ raise_http_errors }.to raise_error RemoteResource::HTTPUnauthorized, "with HTTP response status: #{response_code} and response: #{response}"
-      end
-    end
-
-    context 'when the response code is 403' do
-      let(:response_code) { 403 }
-
-      it 'raises a RemoteResource::HTTPForbidden' do
-        expect{ raise_http_errors }.to raise_error RemoteResource::HTTPForbidden, "with HTTP response status: #{response_code} and response: #{response}"
-      end
-    end
-
-    context 'when the response code is 404' do
-      let(:response_code) { 404 }
-
-      it 'raises a RemoteResource::HTTPNotFound' do
-        expect{ raise_http_errors }.to raise_error RemoteResource::HTTPNotFound, "with HTTP response status: #{response_code} and response: #{response}"
-      end
-    end
-
-    context 'when the response code is 405' do
-      let(:response_code) { 405 }
-
-      it 'raises a RemoteResource::HTTPMethodNotAllowed' do
-        expect{ raise_http_errors }.to raise_error RemoteResource::HTTPMethodNotAllowed, "with HTTP response status: #{response_code} and response: #{response}"
-      end
-    end
-
-    context 'when the response code is 406' do
-      let(:response_code) { 406 }
-
-      it 'raises a RemoteResource::HTTPNotAcceptable' do
-        expect{ raise_http_errors }.to raise_error RemoteResource::HTTPNotAcceptable, "with HTTP response status: #{response_code} and response: #{response}"
-      end
-    end
-
-    context 'when the response code is 408' do
-      let(:response_code) { 408 }
-
-      it 'raises a RemoteResource::HTTPRequestTimeout' do
-        expect{ raise_http_errors }.to raise_error RemoteResource::HTTPRequestTimeout, "with HTTP response status: #{response_code} and response: #{response}"
-      end
-    end
-
-
-    context 'when the response code is 409' do
-      let(:response_code) { 409 }
-
-      it 'raises a RemoteResource::HTTPConflict' do
-        expect{ raise_http_errors }.to raise_error RemoteResource::HTTPConflict, "with HTTP response status: #{response_code} and response: #{response}"
-      end
-    end
-
-    context 'when the response code is 410' do
-      let(:response_code) { 410 }
-
-      it 'raises a RemoteResource::HTTPGone' do
-        expect{ raise_http_errors }.to raise_error RemoteResource::HTTPGone, "with HTTP response status: #{response_code} and response: #{response}"
-      end
-    end
-
-    context 'when the response code is 418' do
-      let(:response_code) { 418 }
-
-      it 'raises a RemoteResource::HTTPTeapot' do
-        expect{ raise_http_errors }.to raise_error RemoteResource::HTTPTeapot, "with HTTP response status: #{response_code} and response: #{response}"
-      end
-    end
-
-    context 'when the response code is 444' do
-      let(:response_code) { 444 }
-
-      it 'raises a RemoteResource::HTTPNoResponse' do
-        expect{ raise_http_errors }.to raise_error RemoteResource::HTTPNoResponse, "with HTTP response status: #{response_code} and response: #{response}"
-      end
-    end
-
-    context 'when the response code is 494' do
-      let(:response_code) { 494 }
-
-      it 'raises a RemoteResource::HTTPRequestHeaderTooLarge' do
-        expect{ raise_http_errors }.to raise_error RemoteResource::HTTPRequestHeaderTooLarge, "with HTTP response status: #{response_code} and response: #{response}"
-      end
-    end
-
-    context 'when the response code is 495' do
-      let(:response_code) { 495 }
-
-      it 'raises a RemoteResource::HTTPCertError' do
-        expect{ raise_http_errors }.to raise_error RemoteResource::HTTPCertError, "with HTTP response status: #{response_code} and response: #{response}"
-      end
-    end
-
-    context 'when the response code is 496' do
-      let(:response_code) { 496 }
-
-      it 'raises a RemoteResource::HTTPNoCert' do
-        expect{ raise_http_errors }.to raise_error RemoteResource::HTTPNoCert, "with HTTP response status: #{response_code} and response: #{response}"
-      end
-    end
-
-    context 'when the response code is 497' do
-      let(:response_code) { 497 }
-
-      it 'raises a RemoteResource::HTTPToHTTPS' do
-        expect{ raise_http_errors }.to raise_error RemoteResource::HTTPToHTTPS, "with HTTP response status: #{response_code} and response: #{response}"
-      end
-    end
-
-    context 'when the response code is 499' do
-      let(:response_code) { 499 }
-
-      it 'raises a RemoteResource::HTTPClientClosedRequest' do
-        expect{ raise_http_errors }.to raise_error RemoteResource::HTTPClientClosedRequest, "with HTTP response status: #{response_code} and response: #{response}"
+          expect{ raise_http_errors }.to raise_error error_class, "with HTTP response status: #{response_code} and response: #{response}"
+        end
       end
     end
 

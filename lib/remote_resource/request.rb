@@ -80,7 +80,8 @@ module RemoteResource
     def determined_headers
       headers = original_connection_options[:headers].presence || {}
 
-      connection_options[:default_headers].presence || resource.connection_options.headers.merge(headers)
+      (connection_options[:default_headers].presence ||
+          resource.connection_options.headers.merge(headers)).reverse_merge RemoteResource::Base.global_headers
     end
 
     private

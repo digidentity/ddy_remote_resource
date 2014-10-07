@@ -420,8 +420,22 @@ describe RemoteResource::Request do
   end
 
   describe '#determined_headers' do
+    let(:global_headers) do
+      {
+        'X-Locale' => 'en',
+        'Authorization' => 'Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ=='
+      }
+    end
+
+    before { RemoteResource::Base.global_headers = global_headers }
+    after  { RemoteResource::Base.global_headers = nil }
+
     let(:headers) do
       { 'Baz' => 'FooBar' }
+    end
+
+    let(:default_headers) do
+      dummy_class.default_headers
     end
 
     context 'the connection_options contain a default_headers' do
@@ -435,7 +449,7 @@ describe RemoteResource::Request do
         end
 
         it 'uses the default_headers for the request headers' do
-          expect(request.determined_headers).to eql({ "Foo"=>"Bar" })
+          expect(request.determined_headers).to eql default_headers.merge(global_headers)
         end
       end
 
@@ -445,7 +459,7 @@ describe RemoteResource::Request do
         end
 
         it 'uses the default_headers for the request headers' do
-          expect(request.determined_headers).to eql({ "Foo"=>"Bar" })
+          expect(request.determined_headers).to eql default_headers.merge(global_headers)
         end
       end
     end
@@ -457,17 +471,21 @@ describe RemoteResource::Request do
         end
 
         it 'uses the headers for the request headers' do
-          expect(request.determined_headers).to eql({ "Accept"=>"application/json", "Baz"=>"FooBar" })
+          expect(request.determined_headers).to eql default_headers.merge(headers).merge(global_headers)
         end
       end
 
       context 'and the given connection_options (original_connection_options) do NOT contain a headers' do
         context 'and the resource contains a extra_headers' do
+          let(:extra_headers) do
+            { 'BarBaz' => 'Baz' }
+          end
+
           it 'uses the headers of the resource for the request headers' do
-            dummy_class.extra_headers = { "BarBaz" => "Baz" }
+            dummy_class.extra_headers = extra_headers
             dummy_class.connection_options.reload!
 
-            expect(request.determined_headers).to eql({ "Accept"=>"application/json",  "BarBaz"=>"Baz" })
+            expect(request.determined_headers).to eql default_headers.merge(extra_headers).merge(global_headers)
 
             dummy_class.extra_headers = nil
             dummy_class.connection_options.reload!
@@ -476,7 +494,7 @@ describe RemoteResource::Request do
 
         context 'and the resource does NOT contain a extra_headers' do
           it 'does NOT use the headers for the request headers' do
-            expect(request.determined_headers).to eql({ "Accept"=>"application/json" })
+            expect(request.determined_headers).to eql default_headers.merge(global_headers)
           end
         end
       end

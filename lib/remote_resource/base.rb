@@ -25,6 +25,14 @@ module RemoteResource
       class_attribute :root_element, instance_accessor: false
     end
 
+    def self.global_headers=(headers)
+      Thread.current[:global_headers] = headers
+    end
+
+    def self.global_headers
+      Thread.current[:global_headers] ||= {}
+    end
+
     module ClassMethods
 
       def connection_options

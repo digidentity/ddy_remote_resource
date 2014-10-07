@@ -34,6 +34,37 @@ describe RemoteResource::Base do
     end
   end
 
+  describe '.global_headers=' do
+    let(:global_headers) do
+      {
+        'X-Locale' => 'en',
+        'Authorization' => 'Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ=='
+      }
+    end
+
+    after { described_class.global_headers = nil }
+
+    it 'sets the global headers Thread variable' do
+      expect{ described_class.global_headers = global_headers }.to change{ Thread.current[:global_headers] }.from(nil).to global_headers
+    end
+  end
+
+  describe '.global_headers' do
+    let(:global_headers) do
+      {
+        'X-Locale' => 'en',
+        'Authorization' => 'Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ=='
+      }
+    end
+
+    before { described_class.global_headers = global_headers }
+    after  { described_class.global_headers = nil }
+
+    it 'returns the global headers Thread variable' do
+      expect(described_class.global_headers).to eql global_headers
+    end
+  end
+
   describe '.connection_options' do
     it 'instantiates as a RemoteResource::ConnectionOptions' do
       expect(dummy_class.connection_options).to be_a RemoteResource::ConnectionOptions

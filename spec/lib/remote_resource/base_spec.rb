@@ -168,6 +168,50 @@ describe RemoteResource::Base do
     end
   end
 
+  describe '#empty?' do
+    before { allow(dummy).to receive(:_response) { response } }
+
+    context 'when the response is present' do
+      let(:response) { instance_double(RemoteResource::Response, sanitized_response_body: sanitized_response_body) }
+
+      context 'and the #sanitized_response_body is present' do
+        let(:sanitized_response_body) do
+          { name: 'Mies' }
+        end
+
+        it 'returns false' do
+          expect(dummy.empty?).to eql false
+        end
+      end
+
+      context 'and the #sanitized_response_body is blank' do
+        let(:sanitized_response_body) do
+          {}
+        end
+
+        it 'returns true' do
+          expect(dummy.empty?).to eql true
+        end
+      end
+
+      context 'and the #sanitized_response_body is NOT present' do
+        let(:sanitized_response_body) { nil }
+
+        it 'returns true' do
+          expect(dummy.empty?).to eql true
+        end
+      end
+    end
+
+    context 'when the response is NOT present' do
+      let(:response) { nil }
+
+      it 'returns true' do
+        expect(dummy.empty?).to eql true
+      end
+    end
+  end
+
   describe '#persisted?' do
     context 'when id is present' do
       it 'returns true' do

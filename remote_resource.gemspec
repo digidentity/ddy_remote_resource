@@ -6,8 +6,8 @@ require 'remote_resource/version'
 Gem::Specification.new do |spec|
   spec.name          = 'remote_resource'
   spec.version       = RemoteResource::VERSION
-  spec.authors       = ["Jan van der Pas"]
-  spec.email         = ["jvanderpas@digidentity.eu"]
+  spec.authors       = ['Jan van der Pas']
+  spec.email         = ['jvanderpas@digidentity.eu']
   spec.summary       = %q{RemoteResource, a gem to use resources with REST services.}
   spec.description   = %q{RemoteResource, a gem to use resources with REST services. A replacement for ActiveResource gem.}
   spec.homepage      = ''

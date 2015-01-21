@@ -29,10 +29,10 @@ module RemoteResource
   class HTTPError < RemoteResourceError # HTTP errors
 
     def initialize(response)
-      if response.try :response_code
-        super "with HTTP response status: #{response.response_code} and response: #{response}"
+      if response.try(:response_code)
+        super "for url: #{response.try(:effective_url)} with HTTP response status: #{response.response_code} and response: #{response.inspect}"
       else
-        super "with HTTP response: #{response}"
+        super "for url: #{response.try(:effective_url)} with HTTP response: #{response.inspect}"
       end
     end
   end

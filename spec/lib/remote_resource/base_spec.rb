@@ -74,8 +74,8 @@ describe RemoteResource::Base do
       expect(dummy_class.connection_options.base_class).to be RemoteResource::Dummy
     end
 
-    it 'sets the name of Thread variable with the implemented class' do
-      expect(dummy_class.connection_options).to eql Thread.current['remote_resource.dummy.connection_options']
+    it 'does NOT memorize the connection options' do
+      expect(dummy_class.connection_options.object_id).not_to eql dummy_class.connection_options.object_id
     end
   end
 

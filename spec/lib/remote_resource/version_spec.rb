@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe RemoteResource::VERSION do
 
-  it { should eql '0.4.2' }
+  it { should eql '0.4.3' }
 end
 
 

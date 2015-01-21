@@ -11,7 +11,11 @@ To replace `ActiveResource` by providing a dynamic and customizable API interfac
 Add this line to your application's Gemfile:
 
 ```ruby
+# Use this to fetch the gem from Gitlab
 gem 'remote_resource', git: 'git@lab.digidentity.eu:jvanderpas/remote_resource.git'
+
+# Use this to fetch the gem from RubyGems.org
+gem 'ddy_remote_resource', require: 'remote_resource'
 ```
 
 

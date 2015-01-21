@@ -36,7 +36,7 @@ module RemoteResource
     module ClassMethods
 
       def connection_options
-        Thread.current[connection_options_thread_name] ||= RemoteResource::ConnectionOptions.new(self)
+        RemoteResource::ConnectionOptions.new(self)
       end
 
       def threaded_connection_options
@@ -57,10 +57,6 @@ module RemoteResource
 
       def threaded_connection_options_thread_name
         "remote_resource.#{_module_name}.threaded_connection_options"
-      end
-
-      def connection_options_thread_name
-        "remote_resource.#{_module_name}.connection_options"
       end
 
       def _module_name

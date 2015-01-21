@@ -520,10 +520,14 @@ describe RemoteResource::Request do
   end
 
   describe '#raise_http_errors' do
+    let(:effective_url)     { 'http://www.foobar.com/request_dummy.json' }
     let(:response)          { instance_double Typhoeus::Response }
     let(:raise_http_errors) { request.send :raise_http_errors, response }
 
-    before { allow(response).to receive(:response_code) { response_code } }
+    before do
+      allow(response).to receive(:response_code) { response_code }
+      allow(response).to receive(:effective_url) { effective_url }
+    end
 
     context 'when the response code is 301, 302, 303 or 307' do
       response_codes = [301, 302, 303, 307]
@@ -532,7 +536,7 @@ describe RemoteResource::Request do
         it "raises a RemoteResource::HTTPRedirectionError with response code #{response_code}" do
           allow(response).to receive(:response_code) { response_code }
 
-          expect{ raise_http_errors }.to raise_error RemoteResource::HTTPRedirectionError, "with HTTP response status: #{response_code} and response: #{response}"
+          expect{ raise_http_errors }.to raise_error RemoteResource::HTTPRedirectionError, "for url: #{effective_url} with HTTP response status: #{response_code} and response: #{response.inspect}"
         end
       end
     end
@@ -561,7 +565,7 @@ describe RemoteResource::Request do
         it "raises a #{error_class} with response code #{response_code}" do
           allow(response).to receive(:response_code) { response_code }
 
-          expect{ raise_http_errors }.to raise_error error_class, "with HTTP response status: #{response_code} and response: #{response}"
+          expect{ raise_http_errors }.to raise_error error_class, "for url: #{effective_url} with HTTP response status: #{response_code} and response: #{response.inspect}"
         end
       end
     end
@@ -570,7 +574,7 @@ describe RemoteResource::Request do
       let(:response_code) { 430 }
 
       it 'raises a RemoteResource::HTTPClientError' do
-        expect{ raise_http_errors }.to raise_error RemoteResource::HTTPClientError, "with HTTP response status: #{response_code} and response: #{response}"
+        expect{ raise_http_errors }.to raise_error RemoteResource::HTTPClientError, "for url: #{effective_url} with HTTP response status: #{response_code} and response: #{response.inspect}"
       end
     end
 
@@ -578,7 +582,7 @@ describe RemoteResource::Request do
       let(:response_code) { 501 }
 
       it 'raises a RemoteResource::HTTPServerError' do
-        expect{ raise_http_errors }.to raise_error RemoteResource::HTTPServerError, "with HTTP response status: #{response_code} and response: #{response}"
+        expect{ raise_http_errors }.to raise_error RemoteResource::HTTPServerError, "for url: #{effective_url} with HTTP response status: #{response_code} and response: #{response.inspect}"
       end
     end
 
@@ -586,7 +590,7 @@ describe RemoteResource::Request do
       let(:response_code) { nil }
 
       it 'raises a RemoteResource::HTTPError' do
-        expect{ raise_http_errors }.to raise_error RemoteResource::HTTPError, "with HTTP response: #{response}"
+        expect{ raise_http_errors }.to raise_error RemoteResource::HTTPError, "for url: #{effective_url} with HTTP response: #{response.inspect}"
       end
     end
   end

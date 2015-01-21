@@ -4,7 +4,7 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require 'remote_resource/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = 'remote_resource'
+  spec.name          = 'ddy_remote_resource'
   spec.version       = RemoteResource::VERSION
   spec.authors       = ['Jan van der Pas']
   spec.email         = ['jvanderpas@digidentity.eu']

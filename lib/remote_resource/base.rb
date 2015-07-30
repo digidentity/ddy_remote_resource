@@ -68,10 +68,6 @@ module RemoteResource
       @connection_options ||= RemoteResource::ConnectionOptions.new(self.class)
     end
 
-    def empty?
-      _response.try(:sanitized_response_body).blank?
-    end
-
     def persisted?
       id.present?
     end

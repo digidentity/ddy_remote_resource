@@ -163,14 +163,14 @@ describe RemoteResource::Collection do
 
   describe '#record_count' do
     context 'when response contains :meta and has key :total' do
-      let(:response_meta) { { total: '4' } }
+      let(:response_meta) { { 'total' => '4' } }
 
       it 'return the :total' do
         expect(collection.record_count).to eql(4)
       end
 
       context 'but with empty value' do
-        let(:response_meta) { { total: '' } }
+        let(:response_meta) { { 'total' => '' } }
 
         it 'return the :total' do
           expect(collection.record_count).to eql(nil)
@@ -179,7 +179,7 @@ describe RemoteResource::Collection do
     end
 
     context 'when response contains :meta but does NOT have key :total' do
-      let(:response_meta) { { pagination: { next: 2 } } }
+      let(:response_meta) { { 'pagination' => { 'next' => 2 } } }
 
       it 'return the :total' do
         expect(collection.record_count).to eql(nil)

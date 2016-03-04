@@ -38,8 +38,8 @@ module RemoteResource
     end
 
     def record_count
-      if meta && meta.has_key?(:total)
-        meta[:total].presence.try(:to_i)
+      if meta && meta.has_key?('total')
+        meta['total'].presence.try(:to_i)
       end
     end
 

@@ -13,9 +13,18 @@ module RemoteResource
       @_response            = response_hash[:_response]
     end
 
-    def each
+    def each(&block)
       if resources_collection.is_a? Array
-        resources_collection.each { |element| yield resource_klass.new element.merge(@response_hash) }
+        if defined?(@collection)
+          @collection.each(&block)
+        else
+          @collection = []
+          resources_collection.each do |element|
+            record = resource_klass.new element.merge(@response_hash)
+            @collection << record
+            yield(record)
+          end
+        end
       end
     end
 

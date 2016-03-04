@@ -91,6 +91,16 @@ describe RemoteResource::Collection do
           expect(collection[1]._response).to eql response
         end
       end
+
+      it 'returns the same objects each time' do
+        expected = collection.collect(&:object_id)
+        actual = collection.collect(&:object_id)
+
+        aggregate_failures do
+          expect(expected.length).to eq(2)
+          expect(expected).to eql(actual)
+        end
+      end
     end
 
     context 'when the resources_collection is NOT an Array' do

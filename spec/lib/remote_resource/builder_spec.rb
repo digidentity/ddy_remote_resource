@@ -21,11 +21,17 @@ describe RemoteResource::Builder do
     let(:sanitized_response_body) do
       { "id" => "12", "username" => "foobar" }
     end
+    let(:sanitized_response_meta) do
+      { 'total' => '1'}
+    end
 
-    before { allow(response).to receive(:sanitized_response_body) { sanitized_response_body } }
+    before do
+      allow(response).to receive(:sanitized_response_body) { sanitized_response_body }
+      allow(response).to receive(:sanitized_response_meta) { sanitized_response_meta }
+    end
 
     it 'calls the .build_resource' do
-      expect(dummy_class).to receive(:build_resource).with sanitized_response_body, { _response: an_instance_of(RemoteResource::Response) }
+      expect(dummy_class).to receive(:build_resource).with sanitized_response_body, { _response: an_instance_of(RemoteResource::Response), meta: sanitized_response_meta }
       dummy_class.build_resource_from_response response
     end
   end
@@ -80,11 +86,17 @@ describe RemoteResource::Builder do
         { "id" => "12", "username" => "aapmies" }
       ]
     end
+    let(:sanitized_response_meta) do
+      { 'total' => '3'}
+    end
 
-    before { allow(response).to receive(:sanitized_response_body) { sanitized_response_body } }
+    before do
+      allow(response).to receive(:sanitized_response_body) { sanitized_response_body }
+      allow(response).to receive(:sanitized_response_meta) { sanitized_response_meta }
+    end
 
     it 'calls the .build_collection' do
-      expect(dummy_class).to receive(:build_collection).with sanitized_response_body, { _response: an_instance_of(RemoteResource::Response) }
+      expect(dummy_class).to receive(:build_collection).with sanitized_response_body, { _response: an_instance_of(RemoteResource::Response), meta: sanitized_response_meta }
       dummy_class.build_collection_from_response response
     end
   end
@@ -141,11 +153,17 @@ describe RemoteResource::Builder do
     let(:sanitized_response_body) do
       { "id" => "12", "username" => "foobar" }
     end
+    let(:sanitized_response_meta) do
+      { 'total' => '1'}
+    end
 
-    before { allow(response).to receive(:sanitized_response_body) { sanitized_response_body } }
+    before do
+      allow(response).to receive(:sanitized_response_body) { sanitized_response_body }
+      allow(response).to receive(:sanitized_response_meta) { sanitized_response_meta }
+    end
 
     it 'calls the #rebuild_resource' do
-      expect(dummy).to receive(:rebuild_resource).with sanitized_response_body, { _response: an_instance_of(RemoteResource::Response) }
+      expect(dummy).to receive(:rebuild_resource).with sanitized_response_body, { _response: an_instance_of(RemoteResource::Response), meta: sanitized_response_meta }
       dummy.rebuild_resource_from_response response
     end
   end

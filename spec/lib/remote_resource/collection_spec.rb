@@ -16,8 +16,9 @@ describe RemoteResource::Collection do
   let(:dummy)       { dummy_class.new }
 
   let(:response) { RemoteResource::Response.new double.as_null_object }
+  let(:response_meta) { { total: '1' } }
   let(:response_hash) do
-    { _response: response }
+    { _response: response, meta: response_meta }
   end
 
   let(:resources_collection) do
@@ -154,5 +155,44 @@ describe RemoteResource::Collection do
     end
   end
 
+  describe '#meta' do
+    it 'returns :meta' do
+      expect(collection.meta).to eql(response_meta)
+    end
+  end
+
+  describe '#record_count' do
+    context 'when response contains :meta and has key :total' do
+      let(:response_meta) { { total: '4' } }
+
+      it 'return the :total' do
+        expect(collection.record_count).to eql(4)
+      end
+
+      context 'but with empty value' do
+        let(:response_meta) { { total: '' } }
+
+        it 'return the :total' do
+          expect(collection.record_count).to eql(nil)
+        end
+      end
+    end
+
+    context 'when response contains :meta but does NOT have key :total' do
+      let(:response_meta) { { pagination: { next: 2 } } }
+
+      it 'return the :total' do
+        expect(collection.record_count).to eql(nil)
+      end
+    end
+
+    context 'when response does NOT contain :meta' do
+      let(:response_meta) { nil }
+
+      it 'return the :total' do
+        expect(collection.record_count).to eql(nil)
+      end
+    end
+  end
 
 end

@@ -27,7 +27,7 @@ module RemoteResource
       private
 
       def response_hash(response_object)
-        { _response: response_object }
+        { _response: response_object, meta: response_object.sanitized_response_meta }
       end
     end
 

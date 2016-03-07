@@ -37,11 +37,5 @@ module RemoteResource
       _response.success?
     end
 
-    def record_count
-      if meta && meta.has_key?('total')
-        meta['total'].presence.try(:to_i)
-      end
-    end
-
   end
 end

@@ -4,18 +4,28 @@ module RemoteResource
 
     delegate :[], :at, :reverse, :size, to: :to_a
 
-    attr_reader :resource_klass, :resources_collection, :_response
+    attr_reader :resource_klass, :resources_collection, :meta, :_response
 
     def initialize(resource_klass, resources_collection, response_hash)
       @resource_klass       = resource_klass
       @resources_collection = resources_collection
       @response_hash        = response_hash
+      @meta                 = response_hash[:meta] || {}
       @_response            = response_hash[:_response]
     end
 
-    def each
+    def each(&block)
       if resources_collection.is_a? Array
-        resources_collection.each { |element| yield resource_klass.new element.merge(@response_hash) }
+        if defined?(@collection)
+          @collection.each(&block)
+        else
+          @collection = []
+          resources_collection.each do |element|
+            record = resource_klass.new element.merge(@response_hash)
+            @collection << record
+            yield(record)
+          end
+        end
       end
     end
 

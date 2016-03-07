@@ -16,8 +16,9 @@ describe RemoteResource::Collection do
   let(:dummy)       { dummy_class.new }
 
   let(:response) { RemoteResource::Response.new double.as_null_object }
+  let(:response_meta) { { total: '1' } }
   let(:response_hash) do
-    { _response: response }
+    { _response: response, meta: response_meta }
   end
 
   let(:resources_collection) do
@@ -91,6 +92,16 @@ describe RemoteResource::Collection do
           expect(collection[1]._response).to eql response
         end
       end
+
+      it 'returns the same objects each time' do
+        expected = collection.collect(&:object_id)
+        actual = collection.collect(&:object_id)
+
+        aggregate_failures do
+          expect(expected.length).to eq(2)
+          expect(expected).to eql(actual)
+        end
+      end
     end
 
     context 'when the resources_collection is NOT an Array' do
@@ -144,5 +155,10 @@ describe RemoteResource::Collection do
     end
   end
 
+  describe '#meta' do
+    it 'returns :meta' do
+      expect(collection.meta).to eql(response_meta)
+    end
+  end
 
 end

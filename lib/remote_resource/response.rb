@@ -33,6 +33,15 @@ module RemoteResource
       unpacked_parsed_response_body
     end
 
+    def sanitized_response_meta
+      return empty_hash if response_body.blank?
+      return empty_hash if parsed_response_body.blank?
+
+      return parsed_response_body['meta'] if parsed_response_body.try :has_key?, 'meta'
+
+      empty_hash
+    end
+
     def error_messages_response_body
       return empty_hash if response_body.blank?
       return empty_hash if parsed_response_body.blank?

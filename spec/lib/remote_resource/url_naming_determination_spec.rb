@@ -110,8 +110,14 @@ describe RemoteResource::UrlNamingDetermination do
             { collection_prefix: '/parent/:parent_id' }
           end
 
-          it 'raises an exception' do
-            expect { url_naming_determination.base_url }.to raise_error(KeyError)
+          it 'returns base_url with variable' do
+            expect(url_naming_determination.base_url).to eql 'http://www.foobar.com/parent/:parent_id/url_naming_determination_dummy'
+          end
+
+          context 'when check_collection_options is true' do
+            it 'raises an exception' do
+              expect { url_naming_determination.base_url(nil, check_collection_options: true) }.to raise_error(RemoteResource::UrlNamingDetermination::CollectionOptionKeyError)
+            end
           end
         end
 
@@ -120,8 +126,14 @@ describe RemoteResource::UrlNamingDetermination do
             { collection_prefix: '/parent/:parent_id', collection_options: { other_id: 696 } }
           end
 
-          it 'raises an exception' do
-            expect { url_naming_determination.base_url }.to raise_error(KeyError)
+          it 'returns base_url with variable' do
+            expect(url_naming_determination.base_url).to eql 'http://www.foobar.com/parent/:parent_id/url_naming_determination_dummy'
+          end
+
+          context 'when check_collection_options is true' do
+            it 'raises an exception' do
+              expect { url_naming_determination.base_url(nil, check_collection_options: true) }.to raise_error(RemoteResource::UrlNamingDetermination::CollectionOptionKeyError)
+            end
           end
         end
       end
@@ -142,8 +154,14 @@ describe RemoteResource::UrlNamingDetermination do
           end
 
           context 'when connection_options does NOT include collection_options' do
-            it 'uses the collection_prefix of the resource_klass' do
-              expect { url_naming_determination.base_url }.to raise_error(KeyError)
+            it 'returns base_url with variable' do
+              expect(url_naming_determination.base_url).to eql 'http://www.foobar.com/parent/:parent_id/url_naming_determination_dummy'
+            end
+
+            context 'when check_collection_options is true' do
+              it 'raises an exception' do
+                expect { url_naming_determination.base_url(nil, check_collection_options: true) }.to raise_error(RemoteResource::UrlNamingDetermination::CollectionOptionKeyError)
+              end
             end
           end
         end

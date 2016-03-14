@@ -44,7 +44,7 @@ module RemoteResource
 
     def determined_request_url
       id           = attributes[:id].presence
-      base_url     = original_connection_options[:base_url].presence || determined_url_naming.base_url(id)
+      base_url     = original_connection_options[:base_url].presence || determined_url_naming.base_url(id, check_collection_options: true)
       content_type = connection_options[:content_type]
 
       "#{base_url}#{content_type}"

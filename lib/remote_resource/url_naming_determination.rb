@@ -1,5 +1,6 @@
 module RemoteResource
   class UrlNamingDetermination
+    CollectionOptionKeyError = Class.new(StandardError)
 
     attr_reader :resource_klass, :connection_options
 
@@ -8,7 +9,7 @@ module RemoteResource
       @connection_options = connection_options
     end
 
-    def base_url(id = nil)
+    def base_url(id = nil, check_collection_options: false)
       site         = connection_options.fetch(:site, resource_klass.site)
       version      = connection_options.fetch(:version, resource_klass.version)
       path_prefix  = connection_options.fetch(:path_prefix, resource_klass.path_prefix)
@@ -16,16 +17,24 @@ module RemoteResource
 
       id           = "/#{id}" if id.present?
 
-      "#{site}#{version.presence}#{path_prefix.presence}#{collection_prefix}/#{url_safe_relative_name}#{id}#{path_postfix.presence}"
+      "#{site}#{version.presence}#{path_prefix.presence}#{collection_prefix(check_collection_options)}/#{url_safe_relative_name}#{id}#{path_postfix.presence}"
     end
 
-    def collection_prefix
+    def collection_prefix(check_collection_options)
       prefix = connection_options.fetch(:collection_prefix, resource_klass.collection_prefix)
 
       if prefix.present?
         prefix = "/#{prefix}" unless prefix.chr == '/'
-        collection_options = connection_options.fetch(:collection_options).with_indifferent_access
-        prefix.gsub(/:\w+/) { |key| URI.parser.escape(collection_options.fetch(key[1..-1]).to_s) }
+        collection_options = connection_options.fetch(:collection_options, {}).with_indifferent_access
+
+        prefix.gsub(/:\w+/) do |key|
+          value = collection_options.fetch(key[1..-1], nil)
+          if value.nil?
+            raise(CollectionOptionKeyError, "`collection_prefix` variable `#{key}` is missing from `collection_options`") if check_collection_options
+            value = key
+          end
+          URI.parser.escape(value.to_s)
+        end
       end
     end
 

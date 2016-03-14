@@ -6,15 +6,16 @@ describe RemoteResource::ConnectionOptions do
     class ConnectionOptionsDummy
       include RemoteResource::Base
 
-      self.site           = 'https://foobar.com'
-      self.content_type   = ''
-      self.extra_headers  = { "X-Locale" => "nl" }
-      self.version        = '/v1'
-      self.path_prefix    = '/prefix'
-      self.path_postfix   = '/postfix'
-      self.content_type   = '.json'
-      self.collection     = true
-      self.root_element   = :test_dummy
+      self.site              = 'https://foobar.com'
+      self.content_type      = ''
+      self.extra_headers     = { "X-Locale" => "nl" }
+      self.version           = '/v1'
+      self.path_prefix       = '/prefix'
+      self.path_postfix      = '/postfix'
+      self.content_type      = '.json'
+      self.collection_prefix = '/parent/:parent_id'
+      self.collection        = true
+      self.root_element      = :test_dummy
 
     end
   end
@@ -77,16 +78,17 @@ describe RemoteResource::ConnectionOptions do
   describe '#to_hash' do
     let(:connection_options_hash) do
       {
-        base_url:         'https://foobar.com/v1/prefix/connection_options_dummies/postfix',
-        site:             'https://foobar.com',
-        headers:          { "Accept" => "application/json", "X-Locale" => "nl" },
-        version:          '/v1',
-        path_prefix:      '/prefix',
-        path_postfix:     '/postfix',
-        content_type:     '.json',
-        collection:       true,
-        collection_name:  nil,
-        root_element:     :test_dummy
+        base_url:          'https://foobar.com/v1/prefix/parent/:parent_id/connection_options_dummies/postfix',
+        site:              'https://foobar.com',
+        headers:           { "Accept" => "application/json", "X-Locale" => "nl" },
+        version:           '/v1',
+        path_prefix:       '/prefix',
+        path_postfix:      '/postfix',
+        content_type:      '.json',
+        collection_prefix: '/parent/:parent_id',
+        collection:        true,
+        collection_name:   nil,
+        root_element:      :test_dummy
       }
     end
 

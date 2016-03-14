@@ -23,7 +23,7 @@ describe RemoteResource::Base do
   specify { expect(described_class.const_defined?('RemoteResource::Querying::PersistenceMethods')).to be_truthy }
 
   describe 'OPTIONS' do
-    let(:options) { [:base_url, :site, :headers, :version, :path_prefix, :path_postfix, :content_type, :collection, :collection_name, :root_element] }
+    let(:options) { [:base_url, :site, :headers, :version, :path_prefix, :path_postfix, :collection_prefix, :content_type, :collection, :collection_name, :root_element] }
 
     specify { expect(described_class::OPTIONS).to eql options }
   end

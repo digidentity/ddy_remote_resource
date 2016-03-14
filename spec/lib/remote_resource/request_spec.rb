@@ -11,6 +11,10 @@ describe RemoteResource::Request do
       attr_accessor :name
 
     end
+
+    class RequestDummyWithCollectionPrefix < RequestDummy
+      self.collection_prefix = '/parent/:parent_id'
+    end
   end
 
   let(:dummy_class) { RemoteResource::RequestDummy }
@@ -332,6 +336,24 @@ describe RemoteResource::Request do
     context 'the connection_options do NOT contain a content_type' do
       it 'does NOT use the content_type for the request url' do
         expect(request.determined_request_url).to eql 'http://www.foobar.com/request_dummy.json'
+      end
+    end
+
+    context 'collection_prefix' do
+      let(:dummy_class) { RemoteResource::RequestDummyWithCollectionPrefix }
+
+      context 'when connection_options does include collection_options' do
+        let(:connection_options) do
+          { collection_options: { parent_id: 23 } }
+        end
+
+        it { expect(request.determined_request_url).to eql 'http://www.foobar.com/parent/23/request_dummy_with_collection_prefix.json' }
+      end
+
+      context 'when connection_options does NOT include collection_options' do
+        it 'raises error' do
+          expect{ request.determined_request_url }.to raise_error(RemoteResource::UrlNamingDetermination::CollectionOptionKeyError)
+        end
       end
     end
   end

@@ -3,7 +3,7 @@ module RemoteResource
     extend ActiveSupport::Concern
 
     included do
-      class_attribute :site, :version, :path_prefix, :path_postfix, :collection, :collection_name, instance_accessor: false
+      class_attribute :site, :version, :path_prefix, :path_postfix, :collection_prefix, :collection, :collection_name, instance_accessor: false
 
       self.collection = false
     end

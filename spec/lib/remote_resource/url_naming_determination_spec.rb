@@ -95,6 +95,67 @@ describe RemoteResource::UrlNamingDetermination do
       end
     end
 
+    context 'collection_prefix' do
+      context 'when the connection_options contain a collection_prefix' do
+        let(:connection_options) do
+          { collection_prefix: '/parent/:parent_id', collection_options: { parent_id: 696 } }
+        end
+
+        it 'uses the collection_prefix of the connection_options' do
+          expect(url_naming_determination.base_url).to eql 'http://www.foobar.com/parent/696/url_naming_determination_dummy'
+        end
+
+        context 'when collection_options is NOT present' do
+          let(:connection_options) do
+            { collection_prefix: '/parent/:parent_id' }
+          end
+
+          it 'raises an exception' do
+            expect { url_naming_determination.base_url }.to raise_error(KeyError)
+          end
+        end
+
+        context 'when collection_prefix variable is not set in the collection_options' do
+          let(:connection_options) do
+            { collection_prefix: '/parent/:parent_id', collection_options: { other_id: 696 } }
+          end
+
+          it 'raises an exception' do
+            expect { url_naming_determination.base_url }.to raise_error(KeyError)
+          end
+        end
+      end
+
+      context 'when the connection_options do NOT contain a collection_prefix' do
+        context 'and the resource_klass contains a collection_prefix' do
+          before { dummy_class.collection_prefix = '/parent/:parent_id' }
+          after { dummy_class.collection_prefix = nil }
+
+          context 'when connection_options includes collection_options with key parent_id' do
+            let(:connection_options) do
+              { collection_options: { parent_id: 696 } }
+            end
+
+            it 'uses the collection_prefix of the resource_klass' do
+              expect(url_naming_determination.base_url).to eql 'http://www.foobar.com/parent/696/url_naming_determination_dummy'
+            end
+          end
+
+          context 'when connection_options does NOT include collection_options' do
+            it 'uses the collection_prefix of the resource_klass' do
+              expect { url_naming_determination.base_url }.to raise_error(KeyError)
+            end
+          end
+        end
+
+        context 'and the resource_klass does NOT contain a collection_prefix' do
+          it 'does NOT use the collection_prefix' do
+            expect(url_naming_determination.base_url).to eql 'http://www.foobar.com/url_naming_determination_dummy'
+          end
+        end
+      end
+    end
+
     context 'id' do
       context 'when an id is specified' do
         it 'uses that id in the base url' do

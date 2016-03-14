@@ -39,7 +39,7 @@ You can set a few options for the `RemoteResource` enabled class.
 
 #### Base URL options (`base_url`)
 
-The `base_url` is constructed from the `.site`, `.version`,  `.path_prefix`, `.path_postfix`, `.collection`, and `.collection_name` options. The `.collection_name` is automatically constructed from the relative class name.
+The `base_url` is constructed from the `.site`, `.version`,  `.path_prefix`, `.path_postfix`, `.collection`, `.collection_prefix`, and `.collection_name` options. The `.collection_name` is automatically constructed from the relative class name.
 
 We will use the `ContactPerson` class for these examples, with the `.collection_name` of `'contact_person'`:
 
@@ -59,6 +59,10 @@ We will use the `ContactPerson` class for these examples, with the `.collection_
     * *Default:* `false`
     * *Example:* `.collection = true`
     * *`base_url`:* `https://www.myapp.com/contact_persons`
+* `.collection_prefix`: This sets the prefix for the collection, before `collection_name` that is used to construct the `base_url`. The prefix variable has to be set via connection_options' key `collection_options`.
+    * *Default:* ``
+    * *Example:* `.collection_prefix = "/companies/:company_id"` and connection_options `collection_options: { company_id: 2 }`
+    * *`base_url`:* `https://www.myapp.com/companies/2/contact_persons`
 * `.collection_name`: This sets the `collection_name` that is used to construct the `base_url`.
     * *Example:* `.collection_name = "company"`
     * *`base_url`:* `https://www.myapp.com/company`

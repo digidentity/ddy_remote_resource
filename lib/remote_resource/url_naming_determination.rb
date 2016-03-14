@@ -16,7 +16,17 @@ module RemoteResource
 
       id           = "/#{id}" if id.present?
 
-      "#{site}#{version.presence}#{path_prefix.presence}/#{url_safe_relative_name}#{id}#{path_postfix.presence}"
+      "#{site}#{version.presence}#{path_prefix.presence}#{collection_prefix}/#{url_safe_relative_name}#{id}#{path_postfix.presence}"
+    end
+
+    def collection_prefix
+      prefix = connection_options.fetch(:collection_prefix, resource_klass.collection_prefix)
+
+      if prefix.present?
+        prefix = "/#{prefix}" unless prefix.chr == '/'
+        collection_options = connection_options.fetch(:collection_options).with_indifferent_access
+        prefix.gsub(/:\w+/) { |key| URI.parser.escape(collection_options.fetch(key[1..-1]).to_s) }
+      end
     end
 
     def url_safe_relative_name

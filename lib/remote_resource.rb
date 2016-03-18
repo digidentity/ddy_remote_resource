@@ -24,6 +24,8 @@ require 'remote_resource/request'
 module RemoteResource
   RemoteResourceError = Class.new StandardError
 
+  IdMissingError = Class.new(RemoteResourceError)
+
   RESTActionUnknown = Class.new RemoteResourceError # REST action
 
   class HTTPError < RemoteResourceError # HTTP errors

@@ -1,6 +1,5 @@
 module RemoteResource
   class UrlNamingDetermination
-    CollectionOptionKeyError = Class.new(StandardError)
 
     attr_reader :resource_klass, :connection_options
 
@@ -30,7 +29,7 @@ module RemoteResource
         prefix.gsub(/:\w+/) do |key|
           value = collection_options.fetch(key[1..-1], nil)
           if value.nil?
-            raise(CollectionOptionKeyError, "`collection_prefix` variable `#{key}` is missing from `collection_options`") if check_collection_options
+            raise(RemoteResource::CollectionOptionKeyError, "`collection_prefix` variable `#{key}` is missing from `collection_options`") if check_collection_options
             value = key
           end
           URI.parser.escape(value.to_s)

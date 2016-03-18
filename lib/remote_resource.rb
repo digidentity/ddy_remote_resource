@@ -25,6 +25,8 @@ module RemoteResource
   RemoteResourceError = Class.new StandardError
 
   IdMissingError = Class.new(RemoteResourceError)
+  
+  CollectionOptionKeyError = Class.new(RemoteResourceError)
 
   RESTActionUnknown = Class.new RemoteResourceError # REST action
 

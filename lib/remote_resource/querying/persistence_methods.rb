@@ -10,6 +10,12 @@ module RemoteResource
           response = RemoteResource::Request.new(self, :post, attributes, connection_options).perform
           resource.handle_response response
         end
+
+        def destroy(id, connection_options = {})
+          resource = new
+          response = RemoteResource::Request.new(self, :delete, { id: id }, connection_options).perform
+          resource.handle_response(response)
+        end
       end
 
       def update_attributes(attributes = {}, connection_options = {})
@@ -31,6 +37,13 @@ module RemoteResource
           response = RemoteResource::Request.new(self, :post, attributes, connection_options).perform
         end
         handle_response response
+      end
+
+      def destroy(connection_options = {})
+        id.present? || raise(RemoteResource::IdMissingError.new("`id` is missing from resource"))
+        response = RemoteResource::Request.new(self, :delete, { id: id }, connection_options).perform
+        handle_response(response)
+        success? ? self : false
       end
 
     end

@@ -116,7 +116,7 @@ describe RemoteResource::UrlNamingDetermination do
 
           context 'when check_collection_options is true' do
             it 'raises an exception' do
-              expect { url_naming_determination.base_url(nil, check_collection_options: true) }.to raise_error(RemoteResource::UrlNamingDetermination::CollectionOptionKeyError)
+              expect { url_naming_determination.base_url(nil, check_collection_options: true) }.to raise_error(RemoteResource::CollectionOptionKeyError)
             end
           end
         end
@@ -132,7 +132,7 @@ describe RemoteResource::UrlNamingDetermination do
 
           context 'when check_collection_options is true' do
             it 'raises an exception' do
-              expect { url_naming_determination.base_url(nil, check_collection_options: true) }.to raise_error(RemoteResource::UrlNamingDetermination::CollectionOptionKeyError)
+              expect { url_naming_determination.base_url(nil, check_collection_options: true) }.to raise_error(RemoteResource::CollectionOptionKeyError)
             end
           end
         end
@@ -160,7 +160,7 @@ describe RemoteResource::UrlNamingDetermination do
 
             context 'when check_collection_options is true' do
               it 'raises an exception' do
-                expect { url_naming_determination.base_url(nil, check_collection_options: true) }.to raise_error(RemoteResource::UrlNamingDetermination::CollectionOptionKeyError)
+                expect { url_naming_determination.base_url(nil, check_collection_options: true) }.to raise_error(RemoteResource::CollectionOptionKeyError)
               end
             end
           end

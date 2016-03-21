@@ -2,7 +2,7 @@ module RemoteResource
   module REST
     extend ActiveSupport::Concern
 
-    ACTIONS = [:get, :put, :patch, :post]
+    ACTIONS = [:get, :put, :patch, :post, :delete]
 
     module ClassMethods
 

@@ -19,14 +19,14 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   spec.add_development_dependency 'bundler', '~> 1.6'
-  spec.add_development_dependency 'rake'
-  spec.add_development_dependency 'rspec'
-  spec.add_development_dependency 'pry'
+  spec.add_development_dependency 'rake', '~> 10.4'
+  spec.add_development_dependency 'rspec', '~> 3.1'
+  spec.add_development_dependency 'pry', '~> 0.10'
 
-  spec.add_runtime_dependency 'activesupport'
-  spec.add_runtime_dependency 'activemodel'
-  spec.add_runtime_dependency 'virtus'
-  spec.add_runtime_dependency 'mime-types', '>= 1.16'
-  spec.add_runtime_dependency 'ethon', '~> 0.7.1'
-  spec.add_runtime_dependency 'typhoeus'
+  spec.add_runtime_dependency 'activesupport', '~> 4.1'
+  spec.add_runtime_dependency 'activemodel', '~> 4.1'
+  spec.add_runtime_dependency 'virtus', '~> 1.0', '>= 1.0.4'
+  spec.add_runtime_dependency 'mime-types', '~> 2.0'
+  spec.add_runtime_dependency 'ethon', '~> 0.7', '>= 0.7.1'
+  spec.add_runtime_dependency 'typhoeus', '~> 0.7', '>= 0.7.0'
 end

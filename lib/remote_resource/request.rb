@@ -31,6 +31,8 @@ module RemoteResource
         response = connection.public_send rest_action, determined_request_url, params: determined_params, headers: determined_headers
       when :put, :patch, :post
         response = connection.public_send rest_action, determined_request_url, body: determined_attributes, headers: determined_headers
+      when :delete
+        response = connection.public_send rest_action, determined_request_url, body: determined_attributes, headers: determined_headers
       else
         raise RemoteResource::RESTActionUnknown, "for action: '#{rest_action}'"
       end

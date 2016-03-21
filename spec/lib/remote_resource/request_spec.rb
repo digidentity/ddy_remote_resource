@@ -271,6 +271,17 @@ describe RemoteResource::Request do
       it_behaves_like 'a conditional construct for the response'
     end
 
+    context 'when the rest_action is :delete' do
+      let(:rest_action) { 'delete' }
+
+      it 'makes a DELETE request with the attributes as body' do
+        expect(connection).to receive(:delete).with(determined_request_url, body: determined_attributes, headers: determined_headers).and_call_original
+        request.perform
+      end
+
+      it_behaves_like 'a conditional construct for the response'
+    end
+
     context 'when the rest_action is unknown' do
       let(:rest_action) { 'foo' }
 
@@ -352,7 +363,7 @@ describe RemoteResource::Request do
 
       context 'when connection_options does NOT include collection_options' do
         it 'raises error' do
-          expect{ request.determined_request_url }.to raise_error(RemoteResource::UrlNamingDetermination::CollectionOptionKeyError)
+          expect{ request.determined_request_url }.to raise_error(RemoteResource::CollectionOptionKeyError)
         end
       end
     end

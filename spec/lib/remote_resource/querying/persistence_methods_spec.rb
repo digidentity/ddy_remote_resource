@@ -46,6 +46,31 @@ describe RemoteResource::Querying::PersistenceMethods do
     end
   end
 
+  describe '.destroy' do
+    let(:response) { instance_double(RemoteResource::Response) }
+
+    before do
+      allow_any_instance_of(dummy_class).to receive(:handle_response)
+      allow_any_instance_of(RemoteResource::Request).to receive(:perform) { response }
+    end
+
+    it 'instantiates the resource without attributes' do
+      expect(dummy_class).to receive(:new).with(no_args()).and_call_original
+      dummy_class.destroy('15')
+    end
+
+    it 'performs a RemoteResource::Request' do
+      expect(RemoteResource::Request).to receive(:new).with(dummy_class, :delete, { id: '15' }, {}).and_call_original
+      expect_any_instance_of(RemoteResource::Request).to receive(:perform)
+      dummy_class.destroy('15')
+    end
+
+    it 'handles the RemoteResource::Response' do
+      expect_any_instance_of(dummy_class).to receive(:handle_response).with response
+      dummy_class.destroy('15')
+    end
+  end
+
   describe '#update_attributes' do
     let(:dummy) { dummy_class.new id: 10 }
 
@@ -167,6 +192,53 @@ describe RemoteResource::Querying::PersistenceMethods do
       it 'handles the RemoteResource::Response' do
         expect(dummy).to receive(:handle_response).with response
         dummy.create_or_update attributes
+      end
+    end
+  end
+
+  describe '#destroy' do
+    let(:dummy) { dummy_class.new(id: 18) }
+
+    let(:response) { instance_double(RemoteResource::Response) }
+
+    before do
+      allow(dummy).to receive(:handle_response)                           { dummy }
+      allow_any_instance_of(RemoteResource::Request).to receive(:perform) { response }
+      allow(dummy).to receive(:success?)
+    end
+
+    it 'performs a RemoteResource::Request with rest_action :delete' do
+      expect(RemoteResource::Request).to receive(:new).with(dummy, :delete, { id: dummy.id }, {}).and_call_original
+      expect_any_instance_of(RemoteResource::Request).to receive(:perform)
+      dummy.destroy
+    end
+
+    it 'handles the RemoteResource::Response' do
+      expect(dummy).to receive(:handle_response).with response
+      dummy.destroy
+    end
+
+    context 'when the destroy was successful' do
+      it 'returns the resource' do
+        allow(dummy).to receive(:success?) { true }
+
+        expect(dummy.destroy).to eql dummy
+      end
+    end
+
+    context 'when the destroy was NOT successful' do
+      it 'returns false' do
+        allow(dummy).to receive(:success?) { false }
+
+        expect(dummy.destroy).to eql false
+      end
+    end
+
+    context 'when the id is NOT present' do
+      let(:dummy) { dummy_class.new }
+
+      it 'raises the RemoteResource::IdMissingError error' do
+        expect { dummy.destroy }.to raise_error(RemoteResource::IdMissingError, "`id` is missing from resource")
       end
     end
   end

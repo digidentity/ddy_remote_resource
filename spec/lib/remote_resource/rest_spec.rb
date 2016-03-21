@@ -63,6 +63,14 @@ describe RemoteResource::REST do
     end
   end
 
+  describe '.delete' do
+    it 'performs a RemoteResource::Request with the rest_action :delete' do
+      expect(RemoteResource::Request).to receive(:new).with(dummy_class, :delete, attributes, connection_options).and_call_original
+      expect_any_instance_of(RemoteResource::Request).to receive(:perform)
+      dummy_class.delete(attributes, connection_options)
+    end
+  end
+
   describe '#get' do
     it 'performs a RemoteResource::Request with the rest_action :get' do
       expect(RemoteResource::Request).to receive(:new).with(dummy, :get, params, connection_options).and_call_original
@@ -92,6 +100,14 @@ describe RemoteResource::REST do
       expect(RemoteResource::Request).to receive(:new).with(dummy, :post, attributes, connection_options).and_call_original
       expect_any_instance_of(RemoteResource::Request).to receive(:perform)
       dummy.post attributes, connection_options
+    end
+  end
+
+  describe '#delete' do
+    it 'performs a RemoteResource::Request with the rest_action :delete' do
+      expect(RemoteResource::Request).to receive(:new).with(dummy, :delete, attributes, connection_options).and_call_original
+      expect_any_instance_of(RemoteResource::Request).to receive(:perform)
+      dummy.delete(attributes, connection_options)
     end
   end
 

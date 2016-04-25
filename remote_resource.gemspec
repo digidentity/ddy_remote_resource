@@ -22,6 +22,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'rake', '~> 10.4'
   spec.add_development_dependency 'rspec', '~> 3.1'
   spec.add_development_dependency 'pry', '~> 0.10'
+  spec.add_development_dependency 'webmock', '~> 1.24'
 
   spec.add_runtime_dependency 'activesupport', '~> 4.1'
   spec.add_runtime_dependency 'activemodel', '~> 4.1'

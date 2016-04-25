@@ -24,15 +24,25 @@ describe RemoteResource::Querying::FinderMethods do
       allow_any_instance_of(RemoteResource::Request).to receive(:perform) { response }
     end
 
-    it 'performs a RemoteResource::Request with the connection_options no_params' do
-      expect(RemoteResource::Request).to receive(:new).with(dummy_class, :get, { id: '12' }, { no_params: true }).and_call_original
-      expect_any_instance_of(RemoteResource::Request).to receive(:perform)
-      dummy_class.find '12'
+    it 'performs a RemoteResource::Request with the connection_options no_attributes' do
+      stub_request(:get, 'https://foobar.com/finder_methods_dummy/12.json').to_return(status: 200, body: {}.to_json)
+      expect(RemoteResource::Request).to receive(:new).with(dummy_class, :get, { id: '12' }, { no_attributes: true }).and_call_original
+      expect_any_instance_of(RemoteResource::Request).to receive(:perform).and_call_original
+      dummy_class.find('12')
     end
 
     it 'builds the resource from the RemoteResource::Response' do
       expect(dummy_class).to receive(:build_resource_from_response).with response
-      dummy_class.find '12'
+      dummy_class.find('12')
+    end
+
+    context 'with extra params' do
+      it 'performs a RemoteResource::Request with params' do
+        stub_request(:get, 'https://foobar.com/finder_methods_dummy/12.json?skip_associations=true').to_return(status: 200, body: {}.to_json)
+        expect(RemoteResource::Request).to receive(:new).with(dummy_class, :get, { id: '12' }, { params: { skip_associations: true }, no_attributes: true }).and_call_original
+        expect_any_instance_of(RemoteResource::Request).to receive(:perform).and_call_original
+        dummy_class.find('12', params: { skip_associations: true })
+      end
     end
   end
 

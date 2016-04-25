@@ -6,7 +6,7 @@ module RemoteResource
       module ClassMethods
 
         def find(id, connection_options = {})
-          connection_options.merge! no_params: true
+          connection_options.merge! no_attributes: true
           response = RemoteResource::Request.new(self, :get, { id: id }, connection_options).perform
           build_resource_from_response response
         end

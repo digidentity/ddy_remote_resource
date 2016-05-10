@@ -60,7 +60,7 @@ describe RemoteResource::Querying::PersistenceMethods do
     end
 
     it 'performs a RemoteResource::Request' do
-      expect(RemoteResource::Request).to receive(:new).with(dummy_class, :delete, { id: '15' }, {}).and_call_original
+      expect(RemoteResource::Request).to receive(:new).with(dummy_class, :delete, { id: '15' }, { no_attributes: true }).and_call_original
       expect_any_instance_of(RemoteResource::Request).to receive(:perform)
       dummy_class.destroy('15')
     end
@@ -68,6 +68,21 @@ describe RemoteResource::Querying::PersistenceMethods do
     it 'handles the RemoteResource::Response' do
       expect_any_instance_of(dummy_class).to receive(:handle_response).with response
       dummy_class.destroy('15')
+    end
+
+    context 'request' do
+      let(:response) { { status: 200, body: '' } }
+      before { allow_any_instance_of(RemoteResource::Request).to receive(:perform).and_call_original }
+
+      it 'generates correct request url' do
+        stub_request(:delete, 'https://foobar.com/persistence_methods_dummy/15.json').with(body: nil).to_return(response)
+        dummy_class.destroy('15')
+      end
+
+      it 'includes params' do
+        stub_request(:delete, 'https://foobar.com/persistence_methods_dummy/15.json?pseudonym=3s8e3j').with(body: nil).to_return(response)
+        dummy_class.destroy('15', params: { pseudonym: '3s8e3j' })
+      end
     end
   end
 
@@ -208,7 +223,7 @@ describe RemoteResource::Querying::PersistenceMethods do
     end
 
     it 'performs a RemoteResource::Request with rest_action :delete' do
-      expect(RemoteResource::Request).to receive(:new).with(dummy, :delete, { id: dummy.id }, {}).and_call_original
+      expect(RemoteResource::Request).to receive(:new).with(dummy, :delete, { id: dummy.id }, { no_attributes: true }).and_call_original
       expect_any_instance_of(RemoteResource::Request).to receive(:perform)
       dummy.destroy
     end
@@ -216,6 +231,21 @@ describe RemoteResource::Querying::PersistenceMethods do
     it 'handles the RemoteResource::Response' do
       expect(dummy).to receive(:handle_response).with response
       dummy.destroy
+    end
+
+    context 'request' do
+      let(:response) { { status: 200, body: '' } }
+      before { allow_any_instance_of(RemoteResource::Request).to receive(:perform).and_call_original }
+
+      it 'generates correct request url' do
+        stub_request(:delete, 'https://foobar.com/persistence_methods_dummy/18.json').with(body: nil).to_return(response)
+        dummy.destroy
+      end
+
+      it 'includes params' do
+        stub_request(:delete, 'https://foobar.com/persistence_methods_dummy/18.json?pseudonym=3s8e3j').with(body: nil).to_return(response)
+        dummy.destroy(params: { pseudonym: '3s8e3j' })
+      end
     end
 
     context 'when the destroy was successful' do

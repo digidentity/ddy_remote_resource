@@ -275,7 +275,7 @@ describe RemoteResource::Request do
       let(:rest_action) { 'delete' }
 
       it 'makes a DELETE request with the attributes as body' do
-        expect(connection).to receive(:delete).with(determined_request_url, body: determined_attributes, headers: determined_headers).and_call_original
+        expect(connection).to receive(:delete).with(determined_request_url, params: determined_params, headers: determined_headers).and_call_original
         request.perform
       end
 

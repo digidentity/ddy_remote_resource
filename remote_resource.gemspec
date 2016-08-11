@@ -23,6 +23,9 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'rspec', '~> 3.1'
   spec.add_development_dependency 'pry', '~> 0.10'
   spec.add_development_dependency 'webmock', '~> 1.24'
+  spec.add_development_dependency 'guard', '~> 2.14'
+  spec.add_development_dependency 'guard-rspec', '~> 4.7'
+  spec.add_development_dependency 'terminal-notifier-guard', '~> 1.6.1'
 
   spec.add_runtime_dependency 'activesupport', '~> 4.1'
   spec.add_runtime_dependency 'activemodel', '~> 4.1'

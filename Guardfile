@@ -40,6 +40,9 @@ guard :rspec, cmd: 'bundle exec rspec', notification: true do
   ruby = dsl.ruby
   dsl.watch_spec_files_for(ruby.lib_files)
 
+  # Integration specs
+  watch(ruby.lib_files) { 'spec/integration' }
+
   # Notification (See: https://github.com/Codaisseur/terminal-notifier-guard)
   notification :terminal_notifier, app_name: 'RemoteResource', activate: 'com.googlecode.iTerm2' if `uname` =~ /Darwin/
 end

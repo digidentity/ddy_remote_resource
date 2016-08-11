@@ -45,7 +45,7 @@ describe RemoteResource::Base do
     after { described_class.global_headers = nil }
 
     it 'sets the global headers Thread variable' do
-      expect{ described_class.global_headers = global_headers }.to change{ Thread.current[:global_headers] }.from(nil).to global_headers
+      expect{ described_class.global_headers = global_headers }.to change{ Thread.current[:global_headers] }.from({}).to global_headers
     end
   end
 

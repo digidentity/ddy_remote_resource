@@ -36,6 +36,12 @@ describe RemoteResource::Querying::FinderMethods do
       dummy_class.find('12')
     end
 
+    it 'does NOT change the given connection_options' do
+      connection_options = { headers: { 'Foo' => 'Bar' } }
+
+      expect { dummy_class.find('12', connection_options) }.not_to change { connection_options }.from({ headers: { 'Foo' => 'Bar' } })
+    end
+
     context 'with extra params' do
       it 'performs a RemoteResource::Request with params' do
         stub_request(:get, 'https://foobar.com/finder_methods_dummy/12.json?skip_associations=true').to_return(status: 200, body: {}.to_json)
@@ -67,6 +73,12 @@ describe RemoteResource::Querying::FinderMethods do
       expect(dummy_class).to receive(:build_resource_from_response).with response
       dummy_class.find_by params
     end
+
+    it 'does NOT change the given connection_options' do
+      connection_options = { headers: { 'Foo' => 'Bar' } }
+
+      expect { dummy_class.find_by(params, connection_options) }.not_to change { connection_options }.from({ headers: { 'Foo' => 'Bar' } })
+    end
   end
 
   describe '.all' do
@@ -86,6 +98,12 @@ describe RemoteResource::Querying::FinderMethods do
     it 'builds the resources from the RemoteResource::Response' do
       expect(dummy_class).to receive(:build_collection_from_response).with response
       dummy_class.all
+    end
+
+    it 'does NOT change the given connection_options' do
+      connection_options = { headers: { 'Foo' => 'Bar' } }
+
+      expect { dummy_class.all(connection_options) }.not_to change { connection_options }.from({ headers: { 'Foo' => 'Bar' } })
     end
   end
 
@@ -109,6 +127,12 @@ describe RemoteResource::Querying::FinderMethods do
     it 'builds the resources from the RemoteResource::Response' do
       expect(dummy_class).to receive(:build_collection_from_response).with response
       dummy_class.where params
+    end
+
+    it 'does NOT change the given connection_options' do
+      connection_options = { headers: { 'Foo' => 'Bar' } }
+
+      expect { dummy_class.where(params, connection_options) }.not_to change { connection_options }.from({ headers: { 'Foo' => 'Bar' } })
     end
   end
 

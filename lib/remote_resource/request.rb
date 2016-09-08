@@ -17,12 +17,11 @@ module RemoteResource
     end
 
     def connection_options
-      @connection_options.reverse_merge! threaded_connection_options
-      @connection_options.reverse_merge! resource.connection_options.to_hash
+      @connection_options.reverse_merge(threaded_connection_options).reverse_merge(resource.connection_options.to_hash)
     end
 
     def original_connection_options
-      @original_connection_options.reverse_merge! threaded_connection_options
+      @original_connection_options.reverse_merge(threaded_connection_options)
     end
 
     def perform

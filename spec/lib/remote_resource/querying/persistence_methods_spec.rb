@@ -44,6 +44,16 @@ describe RemoteResource::Querying::PersistenceMethods do
       expect_any_instance_of(dummy_class).to receive(:handle_response).with response
       dummy_class.create attributes
     end
+
+    it 'does NOT change the given attributes' do
+      expect { dummy_class.create(attributes) }.not_to change { attributes }.from({ name: 'Mies' })
+    end
+
+    it 'does NOT change the given connection_options' do
+      connection_options = { headers: { 'Foo' => 'Bar' } }
+
+      expect { dummy_class.create(attributes, connection_options) }.not_to change { connection_options }.from({ headers: { 'Foo' => 'Bar' } })
+    end
   end
 
   describe '.destroy' do
@@ -68,6 +78,12 @@ describe RemoteResource::Querying::PersistenceMethods do
     it 'handles the RemoteResource::Response' do
       expect_any_instance_of(dummy_class).to receive(:handle_response).with response
       dummy_class.destroy('15')
+    end
+
+    it 'does NOT change the given connection_options' do
+      connection_options = { headers: { 'Foo' => 'Bar' } }
+
+      expect { dummy_class.destroy('15', connection_options) }.not_to change { connection_options }.from({ headers: { 'Foo' => 'Bar' } })
     end
 
     context 'request' do
@@ -112,12 +128,32 @@ describe RemoteResource::Querying::PersistenceMethods do
         expect(dummy).to receive(:create_or_update).with(attributes, {})
         dummy.update_attributes attributes
       end
+
+      it 'does NOT change the given attributes' do
+        expect { dummy.update_attributes(attributes) }.not_to change { attributes }.from({ id: 14, name: 'Noot' })
+      end
+
+      it 'does NOT change the given connection_options' do
+        connection_options = { headers: { 'Foo' => 'Bar' } }
+
+        expect { dummy.update_attributes(attributes, connection_options) }.not_to change { connection_options }.from({ headers: { 'Foo' => 'Bar' } })
+      end
     end
 
     context 'when the id is NOT given in the attributes' do
       it 'calls #create_or_update with the attributes and #id of resource' do
         expect(dummy).to receive(:create_or_update).with(attributes.merge(id: dummy.id), {})
         dummy.update_attributes attributes
+      end
+
+      it 'does NOT change the given attributes' do
+        expect { dummy.update_attributes(attributes) }.not_to change { attributes }.from({ name: 'Noot' })
+      end
+
+      it 'does NOT change the given connection_options' do
+        connection_options = { headers: { 'Foo' => 'Bar' } }
+
+        expect { dummy.update_attributes(attributes, connection_options) }.not_to change { connection_options }.from({ headers: { 'Foo' => 'Bar' } })
       end
     end
 
@@ -149,6 +185,12 @@ describe RemoteResource::Querying::PersistenceMethods do
     it 'calls #create_or_update with the attributes' do
       expect(dummy).to receive(:create_or_update).with(attributes, {})
       dummy.save
+    end
+
+    it 'does NOT change the given connection_options' do
+      connection_options = { headers: { 'Foo' => 'Bar' } }
+
+      expect { dummy.save(connection_options) }.not_to change { connection_options }.from({ headers: { 'Foo' => 'Bar' } })
     end
 
     context 'when the save was successful' do
@@ -191,6 +233,16 @@ describe RemoteResource::Querying::PersistenceMethods do
         expect(dummy).to receive(:handle_response).with response
         dummy.create_or_update attributes
       end
+
+      it 'does NOT change the given attributes' do
+        expect { dummy.create_or_update(attributes) }.not_to change { attributes }.from({ id: 10, name: 'Kees' })
+      end
+
+      it 'does NOT change the given connection_options' do
+        connection_options = { headers: { 'Foo' => 'Bar' } }
+
+        expect { dummy.create_or_update(attributes, connection_options) }.not_to change { connection_options }.from({ headers: { 'Foo' => 'Bar' } })
+      end
     end
 
     context 'when the attributes do NOT contain an id' do
@@ -207,6 +259,16 @@ describe RemoteResource::Querying::PersistenceMethods do
       it 'handles the RemoteResource::Response' do
         expect(dummy).to receive(:handle_response).with response
         dummy.create_or_update attributes
+      end
+
+      it 'does NOT change the given attributes' do
+        expect { dummy.create_or_update(attributes) }.not_to change { attributes }.from({ name: 'Mies' })
+      end
+
+      it 'does NOT change the given connection_options' do
+        connection_options = { headers: { 'Foo' => 'Bar' } }
+
+        expect { dummy.create_or_update(attributes, connection_options) }.not_to change { connection_options }.from({ headers: { 'Foo' => 'Bar' } })
       end
     end
   end
@@ -231,6 +293,12 @@ describe RemoteResource::Querying::PersistenceMethods do
     it 'handles the RemoteResource::Response' do
       expect(dummy).to receive(:handle_response).with response
       dummy.destroy
+    end
+
+    it 'does NOT change the given connection_options' do
+      connection_options = { headers: { 'Foo' => 'Bar' } }
+
+      expect { dummy.destroy(connection_options) }.not_to change { connection_options }.from({ headers: { 'Foo' => 'Bar' } })
     end
 
     context 'request' do

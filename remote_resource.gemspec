@@ -22,7 +22,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'rake', '~> 10.4'
   spec.add_development_dependency 'rspec', '~> 3.1'
   spec.add_development_dependency 'pry', '~> 0.10'
-  spec.add_development_dependency 'webmock', '~> 1.24'
+  # spec.add_development_dependency 'webmock', '~> 1.24'
   spec.add_development_dependency 'guard', '~> 2.14'
   spec.add_development_dependency 'guard-rspec', '~> 4.7'
   spec.add_development_dependency 'terminal-notifier-guard', '~> 1.6.1'

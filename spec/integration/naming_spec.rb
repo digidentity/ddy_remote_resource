@@ -36,12 +36,10 @@ RSpec.describe 'connection_options for naming' do
       mock_request
     end
 
-    xit 'performs the correct HTTP GET request' do
+    it 'performs the correct HTTP GET request' do
       Post.find(12, { site: 'https://api.example.com' })
-      expect(expected_request).to have_been_requested
-
       Post.find(12, { site: 'https://api.example.com/' })
-      expect(expected_request).to have_been_requested
+      expect(expected_request).to have_been_requested.times(2)
     end
   end
 
@@ -64,15 +62,11 @@ RSpec.describe 'connection_options for naming' do
       mock_request
     end
 
-    xit 'performs the correct HTTP GET request' do
+    it 'performs the correct HTTP GET request' do
       Post.find(12, { version: '/api/v2' })
-      expect(expected_request).to have_been_requested
-
       Post.find(12, { version: 'api/v2' })
-      expect(expected_request).to have_been_requested
-
       Post.find(12, { version: '/api/v2/' })
-      expect(expected_request).to have_been_requested
+      expect(expected_request).to have_been_requested.times(3)
     end
   end
 
@@ -95,15 +89,11 @@ RSpec.describe 'connection_options for naming' do
       mock_request
     end
 
-    xit 'performs the correct HTTP GET request' do
+    it 'performs the correct HTTP GET request' do
       Post.find(12, { version: '/api/v2', path_prefix: '/archive' })
-      expect(expected_request).to have_been_requested
-
       Post.find(12, { version: 'api/v2', path_prefix: 'archive' })
-      expect(expected_request).to have_been_requested
-
       Post.find(12, { version: '/api/v2/', path_prefix: '/archive/' })
-      expect(expected_request).to have_been_requested
+      expect(expected_request).to have_been_requested.times(3)
     end
   end
 
@@ -132,26 +122,18 @@ RSpec.describe 'connection_options for naming' do
       mock_request
     end
 
-    xit 'performs the correct HTTP GET request for a singular resource' do
+    it 'performs the correct HTTP GET request for a singular resource' do
       Post.find(12, { path_postfix: '/featured' })
-      expect(expected_request_singular).to have_been_requested
-
       Post.find(12, { path_postfix: 'featured' })
-      expect(expected_request_singular).to have_been_requested
-
       Post.find(12, { path_postfix: '/featured/' })
-      expect(expected_request_singular).to have_been_requested
+      expect(expected_request_singular).to have_been_requested.times(3)
     end
 
-    xit 'performs the correct HTTP GET request for a collection resource' do
+    it 'performs the correct HTTP GET request for a collection resource' do
       Post.all({ path_postfix: '/featured' })
-      expect(expected_request_collection).to have_been_requested
-
       Post.all({ path_postfix: 'featured' })
-      expect(expected_request_collection).to have_been_requested
-
       Post.all({ path_postfix: '/featured/' })
-      expect(expected_request_collection).to have_been_requested
+      expect(expected_request_collection).to have_been_requested.times(3)
     end
   end
 

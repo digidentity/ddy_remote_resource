@@ -224,7 +224,7 @@ describe RemoteResource::Querying::PersistenceMethods do
       end
 
       it 'performs a RemoteResource::Request with rest_action :patch' do
-        expect(RemoteResource::Request).to receive(:new).with(dummy, :patch, attributes, {}).and_call_original
+        expect(RemoteResource::Request).to receive(:new).with(dummy, :patch, { name: 'Kees' }, { id: 10 }).and_call_original
         expect_any_instance_of(RemoteResource::Request).to receive(:perform)
         dummy.create_or_update attributes
       end
@@ -251,7 +251,7 @@ describe RemoteResource::Querying::PersistenceMethods do
       end
 
       it 'performs a RemoteResource::Request with rest_action :post' do
-        expect(RemoteResource::Request).to receive(:new).with(dummy, :post, attributes, {}).and_call_original
+        expect(RemoteResource::Request).to receive(:new).with(dummy, :post, { name: 'Mies' }, {}).and_call_original
         expect_any_instance_of(RemoteResource::Request).to receive(:perform)
         dummy.create_or_update attributes
       end

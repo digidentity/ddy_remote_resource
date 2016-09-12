@@ -30,10 +30,10 @@ module RemoteResource
       end
 
       def create_or_update(attributes = {}, connection_options = {})
-        if attributes.has_key?(:id)
-          response = RemoteResource::Request.new(self, :patch, attributes, connection_options).perform
+        if attributes.has_key?(:id) && attributes[:id].present?
+          response = RemoteResource::Request.new(self, :patch, attributes.except(:id), connection_options.merge(id: attributes[:id])).perform
         else
-          response = RemoteResource::Request.new(self, :post, attributes, connection_options).perform
+          response = RemoteResource::Request.new(self, :post, attributes.except(:id), connection_options).perform
         end
         handle_response(response)
       end

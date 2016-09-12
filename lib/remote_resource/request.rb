@@ -2,13 +2,19 @@ module RemoteResource
   class Request
     include RemoteResource::HTTPErrors
 
-    attr_reader :resource, :rest_action, :attributes
+    DEFAULT_HEADERS = {
+      'Accept'     => 'application/json',
+      'User-Agent' => "RemoteResource #{RemoteResource::VERSION}"
+    }
+
+    attr_reader :resource, :resource_klass, :rest_action, :attributes
 
     def initialize(resource, rest_action, attributes = {}, connection_options = {})
-      @resource           = resource
-      @rest_action        = rest_action.to_sym
-      @attributes         = attributes
-      @connection_options = connection_options
+      @resource                    = resource
+      @resource_klass              = resource.is_a?(Class) ? resource : resource.class
+      @rest_action                 = rest_action.to_sym
+      @attributes                  = attributes
+      @connection_options          = connection_options
       @original_connection_options = connection_options.dup
     end
 
@@ -24,14 +30,19 @@ module RemoteResource
       @original_connection_options.reverse_merge(threaded_connection_options)
     end
 
+    def threaded_connection_options
+      resource.try(:threaded_connection_options) || {}
+    end
+    private :threaded_connection_options
+
     def perform
       case rest_action
       when :get
-        response = connection.public_send rest_action, determined_request_url, params: determined_params, headers: determined_headers
+        response = connection.public_send(rest_action, determined_request_url, params: determined_params, headers: determined_headers.reverse_merge(DEFAULT_HEADERS))
       when :put, :patch, :post
-        response = connection.public_send rest_action, determined_request_url, body: determined_attributes, headers: determined_headers
+        response = connection.public_send(rest_action, determined_request_url, body: JSON.generate(determined_attributes), headers: determined_headers.reverse_merge(DEFAULT_HEADERS).reverse_merge({ 'Content-Type' => 'application/json' }))
       when :delete
-        response = connection.public_send rest_action, determined_request_url, params: determined_params, headers: determined_headers
+        response = connection.public_send(rest_action, determined_request_url, params: determined_params, headers: determined_headers.reverse_merge(DEFAULT_HEADERS))
       else
         raise RemoteResource::RESTActionUnknown, "for action: '#{rest_action}'"
       end
@@ -44,8 +55,8 @@ module RemoteResource
     end
 
     def determined_request_url
-      id           = attributes[:id].presence
-      base_url     = original_connection_options[:base_url].presence || determined_url_naming.base_url(id, check_collection_options: true)
+      id           = attributes[:id].presence || connection_options[:id]
+      base_url     = original_connection_options[:base_url].presence || RemoteResource::UrlNamingDetermination.new(resource_klass, original_connection_options).base_url(id, check_collection_options: true)
       content_type = connection_options[:content_type]
 
       "#{base_url}#{content_type}"
@@ -72,7 +83,7 @@ module RemoteResource
       if no_attributes
         {}
       elsif root_element
-        pack_up_attributes attributes, root_element
+        { root_element => attributes }
       else
         attributes
       end
@@ -81,26 +92,7 @@ module RemoteResource
     def determined_headers
       headers = original_connection_options[:headers].presence || {}
 
-      (connection_options[:default_headers].presence ||
-          resource.connection_options.headers.merge(headers)).reverse_merge RemoteResource::Base.global_headers
-    end
-
-    private
-
-    def threaded_connection_options
-      resource.try(:threaded_connection_options) || {}
-    end
-
-    def determined_url_naming
-      RemoteResource::UrlNamingDetermination.new resource_klass, original_connection_options
-    end
-
-    def resource_klass
-      resource.is_a?(Class) ? resource : resource.class
-    end
-
-    def pack_up_attributes(attributes, root_element)
-      Hash[root_element.to_s, attributes]
+      (connection_options[:default_headers].presence || resource.connection_options.headers.merge(headers)).reverse_merge(RemoteResource::Base.global_headers)
     end
 
   end

@@ -160,13 +160,19 @@ describe RemoteResource::Request do
   end
 
   describe '#perform' do
-    let(:connection)             { Typhoeus::Request }
-    let(:determined_request_url) { 'http://www.foobar.com/request_dummy.json' }
-    let(:determined_params)      { attributes }
-    let(:determined_attributes)  { attributes }
-    let(:determined_headers)     { { "Accept"=>"application/json" } }
+    let(:connection) { Typhoeus::Request }
+    let(:expected_request_url) { 'http://www.foobar.com/request_dummy.json' }
+    let(:expected_params) do
+      attributes
+    end
+    let(:expected_headers) do
+      described_class::DEFAULT_HEADERS
+    end
+    let(:expected_body) do
+      JSON.generate(attributes)
+    end
 
-    let(:typhoeus_request)  { Typhoeus::Request.new determined_request_url }
+    let(:typhoeus_request)  { Typhoeus::Request.new(expected_request_url) }
     let(:typhoeus_response) do
       response = Typhoeus::Response.new
       response.request = typhoeus_request
@@ -220,7 +226,7 @@ describe RemoteResource::Request do
       let(:rest_action) { 'get' }
 
       it 'makes a GET request with the attributes as params' do
-        expect(connection).to receive(:get).with(determined_request_url, params: determined_params, headers: determined_headers).and_call_original
+        expect(connection).to receive(:get).with(expected_request_url, params: expected_params, headers: expected_headers).and_call_original
         request.perform
       end
 
@@ -231,18 +237,7 @@ describe RemoteResource::Request do
       let(:rest_action) { 'put' }
 
       it 'makes a PUT request with the attributes as body' do
-        expect(connection).to receive(:put).with(determined_request_url, body: determined_attributes, headers: determined_headers).and_call_original
-        request.perform
-      end
-
-      it_behaves_like 'a conditional construct for the response'
-    end
-
-    context 'when the rest_action is :put' do
-      let(:rest_action) { 'put' }
-
-      it 'makes a PUT request with the attributes as body' do
-        expect(connection).to receive(:put).with(determined_request_url, body: determined_attributes, headers: determined_headers).and_call_original
+        expect(connection).to receive(:put).with(expected_request_url, body: expected_body, headers: expected_headers.reverse_merge({ 'Content-Type' => 'application/json' })).and_call_original
         request.perform
       end
 
@@ -253,7 +248,7 @@ describe RemoteResource::Request do
       let(:rest_action) { 'patch' }
 
       it 'makes a PATCH request with the attributes as body' do
-        expect(connection).to receive(:patch).with(determined_request_url, body: determined_attributes, headers: determined_headers).and_call_original
+        expect(connection).to receive(:patch).with(expected_request_url, body: expected_body, headers: expected_headers.reverse_merge({ 'Content-Type' => 'application/json' })).and_call_original
         request.perform
       end
 
@@ -264,7 +259,7 @@ describe RemoteResource::Request do
       let(:rest_action) { 'post' }
 
       it 'makes a POST request with the attributes as body' do
-        expect(connection).to receive(:post).with(determined_request_url, body: determined_attributes, headers: determined_headers).and_call_original
+        expect(connection).to receive(:post).with(expected_request_url, body: expected_body, headers: expected_headers.reverse_merge({ 'Content-Type' => 'application/json' })).and_call_original
         request.perform
       end
 
@@ -275,7 +270,7 @@ describe RemoteResource::Request do
       let(:rest_action) { 'delete' }
 
       it 'makes a DELETE request with the attributes as body' do
-        expect(connection).to receive(:delete).with(determined_request_url, params: determined_params, headers: determined_headers).and_call_original
+        expect(connection).to receive(:delete).with(expected_request_url, params: expected_params, headers: expected_headers).and_call_original
         request.perform
       end
 
@@ -436,12 +431,8 @@ describe RemoteResource::Request do
         { root_element: :foobar }
       end
 
-      let(:packed_up_attributes) do
-        { 'foobar' => { name: 'Mies' } }
-      end
-
       it 'packs up the attributes with the root_element' do
-        expect(request.determined_attributes).to eql packed_up_attributes
+        expect(request.determined_attributes).to eql({ foobar: { name: 'Mies' } })
       end
     end
 

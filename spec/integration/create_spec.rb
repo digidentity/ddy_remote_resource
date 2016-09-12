@@ -29,6 +29,10 @@ RSpec.describe '.create' do
     }
   end
 
+  let(:expected_default_headers) do
+    { 'Content-Type' => 'application/json', 'Accept' => 'application/json', 'User-Agent' => "RemoteResource #{RemoteResource::VERSION}" }
+  end
+
   describe 'default behaviour' do
     let(:expected_request_body) do
       {
@@ -42,17 +46,17 @@ RSpec.describe '.create' do
 
     let!(:expected_request) do
       mock_request = stub_request(:post, 'https://www.example.com/posts.json')
-      mock_request.with(body: expected_request_body.to_json)
-      mock_request.to_return(status: 201, body: response_body.to_json)
+      mock_request.with(body: JSON.generate(expected_request_body), headers: expected_default_headers)
+      mock_request.to_return(status: 201, body: JSON.generate(response_body))
       mock_request
     end
 
-    xit 'performs the correct HTTP POST request' do
+    it 'performs the correct HTTP POST request' do
       Post.create(title: 'Lorem Ipsum', body: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.', featured: true)
       expect(expected_request).to have_been_requested
     end
 
-    xit 'builds the correct resource' do
+    it 'builds the correct resource' do
       post = Post.create(title: 'Lorem Ipsum', body: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.', featured: true)
 
       aggregate_failures do
@@ -79,13 +83,12 @@ RSpec.describe '.create' do
 
     let!(:expected_request) do
       mock_request = stub_request(:post, 'https://www.example.com/posts.json')
-      mock_request.with(body: expected_request_body.to_json)
-      mock_request.with(headers: { 'X-Pseudonym' => 'pseudonym' })
-      mock_request.to_return(status: 201, body: response_body.to_json)
+      mock_request.with(body: JSON.generate(expected_request_body), headers: expected_default_headers.merge({ 'X-Pseudonym' => 'pseudonym' }))
+      mock_request.to_return(status: 201, body: JSON.generate(response_body))
       mock_request
     end
 
-    xit 'performs the correct HTTP POST request' do
+    it 'performs the correct HTTP POST request' do
       Post.create({ title: 'Lorem Ipsum', body: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.', featured: true }, { headers: { 'X-Pseudonym' => 'pseudonym' } })
       expect(expected_request).to have_been_requested
     end
@@ -112,17 +115,17 @@ RSpec.describe '.create' do
 
     let!(:expected_request) do
       mock_request = stub_request(:post, 'https://www.example.com/posts.json')
-      mock_request.with(body: expected_request_body.to_json)
-      mock_request.to_return(status: 422, body: response_body.to_json)
+      mock_request.with(body: JSON.generate(expected_request_body), headers: expected_default_headers)
+      mock_request.to_return(status: 422, body: JSON.generate(response_body))
       mock_request
     end
 
-    xit 'performs the correct HTTP POST request' do
+    it 'performs the correct HTTP POST request' do
       Post.create(title: 'Lore', featured: true)
       expect(expected_request).to have_been_requested
     end
 
-    xit 'builds the correct resource with validation errors' do
+    it 'builds the correct resource with validation errors' do
       post = Post.create(title: 'Lore', featured: true)
 
       aggregate_failures do
@@ -151,13 +154,12 @@ RSpec.describe '.create' do
 
     let!(:expected_request) do
       mock_request = stub_request(:post, 'https://www.example.com/posts.json')
-      mock_request.with(body: expected_request_body.to_json)
-      mock_request.with(headers: { 'X-Pseudonym' => 'pseudonym' })
+      mock_request.with(body: JSON.generate(expected_request_body), headers: expected_default_headers.merge({ 'X-Pseudonym' => 'pseudonym' }))
       mock_request.to_return(status: 500)
       mock_request
     end
 
-    xit 'raises the server error' do
+    it 'raises the server error' do
       expect { Post.create({ title: 'Lorem Ipsum', body: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.', featured: true }, { headers: { 'X-Pseudonym' => 'pseudonym' } }) }.to raise_error RemoteResource::HTTPServerError
     end
 

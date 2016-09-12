@@ -116,13 +116,13 @@ describe RemoteResource::Base do
     context 'when the given connection_options contain headers' do
       let(:connection_options) do
         {
-          headers: { "Foo" => "Bar" }
+          headers: { 'Foo' => 'Bar' }
         }
       end
 
       it 'uses the headers of the given connection_options' do
-        expect(Typhoeus::Request).to receive(:get).with('https://foobar.com/dummy.json', params: { username: 'foobar' }, headers: { "Accept" => "application/json", "Foo" => "Bar" }).and_call_original
-        expect(Typhoeus::Request).to receive(:post).with('https://foobar.com/dummy.xml', body: { username: 'bazbar' }, headers: { "Accept" => "application/json", "Foo" => "Bar" }).and_call_original
+        expect(Typhoeus::Request).to receive(:get).with('https://foobar.com/dummy.json', params: { username: 'foobar' }, headers: RemoteResource::Request::DEFAULT_HEADERS.merge({ 'Foo' => 'Bar' })).and_call_original
+        expect(Typhoeus::Request).to receive(:post).with('https://foobar.com/dummy.xml', body: JSON.generate({ username: 'bazbar' }), headers: RemoteResource::Request::DEFAULT_HEADERS.merge({ 'Foo' => 'Bar', 'Content-Type' => 'application/json' })).and_call_original
         block_with_connection_options
       end
     end
@@ -135,8 +135,8 @@ describe RemoteResource::Base do
       end
 
       it 'uses the base_url of the given connection_options' do
-        expect(Typhoeus::Request).to receive(:get).with('https://api.foobar.eu/dummy.json', params: { username: 'foobar' }, headers: { "Accept" => "application/json" }).and_call_original
-        expect(Typhoeus::Request).to receive(:post).with('https://api.foobar.eu/dummy.xml', body: { username: 'bazbar' }, headers: { "Accept" => "application/json" }).and_call_original
+        expect(Typhoeus::Request).to receive(:get).with('https://api.foobar.eu/dummy.json', params: { username: 'foobar' }, headers: RemoteResource::Request::DEFAULT_HEADERS).and_call_original
+        expect(Typhoeus::Request).to receive(:post).with('https://api.foobar.eu/dummy.xml', body: JSON.generate({ username: 'bazbar' }), headers: RemoteResource::Request::DEFAULT_HEADERS.merge({ 'Content-Type' => 'application/json' })).and_call_original
         block_with_connection_options
       end
     end
@@ -151,8 +151,8 @@ describe RemoteResource::Base do
       end
 
       it 'uses the given connection_options' do
-        expect(Typhoeus::Request).to receive(:get).with('https://foobar.com/api/dummies.json', params: { username: 'foobar' }, headers: { "Accept" => "application/json" }).and_call_original
-        expect(Typhoeus::Request).to receive(:post).with('https://foobar.com/api/dummies.xml', body:  { 'bazbar' => { username: 'bazbar' } }, headers: { "Accept" => "application/json" }).and_call_original
+        expect(Typhoeus::Request).to receive(:get).with('https://foobar.com/api/dummies.json', params: { username: 'foobar' }, headers: RemoteResource::Request::DEFAULT_HEADERS).and_call_original
+        expect(Typhoeus::Request).to receive(:post).with('https://foobar.com/api/dummies.xml', body:  JSON.generate({ bazbar: { username: 'bazbar' } }), headers: RemoteResource::Request::DEFAULT_HEADERS.merge({ 'Content-Type' => 'application/json' })).and_call_original
         block_with_connection_options
       end
     end

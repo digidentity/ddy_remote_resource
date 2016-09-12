@@ -29,13 +29,16 @@ RSpec.describe '#save' do
     }
   end
 
+  let(:expected_default_headers) do
+    { 'Content-Type' => 'application/json', 'Accept' => 'application/json', 'User-Agent' => "RemoteResource #{RemoteResource::VERSION}" }
+  end
+
   describe 'when resource is persisted' do
     let(:resource) { Post.new(id: 12, title: 'Lorem Ipsum', body: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.', featured: false, created_at: Time.new(2015, 10, 4, 9, 30, 0)) }
 
     let(:expected_request_body) do
       {
         data: {
-          id:         12,
           title:      'Lorem Ipsum',
           body:       'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
           featured:   false,
@@ -47,18 +50,20 @@ RSpec.describe '#save' do
     describe 'default behaviour' do
       let!(:expected_request) do
         mock_request = stub_request(:patch, 'https://www.example.com/posts/12.json')
-        mock_request.with(body: expected_request_body.to_json)
-        mock_request.to_return(status: 200, body: response_body.to_json)
+        mock_request.with(body: JSON.generate(expected_request_body), headers: expected_default_headers)
+        mock_request.to_return(status: 200, body: JSON.generate(response_body))
         mock_request
       end
 
-      xit 'performs the correct HTTP PATCH request' do
+      it 'performs the correct HTTP PATCH request' do
         resource.save
         expect(expected_request).to have_been_requested
       end
 
-      xit 'builds the correct resource' do
-        post = resource.save
+      it 'builds the correct resource' do
+        resource.save
+
+        post = resource
 
         aggregate_failures do
           expect(post.persisted?).to eql true
@@ -74,13 +79,12 @@ RSpec.describe '#save' do
     describe 'with connection_options[:headers]' do
       let!(:expected_request) do
         mock_request = stub_request(:patch, 'https://www.example.com/posts/12.json')
-        mock_request.with(body: expected_request_body.to_json)
-        mock_request.with(headers: { 'X-Pseudonym' => 'pseudonym' })
-        mock_request.to_return(status: 200, body: response_body.to_json)
+        mock_request.with(body: JSON.generate(expected_request_body), headers: expected_default_headers.merge({ 'X-Pseudonym' => 'pseudonym' }))
+        mock_request.to_return(status: 200, body: JSON.generate(response_body))
         mock_request
       end
 
-      xit 'performs the correct HTTP PATCH request' do
+      it 'performs the correct HTTP PATCH request' do
         resource.save({ headers: { 'X-Pseudonym' => 'pseudonym' } })
         expect(expected_request).to have_been_requested
       end
@@ -99,7 +103,6 @@ RSpec.describe '#save' do
       let(:expected_request_body) do
         {
           data: {
-            id:         12,
             title:      'Lore',
             body:       '',
             featured:   true,
@@ -110,8 +113,8 @@ RSpec.describe '#save' do
 
       let!(:expected_request) do
         mock_request = stub_request(:patch, 'https://www.example.com/posts/12.json')
-        mock_request.with(body: expected_request_body.to_json)
-        mock_request.to_return(status: 422, body: response_body.to_json)
+        mock_request.with(body: JSON.generate(expected_request_body), headers: expected_default_headers)
+        mock_request.to_return(status: 422, body: JSON.generate(response_body))
         mock_request
       end
 
@@ -121,13 +124,15 @@ RSpec.describe '#save' do
         resource.featured = true
       end
 
-      xit 'performs the correct HTTP PATCH request' do
+      it 'performs the correct HTTP PATCH request' do
         resource.save
         expect(expected_request).to have_been_requested
       end
 
-      xit 'builds the correct resource with validation errors' do
-        post = resource.save
+      it 'builds the correct resource with validation errors' do
+        resource.save
+
+        post = resource
 
         aggregate_failures do
           expect(post.persisted?).to eql true
@@ -145,13 +150,12 @@ RSpec.describe '#save' do
     describe 'with a 500 response' do
       let!(:expected_request) do
         mock_request = stub_request(:patch, 'https://www.example.com/posts/12.json')
-        mock_request.with(body: expected_request_body.to_json)
-        mock_request.with(headers: { 'X-Pseudonym' => 'pseudonym' })
+        mock_request.with(body: JSON.generate(expected_request_body), headers: expected_default_headers.merge({ 'X-Pseudonym' => 'pseudonym' }))
         mock_request.to_return(status: 500)
         mock_request
       end
 
-      xit 'raises the server error' do
+      it 'raises the server error' do
         expect { resource.save({ headers: { 'X-Pseudonym' => 'pseudonym' } }) }.to raise_error RemoteResource::HTTPServerError
       end
 
@@ -181,6 +185,7 @@ RSpec.describe '#save' do
           title:      'Lorem Ipsum',
           body:       'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
           featured:   false,
+          created_at: nil,
         }
       }
     end
@@ -188,18 +193,20 @@ RSpec.describe '#save' do
     describe 'default behaviour' do
       let!(:expected_request) do
         mock_request = stub_request(:post, 'https://www.example.com/posts.json')
-        mock_request.with(body: expected_request_body.to_json)
-        mock_request.to_return(status: 201, body: response_body.to_json)
+        mock_request.with(body: JSON.generate(expected_request_body), headers: expected_default_headers)
+        mock_request.to_return(status: 201, body: JSON.generate(response_body))
         mock_request
       end
 
-      xit 'performs the correct HTTP POST request' do
+      it 'performs the correct HTTP POST request' do
         resource.save
         expect(expected_request).to have_been_requested
       end
 
-      xit 'builds the correct resource' do
-        post = resource.save
+      it 'builds the correct resource' do
+        resource.save
+
+        post = resource
 
         aggregate_failures do
           expect(post.persisted?).to eql true
@@ -215,13 +222,12 @@ RSpec.describe '#save' do
     describe 'with connection_options[:headers]' do
       let!(:expected_request) do
         mock_request = stub_request(:post, 'https://www.example.com/posts.json')
-        mock_request.with(body: expected_request_body.to_json)
-        mock_request.with(headers: { 'X-Pseudonym' => 'pseudonym' })
-        mock_request.to_return(status: 201, body: response_body.to_json)
+        mock_request.with(body: JSON.generate(expected_request_body), headers: expected_default_headers.merge({ 'X-Pseudonym' => 'pseudonym' }))
+        mock_request.to_return(status: 201, body: JSON.generate(response_body))
         mock_request
       end
 
-      xit 'performs the correct HTTP POST request' do
+      it 'performs the correct HTTP POST request' do
         resource.save({ headers: { 'X-Pseudonym' => 'pseudonym' } })
         expect(expected_request).to have_been_requested
       end
@@ -240,17 +246,18 @@ RSpec.describe '#save' do
       let(:expected_request_body) do
         {
           data: {
-            title:    'Lore',
-            body:     '',
-            featured: true
+            title:      'Lore',
+            body:       '',
+            featured:   true,
+            created_at: nil
           }
         }
       end
 
       let!(:expected_request) do
         mock_request = stub_request(:post, 'https://www.example.com/posts.json')
-        mock_request.with(body: expected_request_body.to_json)
-        mock_request.to_return(status: 422, body: response_body.to_json)
+        mock_request.with(body: JSON.generate(expected_request_body), headers: expected_default_headers)
+        mock_request.to_return(status: 422, body: JSON.generate(response_body))
         mock_request
       end
 
@@ -260,13 +267,15 @@ RSpec.describe '#save' do
         resource.featured = true
       end
 
-      xit 'performs the correct HTTP POST request' do
+      it 'performs the correct HTTP POST request' do
         resource.save
         expect(expected_request).to have_been_requested
       end
 
-      xit 'builds the correct resource with validation errors' do
-        post = resource.save
+      it 'builds the correct resource with validation errors' do
+        resource.save
+
+        post = resource
 
         aggregate_failures do
           expect(post.persisted?).to eql false
@@ -284,13 +293,12 @@ RSpec.describe '#save' do
     describe 'with a 500 response' do
       let!(:expected_request) do
         mock_request = stub_request(:post, 'https://www.example.com/posts.json')
-        mock_request.with(body: expected_request_body.to_json)
-        mock_request.with(headers: { 'X-Pseudonym' => 'pseudonym' })
+        mock_request.with(body: JSON.generate(expected_request_body), headers: expected_default_headers.merge({ 'X-Pseudonym' => 'pseudonym' }))
         mock_request.to_return(status: 500)
         mock_request
       end
 
-      xit 'raises the server error' do
+      it 'raises the server error' do
         expect { resource.save({ headers: { 'X-Pseudonym' => 'pseudonym' } }) }.to raise_error RemoteResource::HTTPServerError
       end
 

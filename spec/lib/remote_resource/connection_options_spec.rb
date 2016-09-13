@@ -7,12 +7,11 @@ describe RemoteResource::ConnectionOptions do
       include RemoteResource::Base
 
       self.site              = 'https://foobar.com'
-      self.content_type      = ''
-      self.extra_headers     = { "X-Locale" => "nl" }
+      self.extension         = ''
+      self.extra_headers     = { 'X-Locale' => 'nl' }
       self.version           = '/v1'
       self.path_prefix       = '/prefix'
       self.path_postfix      = '/postfix'
-      self.content_type      = '.json'
       self.collection_prefix = '/parent/:parent_id'
       self.collection        = true
       self.root_element      = :test_dummy
@@ -57,7 +56,7 @@ describe RemoteResource::ConnectionOptions do
     let(:custom_connection_options) do
       {
         site: 'https://dummy.foobar.com',
-        content_type: '.xml',
+        version: '/api/v2',
         root_element: :test_dummy_api
       }
     end
@@ -66,7 +65,7 @@ describe RemoteResource::ConnectionOptions do
       connection_options.merge custom_connection_options
 
       expect(connection_options.site).to eql 'https://dummy.foobar.com'
-      expect(connection_options.content_type).to eql '.xml'
+      expect(connection_options.version).to eql '/api/v2'
       expect(connection_options.root_element).to eql :test_dummy_api
     end
 
@@ -80,11 +79,11 @@ describe RemoteResource::ConnectionOptions do
       {
         base_url:          'https://foobar.com/v1/prefix/parent/:parent_id/connection_options_dummies/postfix',
         site:              'https://foobar.com',
-        headers:           { "Accept" => "application/json", "X-Locale" => "nl" },
+        headers:           { 'X-Locale' => 'nl' },
         version:           '/v1',
         path_prefix:       '/prefix',
         path_postfix:      '/postfix',
-        content_type:      '.json',
+        extension:         '',
         collection_prefix: '/parent/:parent_id',
         collection:        true,
         collection_name:   nil,

@@ -20,40 +20,49 @@ describe RemoteResource::Connection do
     end
   end
 
-  describe '.content_type' do
-    let!(:original_content_type) { dummy_class.content_type }
-
-    context 'when content_type is set' do
-      it 'returns the given content_type' do
-        dummy_class.content_type = '.html'
-
-        expect(dummy_class.content_type).to eql '.html'
-
-        dummy_class.content_type = original_content_type
-      end
+  describe '.default_headers' do
+    it 'returns an empty Hash' do
+      expect(dummy_class.default_headers).to eql({})
     end
+  end
 
-    context 'when NO content_type is set' do
-      it 'returns the default content_type' do
-        expect(dummy_class.content_type).to eql '.json'
-      end
+  describe '.extra_headers' do
+    it 'returns an empty Hash' do
+      expect(dummy_class.extra_headers).to eql({})
+    end
+  end
+
+  describe '.content_type=' do
+    it 'warns that the method is deprecated' do
+      expect(dummy_class).to receive(:warn).with('[DEPRECATION] `.content_type=` is deprecated.  Please use `.extension=` instead.')
+      dummy_class.content_type = '.json'
+    end
+  end
+
+  describe '.content_type' do
+    it 'warns that the method is deprecated' do
+      expect(dummy_class).to receive(:warn).with('[DEPRECATION] `.content_type` is deprecated.  Please use `.extension` instead.')
+      dummy_class.content_type
     end
   end
 
   describe '.headers' do
+    before { dummy_class.default_headers = { 'X-Locale' => 'nl' } }
+    after { dummy_class.default_headers = {} }
+
     context 'when .extra_headers are set' do
       it 'returns the default headers merged with the set .extra_headers' do
-        dummy_class.extra_headers = { "Foo" => "Bar" }
+        dummy_class.extra_headers = { 'Foo' => 'Bar' }
 
-        expect(dummy_class.headers).to eql({ "Accept" => "application/json", "Foo" => "Bar" })
+        expect(dummy_class.headers).to eql({ 'X-Locale' => 'nl', 'Foo' => 'Bar' })
 
-        dummy_class.extra_headers = nil
+        dummy_class.extra_headers = {}
       end
     end
 
     context 'when NO .extra_headers are set' do
       it 'returns the default headers' do
-        expect(dummy_class.headers).to eql({ "Accept" => "application/json" })
+        expect(dummy_class.headers).to eql({ 'X-Locale' => 'nl' })
       end
     end
   end

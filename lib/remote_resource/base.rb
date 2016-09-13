@@ -2,7 +2,7 @@ module RemoteResource
   module Base
     extend ActiveSupport::Concern
 
-    OPTIONS = [:base_url, :site, :headers, :version, :path_prefix, :path_postfix, :collection_prefix, :content_type, :collection, :collection_name, :root_element]
+    OPTIONS = [:base_url, :site, :headers, :version, :path_prefix, :path_postfix, :collection_prefix, :extension, :collection, :collection_name, :root_element]
 
     included do
       include Virtus.model
@@ -45,8 +45,7 @@ module RemoteResource
 
       def with_connection_options(connection_options = {})
         begin
-          threaded_connection_options
-          Thread.current[threaded_connection_options_thread_name].merge! connection_options
+          Thread.current[threaded_connection_options_thread_name] = threaded_connection_options.merge(connection_options)
           yield
         ensure
           Thread.current[threaded_connection_options_thread_name] = nil

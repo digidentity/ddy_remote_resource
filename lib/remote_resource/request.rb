@@ -5,7 +5,13 @@ module RemoteResource
     DEFAULT_HEADERS = {
       'Accept'     => 'application/json',
       'User-Agent' => "RemoteResource #{RemoteResource::VERSION}"
-    }
+    }.freeze
+
+    DEFAULT_CONTENT_TYPE = {
+      'Content-Type' => 'application/json'
+    }.freeze
+
+    DEFAULT_EXTENSION = '.json'.freeze
 
     attr_reader :resource, :resource_klass, :rest_action, :attributes
 
@@ -40,7 +46,7 @@ module RemoteResource
       when :get
         response = connection.public_send(rest_action, determined_request_url, params: determined_params, headers: determined_headers.reverse_merge(DEFAULT_HEADERS))
       when :put, :patch, :post
-        response = connection.public_send(rest_action, determined_request_url, body: JSON.generate(determined_attributes), headers: determined_headers.reverse_merge(DEFAULT_HEADERS).reverse_merge({ 'Content-Type' => 'application/json' }))
+        response = connection.public_send(rest_action, determined_request_url, body: JSON.generate(determined_attributes), headers: determined_headers.reverse_merge(DEFAULT_HEADERS).reverse_merge(DEFAULT_CONTENT_TYPE))
       when :delete
         response = connection.public_send(rest_action, determined_request_url, params: determined_params, headers: determined_headers.reverse_merge(DEFAULT_HEADERS))
       else
@@ -55,11 +61,11 @@ module RemoteResource
     end
 
     def determined_request_url
-      id           = attributes[:id].presence || connection_options[:id]
-      base_url     = original_connection_options[:base_url].presence || RemoteResource::UrlNamingDetermination.new(resource_klass, original_connection_options).base_url(id, check_collection_options: true)
-      content_type = connection_options[:content_type]
+      id        = attributes[:id].presence || connection_options[:id]
+      base_url  = original_connection_options[:base_url].presence || RemoteResource::UrlNamingDetermination.new(resource_klass, original_connection_options).base_url(id, check_collection_options: true)
+      extension = connection_options[:extension] || DEFAULT_EXTENSION
 
-      "#{base_url}#{content_type}"
+      "#{base_url}#{extension}"
     end
 
     def determined_params

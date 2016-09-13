@@ -297,13 +297,23 @@ describe RemoteResource::Request do
       end
     end
 
-    context 'the attributes do NOT contain an id' do
+    context 'the connection_options contain an id' do
+      let(:connection_options) do
+        { id: 12 }
+      end
+
+      it 'uses the id for the request url' do
+        expect(request.determined_request_url).to eql 'http://www.foobar.com/request_dummy/12.json'
+      end
+    end
+
+    context 'the attributes or connection_options do NOT contain an id' do
       it 'does NOT use the id for the request url' do
         expect(request.determined_request_url).to eql 'http://www.foobar.com/request_dummy.json'
       end
     end
 
-    context 'the given connection_options (original_connection_options) contain a base_url' do
+    context 'the connection_options contain a base_url' do
       let(:connection_options) do
         { base_url: 'http://www.foo.com/api' }
       end
@@ -313,13 +323,13 @@ describe RemoteResource::Request do
       end
     end
 
-    context 'the given connection_options (original_connection_options) do NOT contain a base_url' do
+    context 'the connection_options do NOT contain a base_url' do
       it 'does NOT use the base_url for the request url' do
         expect(request.determined_request_url).to eql 'http://www.foobar.com/request_dummy.json'
       end
     end
 
-    context 'the given connection_options contain a collection' do
+    context 'the connection_options contain a collection' do
       let(:connection_options) do
         { collection: true }
       end
@@ -329,18 +339,28 @@ describe RemoteResource::Request do
       end
     end
 
-    context 'the connection_options contain a content_type' do
+    context 'the connection_options contain a extension' do
       let(:connection_options) do
-        { content_type: '' }
+        { extension: '.vnd+json' }
       end
 
-      it 'uses the content_type for the request url' do
+      it 'uses the extension for the request url' do
+        expect(request.determined_request_url).to eql 'http://www.foobar.com/request_dummy.vnd+json'
+      end
+    end
+
+    context 'the connection_options contain a blank extension' do
+      let(:connection_options) do
+        { extension: '' }
+      end
+
+      it 'does NOT use a extension for the request url' do
         expect(request.determined_request_url).to eql 'http://www.foobar.com/request_dummy'
       end
     end
 
     context 'the connection_options do NOT contain a content_type' do
-      it 'does NOT use the content_type for the request url' do
+      it 'uses the DEFAULT_EXTENSION for the request url' do
         expect(request.determined_request_url).to eql 'http://www.foobar.com/request_dummy.json'
       end
     end
@@ -511,7 +531,7 @@ describe RemoteResource::Request do
 
             expect(request.determined_headers).to eql default_headers.merge(extra_headers).merge(global_headers)
 
-            dummy_class.extra_headers = nil
+            dummy_class.extra_headers = {}
             dummy_class.connection_options.reload!
           end
         end

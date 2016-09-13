@@ -22,12 +22,6 @@ describe RemoteResource::Base do
   specify { expect(described_class.const_defined?('RemoteResource::Querying::FinderMethods')).to be_truthy }
   specify { expect(described_class.const_defined?('RemoteResource::Querying::PersistenceMethods')).to be_truthy }
 
-  describe 'OPTIONS' do
-    let(:options) { [:base_url, :site, :headers, :version, :path_prefix, :path_postfix, :collection_prefix, :content_type, :collection, :collection_name, :root_element] }
-
-    specify { expect(described_class::OPTIONS).to eql options }
-  end
-
   describe 'attributes' do
     it '#id' do
       expect(dummy.attributes).to have_key :id
@@ -45,7 +39,7 @@ describe RemoteResource::Base do
     after { described_class.global_headers = nil }
 
     it 'sets the global headers Thread variable' do
-      expect{ described_class.global_headers = global_headers }.to change{ Thread.current[:global_headers] }.from({}).to global_headers
+      expect{ described_class.global_headers = global_headers }.to change{ described_class.global_headers }.from({}).to(global_headers)
     end
   end
 
@@ -94,23 +88,23 @@ describe RemoteResource::Base do
 
     let(:block_with_connection_options) do
       dummy_class.with_connection_options(connection_options) do
-        dummy_class.find_by({ username: 'foobar' }, { content_type: '.json' })
-        dummy_class.create({ username: 'bazbar' }, { content_type: '.xml' })
+        dummy_class.find_by({ username: 'foobar' }, { path_prefix: '/archive' })
+        dummy_class.create({ username: 'bazbar' }, { path_prefix: '/featured' })
       end
     end
 
     before { allow_any_instance_of(Typhoeus::Request).to receive(:run) { double.as_null_object } }
 
     it 'yields the block' do
-      expect(dummy_class).to receive(:find_by).with({ username: 'foobar' }, { content_type: '.json' }).and_call_original
-      expect(dummy_class).to receive(:create).with({ username: 'bazbar' }, { content_type: '.xml' }).and_call_original
+      expect(dummy_class).to receive(:find_by).with({ username: 'foobar' }, { path_prefix: '/archive' }).and_call_original
+      expect(dummy_class).to receive(:create).with({ username: 'bazbar' }, { path_prefix: '/featured' }).and_call_original
       block_with_connection_options
     end
 
-    it 'ensures to set the threaded_connection_options Thread variable to nil' do
-      dummy_class.threaded_connection_options
-
-      expect{ block_with_connection_options }.to change{ Thread.current['remote_resource.dummy.threaded_connection_options'] }.from(an_instance_of(Hash)).to nil
+    it 'ensures to set the threaded_connection_options back to the default' do
+      expect(dummy_class.threaded_connection_options).to eql({})
+      block_with_connection_options
+      expect(dummy_class.threaded_connection_options).to eql({})
     end
 
     context 'when the given connection_options contain headers' do
@@ -121,8 +115,8 @@ describe RemoteResource::Base do
       end
 
       it 'uses the headers of the given connection_options' do
-        expect(Typhoeus::Request).to receive(:get).with('https://foobar.com/dummy.json', params: { username: 'foobar' }, headers: RemoteResource::Request::DEFAULT_HEADERS.merge({ 'Foo' => 'Bar' })).and_call_original
-        expect(Typhoeus::Request).to receive(:post).with('https://foobar.com/dummy.xml', body: JSON.generate({ username: 'bazbar' }), headers: RemoteResource::Request::DEFAULT_HEADERS.merge({ 'Foo' => 'Bar', 'Content-Type' => 'application/json' })).and_call_original
+        expect(Typhoeus::Request).to receive(:get).with('https://foobar.com/archive/dummy.json', params: { username: 'foobar' }, headers: RemoteResource::Request::DEFAULT_HEADERS.merge({ 'Foo' => 'Bar' })).and_call_original
+        expect(Typhoeus::Request).to receive(:post).with('https://foobar.com/featured/dummy.json', body: JSON.generate({ username: 'bazbar' }), headers: RemoteResource::Request::DEFAULT_HEADERS.merge({ 'Foo' => 'Bar', 'Content-Type' => 'application/json' })).and_call_original
         block_with_connection_options
       end
     end
@@ -136,7 +130,7 @@ describe RemoteResource::Base do
 
       it 'uses the base_url of the given connection_options' do
         expect(Typhoeus::Request).to receive(:get).with('https://api.foobar.eu/dummy.json', params: { username: 'foobar' }, headers: RemoteResource::Request::DEFAULT_HEADERS).and_call_original
-        expect(Typhoeus::Request).to receive(:post).with('https://api.foobar.eu/dummy.xml', body: JSON.generate({ username: 'bazbar' }), headers: RemoteResource::Request::DEFAULT_HEADERS.merge({ 'Content-Type' => 'application/json' })).and_call_original
+        expect(Typhoeus::Request).to receive(:post).with('https://api.foobar.eu/dummy.json', body: JSON.generate({ username: 'bazbar' }), headers: RemoteResource::Request::DEFAULT_HEADERS.merge({ 'Content-Type' => 'application/json' })).and_call_original
         block_with_connection_options
       end
     end
@@ -145,14 +139,14 @@ describe RemoteResource::Base do
       let(:connection_options) do
         {
           collection: true,
-          path_prefix: '/api',
+          version: '/api/v1',
           root_element: :bazbar
         }
       end
 
       it 'uses the given connection_options' do
-        expect(Typhoeus::Request).to receive(:get).with('https://foobar.com/api/dummies.json', params: { username: 'foobar' }, headers: RemoteResource::Request::DEFAULT_HEADERS).and_call_original
-        expect(Typhoeus::Request).to receive(:post).with('https://foobar.com/api/dummies.xml', body:  JSON.generate({ bazbar: { username: 'bazbar' } }), headers: RemoteResource::Request::DEFAULT_HEADERS.merge({ 'Content-Type' => 'application/json' })).and_call_original
+        expect(Typhoeus::Request).to receive(:get).with('https://foobar.com/api/v1/archive/dummies.json', params: { username: 'foobar' }, headers: RemoteResource::Request::DEFAULT_HEADERS).and_call_original
+        expect(Typhoeus::Request).to receive(:post).with('https://foobar.com/api/v1/featured/dummies.json', body:  JSON.generate({ bazbar: { username: 'bazbar' } }), headers: RemoteResource::Request::DEFAULT_HEADERS.merge({ 'Content-Type' => 'application/json' })).and_call_original
         block_with_connection_options
       end
     end

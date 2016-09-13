@@ -35,6 +35,15 @@ describe RemoteResource::UrlNaming do
   end
 
   describe '.app_host' do
+    before { allow(dummy_class).to receive(:warn) }
+
+    it 'warns that the method is deprecated' do
+      stub_const("CONFIG", { test: { apps: { dummy: 'https://foobar.test.com' } } })
+
+      expect(dummy_class).to receive(:warn).with('[DEPRECATION] `.app_host` is deprecated. Please use a different method to determine the site.')
+      dummy_class.app_host('dummy', 'test')
+    end
+
     context 'when the env is given as an argument' do
       it 'uses the host specified in the CONFIG constant for the given env' do
         stub_const("CONFIG", { test: { apps: { dummy: 'https://foobar.test.com' } } })

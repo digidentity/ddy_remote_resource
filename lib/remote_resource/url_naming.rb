@@ -11,6 +11,7 @@ module RemoteResource
     module ClassMethods
 
       def app_host(app, env = 'development')
+        warn '[DEPRECATION] `.app_host` is deprecated. Please use a different method to determine the site.'
         CONFIG[env.to_sym][:apps][app.to_sym]
       end
 

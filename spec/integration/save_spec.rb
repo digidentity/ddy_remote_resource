@@ -237,8 +237,9 @@ RSpec.describe '#save' do
       let(:response_body) do
         {
           errors: {
-            title: ['Please use a title which is more than 5 characters'],
-            body:  ['Please fill in a body']
+            title:             ['Please use a title which is more than 5 characters'],
+            body:              ['Please fill in a body'],
+            virtual_attribute: ['You already posted today', 'Please refrain from using curse words']
           }
         }
       end
@@ -286,6 +287,7 @@ RSpec.describe '#save' do
           expect(post.created_at).to be_blank
           expect(post.errors.messages[:title]).to eql ['Please use a title which is more than 5 characters']
           expect(post.errors.messages[:body]).to eql ['Please fill in a body']
+          expect(post.errors.messages[:base]).to eql ['You already posted today', 'Please refrain from using curse words']
         end
       end
     end

@@ -136,8 +136,9 @@ RSpec.describe '#update_attributes' do
     let(:response_body) do
       {
         errors: {
-          title: ['Please use a title which is more than 5 characters'],
-          body:  ['Please fill in a body']
+          title:             ['Please use a title which is more than 5 characters'],
+          body:              ['Please fill in a body'],
+          virtual_attribute: ['You already posted today', 'Please refrain from using curse words']
         }
       }
     end
@@ -178,6 +179,7 @@ RSpec.describe '#update_attributes' do
         expect(post.created_at).to eql Time.new(2015, 10, 4, 9, 30, 0)
         expect(post.errors.messages[:title]).to eql ['Please use a title which is more than 5 characters']
         expect(post.errors.messages[:body]).to eql ['Please fill in a body']
+        expect(post.errors.messages[:base]).to eql ['You already posted today', 'Please refrain from using curse words']
       end
     end
   end

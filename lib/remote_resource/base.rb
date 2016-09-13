@@ -104,11 +104,15 @@ module RemoteResource
     private
 
     def assign_errors(error_messages)
-      return unless error_messages.respond_to? :each
+      return unless error_messages.respond_to?(:each)
 
       error_messages.each do |attribute, attribute_errors|
-        attribute_errors.each do |error|
-          self.errors.add attribute, error
+        attribute_errors.each do |attribute_error|
+          if respond_to?(attribute)
+            self.errors.add(attribute, attribute_error)
+          else
+            self.errors.add(:base, attribute_error)
+          end
         end
       end
     end

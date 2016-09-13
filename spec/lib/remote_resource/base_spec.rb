@@ -296,43 +296,5 @@ describe RemoteResource::Base do
     end
   end
 
-  describe '#assign_errors' do
-    context 'with errors in the error_messages' do
-      let(:error_messages) do
-        {
-          "foo" => ["is required"],
-          "bar" => ["must be greater than 5"]
-        }
-      end
-
-      it 'assigns the error_messages as errors' do
-        dummy.send :assign_errors, error_messages
-        expect(dummy.errors.messages).to eql foo: ["is required"], bar: ["must be greater than 5"]
-      end
-    end
-
-    context 'with an empty Hash in the error_messages' do
-      let(:error_messages) do
-        {}
-      end
-
-      it 'does NOT assign the error_messages as errors' do
-        dummy.send :assign_errors, error_messages
-        expect(dummy.errors.messages).to eql({})
-      end
-    end
-
-    context 'with a String in the error_messages' do
-      let(:error_messages) do
-        "unauthorized"
-      end
-
-      it 'does NOT assign the error_messages as errors' do
-        dummy.send :assign_errors, error_messages
-        expect(dummy.errors.messages).to eql({})
-      end
-    end
-  end
-
 end
 

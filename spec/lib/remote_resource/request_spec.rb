@@ -27,7 +27,7 @@ describe RemoteResource::Request do
     { name: 'Mies' }
   end
 
-  let(:request) { described_class.new resource, rest_action, attributes, connection_options.dup }
+  let(:request) { described_class.new(resource, rest_action, attributes, connection_options) }
 
   specify { expect(described_class).to include RemoteResource::HTTPErrors }
 
@@ -171,6 +171,9 @@ describe RemoteResource::Request do
     let(:expected_body) do
       JSON.generate(attributes)
     end
+    let(:expected_connection_options) do
+      request.connection_options
+    end
 
     let(:typhoeus_request)  { Typhoeus::Request.new(expected_request_url) }
     let(:typhoeus_response) do
@@ -178,8 +181,6 @@ describe RemoteResource::Request do
       response.request = typhoeus_request
       response
     end
-
-    let(:determined_connection_options) { request.connection_options }
 
     before do
       allow_any_instance_of(Typhoeus::Request).to receive(:run) { typhoeus_response }
@@ -190,7 +191,7 @@ describe RemoteResource::Request do
     shared_examples 'a conditional construct for the response' do
       context 'when the response is successful' do
         it 'makes a RemoteResource::Response object with the Typhoeus::Response object and the connection_options' do
-          expect(RemoteResource::Response).to receive(:new).with(typhoeus_response, determined_connection_options).and_call_original
+          expect(RemoteResource::Response).to receive(:new).with(typhoeus_response, expected_connection_options).and_call_original
           request.perform
         end
 
@@ -203,7 +204,7 @@ describe RemoteResource::Request do
         before { allow(typhoeus_response).to receive(:response_code) { 422 } }
 
         it 'makes a RemoteResource::Response object with the Typhoeus::Response object and the connection_options' do
-          expect(RemoteResource::Response).to receive(:new).with(typhoeus_response, determined_connection_options).and_call_original
+          expect(RemoteResource::Response).to receive(:new).with(typhoeus_response, expected_connection_options).and_call_original
           request.perform
         end
 
@@ -286,14 +287,14 @@ describe RemoteResource::Request do
     end
   end
 
-  describe '#determined_request_url' do
+  describe '#request_url' do
     context 'the attributes contain an id' do
       let(:attributes) do
         { id: 12, name: 'Mies' }
       end
 
       it 'uses the id for the request url' do
-        expect(request.determined_request_url).to eql 'http://www.foobar.com/request_dummy/12.json'
+        expect(request.request_url).to eql 'http://www.foobar.com/request_dummy/12.json'
       end
     end
 
@@ -303,13 +304,13 @@ describe RemoteResource::Request do
       end
 
       it 'uses the id for the request url' do
-        expect(request.determined_request_url).to eql 'http://www.foobar.com/request_dummy/12.json'
+        expect(request.request_url).to eql 'http://www.foobar.com/request_dummy/12.json'
       end
     end
 
     context 'the attributes or connection_options do NOT contain an id' do
       it 'does NOT use the id for the request url' do
-        expect(request.determined_request_url).to eql 'http://www.foobar.com/request_dummy.json'
+        expect(request.request_url).to eql 'http://www.foobar.com/request_dummy.json'
       end
     end
 
@@ -319,13 +320,13 @@ describe RemoteResource::Request do
       end
 
       it 'uses the base_url for the request url' do
-        expect(request.determined_request_url).to eql 'http://www.foo.com/api.json'
+        expect(request.request_url).to eql 'http://www.foo.com/api.json'
       end
     end
 
     context 'the connection_options do NOT contain a base_url' do
       it 'does NOT use the base_url for the request url' do
-        expect(request.determined_request_url).to eql 'http://www.foobar.com/request_dummy.json'
+        expect(request.request_url).to eql 'http://www.foobar.com/request_dummy.json'
       end
     end
 
@@ -335,7 +336,7 @@ describe RemoteResource::Request do
       end
 
       it 'uses the collection to determine the base_url for the request url' do
-        expect(request.determined_request_url).to eql 'http://www.foobar.com/request_dummies.json'
+        expect(request.request_url).to eql 'http://www.foobar.com/request_dummies.json'
       end
     end
 
@@ -345,7 +346,7 @@ describe RemoteResource::Request do
       end
 
       it 'uses the extension for the request url' do
-        expect(request.determined_request_url).to eql 'http://www.foobar.com/request_dummy.vnd+json'
+        expect(request.request_url).to eql 'http://www.foobar.com/request_dummy.vnd+json'
       end
     end
 
@@ -355,13 +356,13 @@ describe RemoteResource::Request do
       end
 
       it 'does NOT use a extension for the request url' do
-        expect(request.determined_request_url).to eql 'http://www.foobar.com/request_dummy'
+        expect(request.request_url).to eql 'http://www.foobar.com/request_dummy'
       end
     end
 
     context 'the connection_options do NOT contain a content_type' do
       it 'uses the DEFAULT_EXTENSION for the request url' do
-        expect(request.determined_request_url).to eql 'http://www.foobar.com/request_dummy.json'
+        expect(request.request_url).to eql 'http://www.foobar.com/request_dummy.json'
       end
     end
 
@@ -373,18 +374,18 @@ describe RemoteResource::Request do
           { collection_options: { parent_id: 23 } }
         end
 
-        it { expect(request.determined_request_url).to eql 'http://www.foobar.com/parent/23/request_dummy_with_collection_prefix.json' }
+        it { expect(request.request_url).to eql 'http://www.foobar.com/parent/23/request_dummy_with_collection_prefix.json' }
       end
 
       context 'when connection_options does NOT include collection_options' do
         it 'raises error' do
-          expect{ request.determined_request_url }.to raise_error(RemoteResource::CollectionOptionKeyError)
+          expect{ request.request_url }.to raise_error(RemoteResource::CollectionOptionKeyError)
         end
       end
     end
   end
 
-  describe '#determined_params' do
+  describe '#params' do
     context 'the connection_options contain no_params' do
       let(:connection_options) do
         {
@@ -394,7 +395,7 @@ describe RemoteResource::Request do
       end
 
       it 'returns nil' do
-        expect(request.determined_params).to be_nil
+        expect(request.params).to be_nil
       end
     end
 
@@ -409,7 +410,7 @@ describe RemoteResource::Request do
         end
 
         it 'returns the params' do
-          expect(request.determined_params).to eql({ page: 5, limit: 15 })
+          expect(request.params).to eql({ page: 5, limit: 15 })
         end
       end
 
@@ -423,26 +424,26 @@ describe RemoteResource::Request do
         end
 
         it 'returns the params merge with the attributes' do
-          expect(request.determined_params).to eql({ name: 'Mies', page: 5, limit: 15 })
+          expect(request.params).to eql({ name: 'Mies', page: 5, limit: 15 })
         end
       end
     end
   end
 
-  describe '#determined_attributes' do
+  describe '#attributes' do
     context 'the connection_options contain no_attributes' do
       let(:connection_options) do
         { no_attributes: true }
       end
 
       it 'returns an empty Hash' do
-        expect(request.determined_attributes).to eql({})
+        expect(request.attributes).to eql({})
       end
     end
 
     context 'the connection_options do NOT contain a no_attributes' do
       it 'does NOT return an empty Hash' do
-        expect(request.determined_attributes).not_to eql({})
+        expect(request.attributes).not_to eql({})
       end
     end
 
@@ -452,18 +453,18 @@ describe RemoteResource::Request do
       end
 
       it 'packs up the attributes with the root_element' do
-        expect(request.determined_attributes).to eql({ foobar: { name: 'Mies' } })
+        expect(request.attributes).to eql({ foobar: { name: 'Mies' } })
       end
     end
 
     context 'the connection_options do NOT contain a root_element' do
       it 'does NOT pack up the attributes with the root_element' do
-        expect(request.determined_attributes).to eql attributes
+        expect(request.attributes).to eql attributes
       end
     end
   end
 
-  describe '#determined_headers' do
+  describe '#headers' do
     let(:global_headers) do
       {
         'X-Locale' => 'en',
@@ -493,7 +494,7 @@ describe RemoteResource::Request do
         end
 
         it 'uses the default_headers for the request headers' do
-          expect(request.determined_headers).to eql default_headers.merge(global_headers)
+          expect(request.headers).to eql default_headers.merge(global_headers)
         end
       end
 
@@ -503,7 +504,7 @@ describe RemoteResource::Request do
         end
 
         it 'uses the default_headers for the request headers' do
-          expect(request.determined_headers).to eql default_headers.merge(global_headers)
+          expect(request.headers).to eql default_headers.merge(global_headers)
         end
       end
     end
@@ -515,7 +516,7 @@ describe RemoteResource::Request do
         end
 
         it 'uses the headers for the request headers' do
-          expect(request.determined_headers).to eql default_headers.merge(headers).merge(global_headers)
+          expect(request.headers).to eql default_headers.merge(headers).merge(global_headers)
         end
       end
 
@@ -529,7 +530,7 @@ describe RemoteResource::Request do
             dummy_class.extra_headers = extra_headers
             dummy_class.connection_options.reload!
 
-            expect(request.determined_headers).to eql default_headers.merge(extra_headers).merge(global_headers)
+            expect(request.headers).to eql default_headers.merge(extra_headers).merge(global_headers)
 
             dummy_class.extra_headers = {}
             dummy_class.connection_options.reload!
@@ -538,7 +539,7 @@ describe RemoteResource::Request do
 
         context 'and the resource does NOT contain a extra_headers' do
           it 'does NOT use the headers for the request headers' do
-            expect(request.determined_headers).to eql default_headers.merge(global_headers)
+            expect(request.headers).to eql default_headers.merge(global_headers)
           end
         end
       end

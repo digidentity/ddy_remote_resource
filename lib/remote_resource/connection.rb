@@ -16,12 +16,12 @@ module RemoteResource
       end
 
       def content_type=(content_type)
-        warn '[DEPRECATION] `.content_type=` is deprecated.  Please use `.extension=` instead.'
+        warn '[DEPRECATION] `.content_type=` is deprecated. Please use `.extension=` instead.'
         self.extension = content_type
       end
 
       def content_type
-        warn '[DEPRECATION] `.content_type` is deprecated.  Please use `.extension` instead.'
+        warn '[DEPRECATION] `.content_type` is deprecated. Please use `.extension` instead.'
         self.extension
       end
 

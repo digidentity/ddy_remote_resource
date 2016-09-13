@@ -34,14 +34,14 @@ describe RemoteResource::Connection do
 
   describe '.content_type=' do
     it 'warns that the method is deprecated' do
-      expect(dummy_class).to receive(:warn).with('[DEPRECATION] `.content_type=` is deprecated.  Please use `.extension=` instead.')
+      expect(dummy_class).to receive(:warn).with('[DEPRECATION] `.content_type=` is deprecated. Please use `.extension=` instead.')
       dummy_class.content_type = '.json'
     end
   end
 
   describe '.content_type' do
     it 'warns that the method is deprecated' do
-      expect(dummy_class).to receive(:warn).with('[DEPRECATION] `.content_type` is deprecated.  Please use `.extension` instead.')
+      expect(dummy_class).to receive(:warn).with('[DEPRECATION] `.content_type` is deprecated. Please use `.extension` instead.')
       dummy_class.content_type
     end
   end

@@ -14,6 +14,8 @@ module RemoteResource
       include RemoteResource::Builder
       include RemoteResource::UrlNaming
       include RemoteResource::Connection
+
+      extend RemoteResource::REST
       include RemoteResource::REST
 
       include RemoteResource::Querying::FinderMethods

@@ -26,12 +26,6 @@ describe RemoteResource::Connection do
     end
   end
 
-  describe '.extra_headers' do
-    it 'returns an empty Hash' do
-      expect(dummy_class.extra_headers).to eql({})
-    end
-  end
-
   describe '.content_type=' do
     it 'warns that the method is deprecated' do
       expect(dummy_class).to receive(:warn).with('[DEPRECATION] `.content_type=` is deprecated. Please use `.extension=` instead.')
@@ -46,24 +40,30 @@ describe RemoteResource::Connection do
     end
   end
 
-  describe '.headers' do
-    before { dummy_class.default_headers = { 'X-Locale' => 'nl' } }
-    after { dummy_class.default_headers = {} }
-
-    context 'when .extra_headers are set' do
-      it 'returns the default headers merged with the set .extra_headers' do
-        dummy_class.extra_headers = { 'Foo' => 'Bar' }
-
-        expect(dummy_class.headers).to eql({ 'X-Locale' => 'nl', 'Foo' => 'Bar' })
-
-        dummy_class.extra_headers = {}
-      end
+  describe '.extra_headers=' do
+    it 'warns that the method is deprecated' do
+      expect(dummy_class).to receive(:warn).with('[DEPRECATION] `.extra_headers=` is deprecated. Please overwrite the .headers method to set custom headers.')
+      dummy_class.extra_headers = '.json'
     end
+  end
 
-    context 'when NO .extra_headers are set' do
-      it 'returns the default headers' do
-        expect(dummy_class.headers).to eql({ 'X-Locale' => 'nl' })
-      end
+  describe '.extra_headers' do
+    it 'warns that the method is deprecated' do
+      expect(dummy_class).to receive(:warn).with('[DEPRECATION] `.extra_headers` is deprecated. Please overwrite the .headers method to set custom headers.')
+      dummy_class.extra_headers
+    end
+  end
+
+  describe '.headers=' do
+    it 'warns that the method is not used to set custom headers' do
+      expect(dummy_class).to receive(:warn).with('[WARNING] `.headers=` can not be used to set custom headers. Please overwrite the .headers method to set custom headers.')
+      dummy_class.headers = { 'Foo' => 'Bar' }
+    end
+  end
+
+  describe '.headers' do
+    it 'returns an empty Hash' do
+      expect(dummy_class.headers).to eql({})
     end
   end
 

@@ -2,8 +2,6 @@ module RemoteResource
   module Base
     extend ActiveSupport::Concern
 
-    OPTIONS = [:base_url, :site, :headers, :version, :path_prefix, :path_postfix, :collection_prefix, :extension, :collection, :collection_name, :root_element]
-
     included do
       include Virtus.model
       extend ActiveModel::Naming

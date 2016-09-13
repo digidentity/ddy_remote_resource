@@ -31,6 +31,24 @@ describe RemoteResource::Request do
 
   specify { expect(described_class).to include RemoteResource::HTTPErrors }
 
+  describe '#resource_klass' do
+    context 'when the resource is a RemoteResource class' do
+      let(:resource) { dummy_class }
+
+      it 'returns the resource' do
+        expect(request.send :resource_klass).to eql RemoteResource::RequestDummy
+      end
+    end
+
+    context 'when the resource is a RemoteResource object' do
+      let(:resource) { dummy }
+
+      it 'returns the Class of the resource' do
+        expect(request.send :resource_klass).to eql RemoteResource::RequestDummy
+      end
+    end
+  end
+
   describe '#connection' do
     it 'uses the connection of the resource_klass' do
       expect(request.connection).to eql Typhoeus::Request
@@ -465,101 +483,54 @@ describe RemoteResource::Request do
   end
 
   describe '#headers' do
-    let(:global_headers) do
-      {
-        'X-Locale' => 'en',
-        'Authorization' => 'Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ=='
-      }
-    end
-
-    before { RemoteResource::Base.global_headers = global_headers }
-    after  { RemoteResource::Base.global_headers = nil }
-
-    let(:headers) do
-      { 'Baz' => 'FooBar' }
-    end
-
-    let(:default_headers) do
-      dummy_class.default_headers
-    end
-
-    context 'the connection_options contain a default_headers' do
-      let(:default_headers) do
-        { 'Foo' => 'Bar' }
+    context 'default behaviour' do
+      let(:expected_headers) do
+        { 'Accept' => 'application/json', 'User-Agent' => "RemoteResource #{RemoteResource::VERSION}" }
       end
 
-      context 'and the given connection_options (original_connection_options) contain a headers' do
-        let(:connection_options) do
-          { default_headers: default_headers, headers: headers }
-        end
-
-        it 'uses the default_headers for the request headers' do
-          expect(request.headers).to eql default_headers.merge(global_headers)
-        end
-      end
-
-      context 'and the given connection_options (original_connection_options) do NOT contain a headers' do
-        let(:connection_options) do
-          { default_headers: default_headers }
-        end
-
-        it 'uses the default_headers for the request headers' do
-          expect(request.headers).to eql default_headers.merge(global_headers)
-        end
+      it 'returns the default headers' do
+        expect(request.headers).to eql expected_headers
       end
     end
 
-    context 'the connection_options do NOT contain a default_headers' do
-      context 'and the given connection_options (original_connection_options) contain a headers' do
-        let(:connection_options) do
-          { headers: headers }
-        end
-
-        it 'uses the headers for the request headers' do
-          expect(request.headers).to eql default_headers.merge(headers).merge(global_headers)
-        end
+    context 'when connection_options[:default_headers] are present' do
+      let(:connection_options) do
+        { default_headers: { 'User-Agent' => 'From connection_options[:default_headers]', 'X-Locale' => 'From connection_options[:default_headers]' } }
       end
 
-      context 'and the given connection_options (original_connection_options) do NOT contain a headers' do
-        context 'and the resource contains a extra_headers' do
-          let(:extra_headers) do
-            { 'BarBaz' => 'Baz' }
-          end
-
-          it 'uses the headers of the resource for the request headers' do
-            dummy_class.extra_headers = extra_headers
-            dummy_class.connection_options.reload!
-
-            expect(request.headers).to eql default_headers.merge(extra_headers).merge(global_headers)
-
-            dummy_class.extra_headers = {}
-            dummy_class.connection_options.reload!
-          end
-        end
-
-        context 'and the resource does NOT contain a extra_headers' do
-          it 'does NOT use the headers for the request headers' do
-            expect(request.headers).to eql default_headers.merge(global_headers)
-          end
-        end
+      let(:expected_headers) do
+        { 'User-Agent' => 'From connection_options[:default_headers]', 'X-Locale' => 'From connection_options[:default_headers]' }
       end
-    end
-  end
 
-  describe '#resource_klass' do
-    context 'when the resource is a RemoteResource class' do
-      let(:resource) { dummy_class }
-
-      it 'returns the resource' do
-        expect(request.send :resource_klass).to eql RemoteResource::RequestDummy
+      it 'returns the default headers while overwriting the headers according to the correct precedence' do
+        expect(request.headers).to eql expected_headers
       end
     end
 
-    context 'when the resource is a RemoteResource object' do
-      let(:resource) { dummy }
+    context 'when RemoteResource::Base.global_headers are present' do
+      let(:expected_headers) do
+        { 'Accept' => 'application/json', 'User-Agent' => 'From RemoteResource::Base.global_headers', 'X-Locale' => 'From RemoteResource::Base.global_headers' }
+      end
 
-      it 'returns the Class of the resource' do
-        expect(request.send :resource_klass).to eql RemoteResource::RequestDummy
+      before { RemoteResource::Base.global_headers = { 'User-Agent' => 'From RemoteResource::Base.global_headers', 'X-Locale' => 'From RemoteResource::Base.global_headers' } }
+      after  { RemoteResource::Base.global_headers = nil }
+
+      it 'returns the default headers while overwriting the headers according to the correct precedence' do
+        expect(request.headers).to eql expected_headers
+      end
+    end
+
+    context 'when connection_options[:headers] are present' do
+      let(:connection_options) do
+        { headers: { 'User-Agent' => 'From connection_options[:headers]', 'X-Locale' => 'From connection_options[:headers]' } }
+      end
+
+      let(:expected_headers) do
+        { 'Accept' => 'application/json', 'User-Agent' => 'From connection_options[:headers]', 'X-Locale' => 'From connection_options[:headers]' }
+      end
+
+      it 'returns the default headers while overwriting the headers according to the correct precedence' do
+        expect(request.headers).to eql expected_headers
       end
     end
   end

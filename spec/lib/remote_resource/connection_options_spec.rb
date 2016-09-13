@@ -8,13 +8,17 @@ describe RemoteResource::ConnectionOptions do
 
       self.site              = 'https://foobar.com'
       self.extension         = ''
-      self.extra_headers     = { 'X-Locale' => 'nl' }
+      self.default_headers   = { 'Accept' => 'application/vnd+json' }
       self.version           = '/v1'
       self.path_prefix       = '/prefix'
       self.path_postfix      = '/postfix'
       self.collection_prefix = '/parent/:parent_id'
       self.collection        = true
       self.root_element      = :test_dummy
+
+      def self.headers
+        { 'Authorization' => 'Bearer <token>' }
+      end
 
     end
   end
@@ -31,21 +35,21 @@ describe RemoteResource::ConnectionOptions do
       expect(connection_options.base_class).to eql RemoteResource::ConnectionOptionsDummy
     end
 
-    context 'RemoteResource::Base::OPTIONS' do
+    context 'RemoteResource::ConnectionOptions::AVAILABLE_OPTIONS' do
       it 'calls #initialize_connection_options' do
         expect_any_instance_of(described_class).to receive(:initialize_connection_options)
         connection_options
       end
 
-      it 'sets the accessor of the option from the RemoteResource::Base::OPTIONS' do
-        RemoteResource::Base::OPTIONS.each do |option|
+      it 'sets the accessor of the option from the RemoteResource::ConnectionOptions::AVAILABLE_OPTIONS' do
+        RemoteResource::ConnectionOptions::AVAILABLE_OPTIONS.each do |option|
           expect(connection_options).to respond_to "#{option}"
           expect(connection_options).to respond_to "#{option}="
         end
       end
 
-      it 'assigns the value of the option from the RemoteResource::Base::OPTIONS' do
-        RemoteResource::Base::OPTIONS.each do |option|
+      it 'assigns the value of the option from the RemoteResource::ConnectionOptions::AVAILABLE_OPTIONS' do
+        RemoteResource::ConnectionOptions::AVAILABLE_OPTIONS.each do |option|
           expect(connection_options.public_send(option)).to eql dummy_class.public_send(option)
         end
       end
@@ -79,7 +83,8 @@ describe RemoteResource::ConnectionOptions do
       {
         base_url:          'https://foobar.com/v1/prefix/parent/:parent_id/connection_options_dummies/postfix',
         site:              'https://foobar.com',
-        headers:           { 'X-Locale' => 'nl' },
+        default_headers:   { 'Accept' => 'application/vnd+json' },
+        headers:           { 'Authorization' => 'Bearer <token>' },
         version:           '/v1',
         path_prefix:       '/prefix',
         path_postfix:      '/postfix',
@@ -101,7 +106,7 @@ describe RemoteResource::ConnectionOptions do
       expect(connection_options.reload).not_to eql connection_options
     end
 
-    context 'RemoteResource::Base::OPTIONS' do
+    context 'RemoteResource::ConnectionOptions::AVAILABLE_OPTIONS' do
       it 'calls #initialize_connection_options' do
         expect_any_instance_of(described_class).to receive(:initialize_connection_options).twice
         connection_options.reload
@@ -114,7 +119,7 @@ describe RemoteResource::ConnectionOptions do
       expect(connection_options.reload!).to eql connection_options
     end
 
-    context 'RemoteResource::Base::OPTIONS' do
+    context 'RemoteResource::ConnectionOptions::AVAILABLE_OPTIONS' do
       it 'calls #initialize_connection_options' do
         expect_any_instance_of(described_class).to receive(:initialize_connection_options).twice
         connection_options.reload!

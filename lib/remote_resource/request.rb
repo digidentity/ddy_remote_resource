@@ -16,11 +16,11 @@ module RemoteResource
     attr_reader :resource, :resource_klass, :rest_action, :attributes
 
     def initialize(resource, rest_action, attributes = {}, connection_options = {})
-      @resource                    = resource
-      @resource_klass              = resource.is_a?(Class) ? resource : resource.class
-      @rest_action                 = rest_action.to_sym
-      @attributes                  = attributes
-      @connection_options          = connection_options.dup
+      @resource           = resource
+      @resource_klass     = resource.is_a?(Class) ? resource : resource.class
+      @rest_action        = rest_action.to_sym
+      @attributes         = attributes
+      @connection_options = connection_options.dup
     end
 
     def connection
@@ -40,6 +40,16 @@ module RemoteResource
       @connection_options.reverse_merge(threaded_connection_options)
     end
 
+    def ordered_connection_options
+      return @ordered_connection_options if defined?(@ordered_connection_options)
+
+      default = resource.connection_options.to_hash # Defined on the resource (klass).
+      block   = threaded_connection_options # Given as arguments in the .with_connection_options block.
+      local   = @connection_options # Given as arguments directly.
+
+      @ordered_connection_options = default.deep_merge(block).deep_merge(local)
+    end
+
     def threaded_connection_options
       resource.try(:threaded_connection_options) || {}
     end
@@ -48,11 +58,11 @@ module RemoteResource
     def perform
       case rest_action
       when :get
-        response = connection.public_send(rest_action, request_url, params: params, headers: headers.reverse_merge(DEFAULT_HEADERS))
+        response = connection.public_send(rest_action, request_url, params: params, headers: headers)
       when :put, :patch, :post
-        response = connection.public_send(rest_action, request_url, body: JSON.generate(attributes), headers: headers.reverse_merge(DEFAULT_HEADERS).reverse_merge(DEFAULT_CONTENT_TYPE))
+        response = connection.public_send(rest_action, request_url, body: JSON.generate(attributes), headers: headers.reverse_merge(DEFAULT_CONTENT_TYPE))
       when :delete
-        response = connection.public_send(rest_action, request_url, params: params, headers: headers.reverse_merge(DEFAULT_HEADERS))
+        response = connection.public_send(rest_action, request_url, params: params, headers: headers)
       else
         raise RemoteResource::RESTActionUnknown, "for action: '#{rest_action}'"
       end
@@ -100,9 +110,11 @@ module RemoteResource
     end
 
     def headers
-      headers = original_connection_options[:headers].presence || {}
+      default_headers = ordered_connection_options[:default_headers].presence || DEFAULT_HEADERS
+      global_headers  = RemoteResource::Base.global_headers.presence || {}
+      headers         = ordered_connection_options[:headers].presence || {}
 
-      (connection_options[:default_headers].presence || resource.connection_options.headers.merge(headers)).reverse_merge(RemoteResource::Base.global_headers)
+      default_headers.merge(global_headers).merge(headers)
     end
 
   end

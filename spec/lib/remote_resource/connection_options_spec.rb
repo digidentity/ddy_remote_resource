@@ -81,7 +81,6 @@ describe RemoteResource::ConnectionOptions do
   describe '#to_hash' do
     let(:connection_options_hash) do
       {
-        base_url:          'https://foobar.com/v1/prefix/parent/:parent_id/connection_options_dummies/postfix',
         site:              'https://foobar.com',
         default_headers:   { 'Accept' => 'application/vnd+json' },
         headers:           { 'Authorization' => 'Bearer <token>' },

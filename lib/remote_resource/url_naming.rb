@@ -16,17 +16,11 @@ module RemoteResource
       end
 
       def base_url
-        determined_url_naming.base_url
+        warn '[DEPRECATION] `.base_url` is deprecated. Please use the connection_options[:base_url] when querying instead.'
       end
 
       def use_relative_model_naming?
         true
-      end
-
-      private
-
-      def determined_url_naming
-        RemoteResource::UrlNamingDetermination.new self
       end
 
     end

@@ -62,13 +62,9 @@ describe RemoteResource::UrlNaming do
   end
 
   describe '.base_url' do
-    it 'uses the RemoteResource::UrlNamingDetermination class to determine the base_url' do
-      expect(RemoteResource::UrlNamingDetermination).to receive(:new).with(dummy_class).and_call_original
+    it 'warns that the method is deprecated' do
+      expect(dummy_class).to receive(:warn).with('[DEPRECATION] `.base_url` is deprecated. Please use the connection_options[:base_url] when querying instead.')
       dummy_class.base_url
-    end
-
-    it 'returns the determined base_url' do
-      expect(dummy_class.base_url).to eql 'https://foobar.com/url_naming_dummy'
     end
   end
 

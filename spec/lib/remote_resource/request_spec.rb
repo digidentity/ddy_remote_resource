@@ -56,124 +56,51 @@ describe RemoteResource::Request do
   end
 
   describe '#connection_options' do
-    let(:threaded_connection_options_thread_name) { 'remote_resource.request_dummy.threaded_connection_options' }
+    around(:each) do |example|
+      dummy_class.site    = 'From Klass.site'
+      dummy_class.version = 'From Klass.version'
 
-    before { Thread.current[threaded_connection_options_thread_name] = threaded_connection_options }
-    after  { Thread.current[threaded_connection_options_thread_name] = nil }
-
-    context 'when the given connection_options contain other values than the resource threaded_connection_options or connection_options' do
-      let(:connection_options) do
-        {
-          site: 'http://www.barbaz.com',
-          collection: true,
-          path_prefix: '/api',
-          root_element: :bazbar
-        }
+      dummy_class.with_connection_options(block_connection_options) do
+        example.run
       end
 
-      let(:threaded_connection_options) do
-        {
-          site: 'http://www.bazbazbaz.com',
-          path_prefix: '/registration',
-          path_postfix: '/promotion',
-          root_element: :bazbazbaz
-        }
-      end
-
-      it 'merges the given connection_options with the resource connection_options while taking precedence over the resource connection_options after the threaded_connection_options' do
-        expect(request.connection_options[:site]).to eql 'http://www.barbaz.com'
-        expect(request.connection_options[:collection]).to eql true
-        expect(request.connection_options[:path_prefix]).to eql '/api'
-        expect(request.connection_options[:path_postfix]).to eql '/promotion'
-        expect(request.connection_options[:root_element]).to eql :bazbar
-      end
+      dummy_class.site    = 'http://www.foobar.com'
+      dummy_class.version = nil
     end
 
-    context 'when the given connection_options do NOT contain other values than the resource threaded_connection_options or connection_options' do
-      let(:connection_options) do
-        {
-          collection: true,
-          path_prefix: '/api',
-          root_element: :bazbar
-        }
-      end
-
-      let(:threaded_connection_options) do
-        {
-          site: 'http://www.bazbazbaz.com',
-          path_prefix: '/api',
-          path_postfix: '/promotion'
-        }
-      end
-
-      it 'merges the given connection_options with the resource threaded_connection_options and connection_options' do
-        expect(request.connection_options[:site]).to eql 'http://www.bazbazbaz.com'
-        expect(request.connection_options[:collection]).to eql true
-        expect(request.connection_options[:path_prefix]).to eql '/api'
-        expect(request.connection_options[:path_postfix]).to eql '/promotion'
-        expect(request.connection_options[:root_element]).to eql :bazbar
-      end
-    end
-  end
-
-  describe '#original_connection_options' do
-    let(:threaded_connection_options_thread_name) { 'remote_resource.request_dummy.threaded_connection_options' }
-
-    before { Thread.current[threaded_connection_options_thread_name] = threaded_connection_options }
-    after  { Thread.current[threaded_connection_options_thread_name] = nil }
-
-    context 'when the given connection_options (original_connection_options) contain other values than the resource threaded_connection_options' do
-      let(:connection_options) do
-        {
-          site: 'http://www.barbaz.com',
-          collection: true,
-          path_prefix: '/api',
-          root_element: :bazbar
-        }
-      end
-
-      let(:threaded_connection_options) do
-        {
-          site: 'http://www.bazbazbaz.com',
-          path_prefix: '/registration',
-          path_postfix: '/promotion',
-          root_element: :bazbazbaz
-        }
-      end
-
-      it 'merges the given connection_options (original_connection_options) with the resource threaded_connection_options while taking precedence over the resource threaded_connection_options' do
-        expect(request.original_connection_options[:site]).to eql 'http://www.barbaz.com'
-        expect(request.original_connection_options[:collection]).to eql true
-        expect(request.original_connection_options[:path_prefix]).to eql '/api'
-        expect(request.original_connection_options[:path_postfix]).to eql '/promotion'
-        expect(request.original_connection_options[:root_element]).to eql :bazbar
-      end
+    let(:block_connection_options) do
+      {
+        root_element: 'From .with_connection_options',
+        version:      'From .with_connection_options',
+        path_prefix:  'From .with_connection_options'
+      }
     end
 
-    context 'when the given connection_options (original_connection_options) do NOT contain other values than the resource threaded_connection_options' do
-      let(:connection_options) do
-        {
-          collection: true,
-          path_prefix: '/api',
-          root_element: :bazbar
-        }
-      end
+    let(:connection_options) do
+      {
+        root_element: 'From connection_options[]',
+        path_postfix: 'From connection_options[]'
+      }
+    end
 
-      let(:threaded_connection_options) do
-        {
-          site: 'http://www.bazbazbaz.com',
-          path_prefix: '/api',
-          path_postfix: '/promotion'
-        }
-      end
+    let(:expected_connection_options) do
+      {
+        site:              'From Klass.site',
+        root_element:      'From connection_options[]',
+        version:           'From .with_connection_options',
+        path_prefix:       'From .with_connection_options',
+        path_postfix:      'From connection_options[]',
+        collection:        false,
+        collection_name:   nil,
+        collection_prefix: nil,
+        default_headers:   {},
+        headers:           {},
+        extension:         nil,
+      }
+    end
 
-      it 'merges the given connection_options (original_connection_options) with the resource threaded_connection_options' do
-        expect(request.original_connection_options[:site]).to eql 'http://www.bazbazbaz.com'
-        expect(request.original_connection_options[:collection]).to eql true
-        expect(request.original_connection_options[:path_prefix]).to eql '/api'
-        expect(request.original_connection_options[:path_postfix]).to eql '/promotion'
-        expect(request.original_connection_options[:root_element]).to eql :bazbar
-      end
+    it 'returns default connection options with are defined on the resource while overwriting the connection options according to the correct precedence' do
+      expect(request.connection_options).to eql expected_connection_options
     end
   end
 

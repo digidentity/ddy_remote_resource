@@ -27,33 +27,15 @@ module RemoteResource
       resource_klass.connection
     end
 
-    # Note: These are the connection options which are given directly as argument,
-    # merged with the connection options of the .with_connection_options method,
-    # merged with the connection options declared on the resource (klass).
     def connection_options
-      @connection_options.reverse_merge(threaded_connection_options).reverse_merge(resource.connection_options.to_hash)
+      @combined_connection_options ||= begin
+        default = resource.connection_options.to_hash # Defined on the resource (klass).
+        block   = resource.try(:threaded_connection_options) || {} # Given as arguments in the .with_connection_options block.
+        local   = @connection_options # Given as arguments directly.
+
+        default.deep_merge(block).deep_merge(local)
+      end
     end
-
-    # Note: These are the connection options which are given directly as argument,
-    # merged with the connection options of the .with_connection_options method
-    def original_connection_options
-      @connection_options.reverse_merge(threaded_connection_options)
-    end
-
-    def ordered_connection_options
-      return @ordered_connection_options if defined?(@ordered_connection_options)
-
-      default = resource.connection_options.to_hash # Defined on the resource (klass).
-      block   = threaded_connection_options # Given as arguments in the .with_connection_options block.
-      local   = @connection_options # Given as arguments directly.
-
-      @ordered_connection_options = default.deep_merge(block).deep_merge(local)
-    end
-
-    def threaded_connection_options
-      resource.try(:threaded_connection_options) || {}
-    end
-    private :threaded_connection_options
 
     def perform
       case rest_action
@@ -76,7 +58,7 @@ module RemoteResource
 
     def request_url
       id        = @attributes[:id].presence || connection_options[:id]
-      base_url  = original_connection_options[:base_url].presence || RemoteResource::UrlNamingDetermination.new(resource_klass, original_connection_options).base_url(id, check_collection_options: true)
+      base_url  = connection_options[:base_url].presence || RemoteResource::UrlNamingDetermination.new(resource_klass, connection_options).base_url(id, check_collection_options: true)
       extension = connection_options[:extension] || DEFAULT_EXTENSION
 
       "#{base_url}#{extension}"
@@ -110,9 +92,9 @@ module RemoteResource
     end
 
     def headers
-      default_headers = ordered_connection_options[:default_headers].presence || DEFAULT_HEADERS
+      default_headers = connection_options[:default_headers].presence || DEFAULT_HEADERS
       global_headers  = RemoteResource::Base.global_headers.presence || {}
-      headers         = ordered_connection_options[:headers].presence || {}
+      headers         = connection_options[:headers].presence || {}
 
       default_headers.merge(global_headers).merge(headers)
     end

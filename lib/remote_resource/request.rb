@@ -2,6 +2,8 @@ module RemoteResource
   class Request
     include RemoteResource::HTTPErrors
 
+    SUPPORTED_HTTP_METHODS = [:get, :put, :patch, :post, :delete].freeze
+
     DEFAULT_HEADERS = {
       'Accept'     => 'application/json',
       'User-Agent' => "RemoteResource #{RemoteResource::VERSION}"
@@ -13,12 +15,12 @@ module RemoteResource
 
     DEFAULT_EXTENSION = '.json'.freeze
 
-    attr_reader :resource, :resource_klass, :rest_action, :attributes
+    attr_reader :resource, :resource_klass, :http_action, :attributes
 
-    def initialize(resource, rest_action, attributes = {}, connection_options = {})
+    def initialize(resource, http_action, attributes = {}, connection_options = {})
       @resource           = resource
       @resource_klass     = resource.is_a?(Class) ? resource : resource.class
-      @rest_action        = rest_action.to_sym
+      @http_action        = http_action.to_sym
       @attributes         = attributes
       @connection_options = connection_options.dup
     end
@@ -38,21 +40,14 @@ module RemoteResource
     end
 
     def perform
-      case rest_action
-      when :get
-        response = connection.public_send(rest_action, request_url, params: params, headers: headers)
-      when :put, :patch, :post
-        response = connection.public_send(rest_action, request_url, body: JSON.generate(attributes), headers: headers.reverse_merge(DEFAULT_CONTENT_TYPE))
-      when :delete
-        response = connection.public_send(rest_action, request_url, params: params, headers: headers)
-      else
-        raise RemoteResource::RESTActionUnknown, "for action: '#{rest_action}'"
-      end
+      SUPPORTED_HTTP_METHODS.include?(http_action) || raise(RemoteResource::HTTPMethodUnsupported, "Requested HTTP method=#{http_action.to_s} is NOT supported, the HTTP action MUST be a supported HTTP action=#{SUPPORTED_HTTP_METHODS.join(', ')}")
+
+      response = connection.public_send(http_action, request_url, params: query, body: body, headers: headers)
 
       if response.success? || response.response_code == 422
-        RemoteResource::Response.new response, connection_options
+        RemoteResource::Response.new(response, connection_options)
       else
-        raise_http_errors response
+        raise_http_errors(response)
       end
     end
 
@@ -64,30 +59,31 @@ module RemoteResource
       "#{base_url}#{extension}"
     end
 
-    def params
-      no_params     = connection_options[:no_params].eql? true
-      no_attributes = connection_options[:no_attributes].eql? true
-      params        = connection_options[:params].presence || {}
+    def query
+      params = connection_options[:params]
 
-      if no_params
-        nil
-      elsif no_attributes
-        params
+      if params.present?
+        RemoteResource::Util.encode_params_to_query(params)
       else
-        @attributes.merge(params)
+        nil
+      end
+    end
+
+    def body
+      if [:put, :patch, :post].include?(http_action)
+        JSON.generate(attributes)
+      else
+        nil
       end
     end
 
     def attributes
-      no_attributes = connection_options[:no_attributes].eql? true
-      root_element  = connection_options[:root_element].presence
+      root_element = connection_options[:root_element]
 
-      if no_attributes
-        {}
-      elsif root_element
+      if root_element.present?
         { root_element => @attributes }
       else
-        @attributes
+        @attributes || {}
       end
     end
 
@@ -96,7 +92,13 @@ module RemoteResource
       global_headers  = RemoteResource::Base.global_headers.presence || {}
       headers         = connection_options[:headers].presence || {}
 
-      default_headers.merge(global_headers).merge(headers)
+      default_headers.merge(global_headers).merge(headers).merge(conditional_headers)
+    end
+
+    def conditional_headers
+      headers = {}
+      headers = headers.merge(DEFAULT_CONTENT_TYPE) if body.present?
+      headers
     end
 
   end

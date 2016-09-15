@@ -21,13 +21,13 @@ describe RemoteResource::Request do
   let(:dummy)       { dummy_class.new id: '12' }
 
   let(:resource)           { dummy_class }
-  let(:rest_action)        { :get }
+  let(:http_action)        { :get }
   let(:connection_options) { {} }
   let(:attributes) do
     { name: 'Mies' }
   end
 
-  let(:request) { described_class.new(resource, rest_action, attributes, connection_options) }
+  let(:request) { described_class.new(resource, http_action, attributes, connection_options) }
 
   specify { expect(described_class).to include RemoteResource::HTTPErrors }
 
@@ -36,7 +36,7 @@ describe RemoteResource::Request do
       let(:resource) { dummy_class }
 
       it 'returns the resource' do
-        expect(request.send :resource_klass).to eql RemoteResource::RequestDummy
+        expect(request.resource_klass).to eql RemoteResource::RequestDummy
       end
     end
 
@@ -44,7 +44,7 @@ describe RemoteResource::Request do
       let(:resource) { dummy }
 
       it 'returns the Class of the resource' do
-        expect(request.send :resource_klass).to eql RemoteResource::RequestDummy
+        expect(request.resource_klass).to eql RemoteResource::RequestDummy
       end
     end
   end
@@ -106,20 +106,6 @@ describe RemoteResource::Request do
 
   describe '#perform' do
     let(:connection) { Typhoeus::Request }
-    let(:expected_request_url) { 'http://www.foobar.com/request_dummy.json' }
-    let(:expected_params) do
-      attributes
-    end
-    let(:expected_headers) do
-      described_class::DEFAULT_HEADERS
-    end
-    let(:expected_body) do
-      JSON.generate(attributes)
-    end
-    let(:expected_connection_options) do
-      request.connection_options
-    end
-
     let(:typhoeus_request)  { Typhoeus::Request.new(expected_request_url) }
     let(:typhoeus_response) do
       response = Typhoeus::Response.new
@@ -168,66 +154,127 @@ describe RemoteResource::Request do
       end
     end
 
-    context 'when the rest_action is :get' do
-      let(:rest_action) { 'get' }
+    context 'when the http_action is :get' do
+      let(:http_action) { 'get' }
+      let(:attributes) do
+        {}
+      end
+      let(:connection_options) do
+        { params: { pseudonym: 'pseudonym' } }
+      end
 
-      it 'makes a GET request with the attributes as params' do
-        expect(connection).to receive(:get).with(expected_request_url, params: expected_params, headers: expected_headers).and_call_original
+      let(:expected_request_url) { 'http://www.foobar.com/request_dummy.json' }
+      let(:expected_params) { RemoteResource::Util.encode_params_to_query({ pseudonym: 'pseudonym' }) }
+      let(:expected_headers) { described_class::DEFAULT_HEADERS }
+      let(:expected_body) { nil }
+      let(:expected_connection_options) { request.connection_options }
+
+      it 'makes a GET request with the connection_options[:params] as query' do
+        expect(connection).to receive(:get).with(expected_request_url, params: expected_params, body: expected_body, headers: expected_headers).and_call_original
         request.perform
       end
 
-      it_behaves_like 'a conditional construct for the response'
+      include_examples 'a conditional construct for the response'
     end
 
-    context 'when the rest_action is :put' do
-      let(:rest_action) { 'put' }
+    context 'when the http_action is :put' do
+      let(:http_action) { 'put' }
+      let(:attributes) do
+        { id: 15, name: 'Mies', famous: true }
+      end
+      let(:connection_options) do
+        {}
+      end
+
+      let(:expected_request_url) { 'http://www.foobar.com/request_dummy/15.json' }
+      let(:expected_params) { nil }
+      let(:expected_headers) { described_class::DEFAULT_HEADERS.merge(described_class::DEFAULT_CONTENT_TYPE) }
+      let(:expected_body) { JSON.generate(attributes) }
+      let(:expected_connection_options) { request.connection_options }
 
       it 'makes a PUT request with the attributes as body' do
-        expect(connection).to receive(:put).with(expected_request_url, body: expected_body, headers: expected_headers.reverse_merge({ 'Content-Type' => 'application/json' })).and_call_original
+        expect(connection).to receive(:put).with(expected_request_url, params: expected_params, body: expected_body, headers: expected_headers).and_call_original
         request.perform
       end
 
-      it_behaves_like 'a conditional construct for the response'
+      include_examples 'a conditional construct for the response'
     end
 
-    context 'when the rest_action is :patch' do
-      let(:rest_action) { 'patch' }
+    context 'when the http_action is :patch' do
+      let(:http_action) { 'patch' }
+      let(:attributes) do
+        { id: 15, name: 'Mies', famous: true }
+      end
+      let(:connection_options) do
+        {}
+      end
+
+      let(:expected_request_url) { 'http://www.foobar.com/request_dummy/15.json' }
+      let(:expected_params) { nil }
+      let(:expected_headers) { described_class::DEFAULT_HEADERS.merge(described_class::DEFAULT_CONTENT_TYPE) }
+      let(:expected_body) { JSON.generate(attributes) }
+      let(:expected_connection_options) { request.connection_options }
 
       it 'makes a PATCH request with the attributes as body' do
-        expect(connection).to receive(:patch).with(expected_request_url, body: expected_body, headers: expected_headers.reverse_merge({ 'Content-Type' => 'application/json' })).and_call_original
+        expect(connection).to receive(:patch).with(expected_request_url, params: expected_params, body: expected_body, headers: expected_headers).and_call_original
         request.perform
       end
 
-      it_behaves_like 'a conditional construct for the response'
+      include_examples 'a conditional construct for the response'
     end
 
-    context 'when the rest_action is :post' do
-      let(:rest_action) { 'post' }
+    context 'when the http_action is :post' do
+      let(:http_action) { 'post' }
+      let(:attributes) do
+        { name: 'Mies', famous: true }
+      end
+      let(:connection_options) do
+        {}
+      end
+
+      let(:expected_request_url) { 'http://www.foobar.com/request_dummy.json' }
+      let(:expected_params) { nil }
+      let(:expected_headers) { described_class::DEFAULT_HEADERS.merge(described_class::DEFAULT_CONTENT_TYPE) }
+      let(:expected_body) { JSON.generate(attributes) }
+      let(:expected_connection_options) { request.connection_options }
 
       it 'makes a POST request with the attributes as body' do
-        expect(connection).to receive(:post).with(expected_request_url, body: expected_body, headers: expected_headers.reverse_merge({ 'Content-Type' => 'application/json' })).and_call_original
+        expect(connection).to receive(:post).with(expected_request_url, params: expected_params, body: expected_body, headers: expected_headers).and_call_original
         request.perform
       end
 
-      it_behaves_like 'a conditional construct for the response'
+      include_examples 'a conditional construct for the response'
     end
 
-    context 'when the rest_action is :delete' do
-      let(:rest_action) { 'delete' }
+    context 'when the http_action is :delete' do
+      let(:http_action) { 'delete' }
+      let(:attributes) do
+        { id: 15 }
+      end
+      let(:connection_options) do
+        { params: { pseudonym: 'pseudonym' } }
+      end
 
-      it 'makes a DELETE request with the attributes as body' do
-        expect(connection).to receive(:delete).with(expected_request_url, params: expected_params, headers: expected_headers).and_call_original
+      let(:expected_request_url) { 'http://www.foobar.com/request_dummy/15.json' }
+      let(:expected_params) { RemoteResource::Util.encode_params_to_query({ pseudonym: 'pseudonym' }) }
+      let(:expected_headers) { described_class::DEFAULT_HEADERS }
+      let(:expected_body) { nil }
+      let(:expected_connection_options) { request.connection_options }
+
+      it 'makes a DELETE request with the connection_options[:params] as query' do
+        expect(connection).to receive(:delete).with(expected_request_url, params: expected_params, body: expected_body, headers: expected_headers).and_call_original
         request.perform
       end
 
-      it_behaves_like 'a conditional construct for the response'
+      include_examples 'a conditional construct for the response'
     end
 
-    context 'when the rest_action is unknown' do
-      let(:rest_action) { 'foo' }
+    context 'when the http_action is unknown' do
+      let(:http_action) { 'foo' }
+      let(:expected_request_url) { '' }
 
-      it 'raises the RemoteResource::RESTActionUnknown error' do
-        expect{ request.perform }.to raise_error RemoteResource::RESTActionUnknown, "for action: 'foo'"
+      it 'raises the RemoteResource::HTTPMethodUnsupported error' do
+        expect{ request.perform }.to raise_error RemoteResource::HTTPMethodUnsupported, 'Requested HTTP method=foo is NOT supported, the HTTP action MUST be a supported HTTP action=get, put, patch, post, delete'
       end
     end
   end
@@ -330,81 +377,104 @@ describe RemoteResource::Request do
     end
   end
 
-  describe '#params' do
-    context 'the connection_options contain no_params' do
+  describe '#query' do
+    context 'when connection_options[:params] are present' do
       let(:connection_options) do
-        {
-          params: { page: 5, limit: 15 },
-          no_params: true
-        }
+        { root_element: :data, params: { pseudonym: 'pseudonym', labels: [1, '2', 'three'], pagination: { page: 5, limit: 15, ordered: true } } }
       end
 
-      it 'returns nil' do
-        expect(request.params).to be_nil
+      let(:expected_query) do
+        'pseudonym=pseudonym&labels[]=1&labels[]=2&labels[]=three&pagination[page]=5&pagination[limit]=15&pagination[ordered]=true'
+      end
+
+      it 'returns the URL-encoded params' do
+        expect(CGI.unescape(request.query)).to eql expected_query
       end
     end
 
-    context 'the connection_options do NOT contain a no_params' do
-      context 'and the connection_options contain no_attributes' do
-        let(:connection_options) do
-          {
-            params: { page: 5, limit: 15 },
-            no_params: false,
-            no_attributes: true
-          }
-        end
-
-        it 'returns the params' do
-          expect(request.params).to eql({ page: 5, limit: 15 })
-        end
+    context 'when connection_options[:params] are NOT present' do
+      let(:connection_options) do
+        { root_element: :data }
       end
 
-      context 'and the connection_options do NOT contain no_attributes' do
-        let(:connection_options) do
-          {
-            params: { page: 5, limit: 15 },
-            no_params: false,
-            no_attributes: false
-          }
-        end
+      it 'returns nil' do
+        expect(request.query).to be_nil
+      end
+    end
+  end
 
-        it 'returns the params merge with the attributes' do
-          expect(request.params).to eql({ name: 'Mies', page: 5, limit: 15 })
-        end
+  describe '#body' do
+    let(:attributes) do
+      { name: 'Mies', featured: true, labels: [1, '2', 'three'] }
+    end
+
+    context 'when the http_action is :put, :patch or :post' do
+      let(:http_action) { :post }
+
+      let(:expected_body) do
+        '{"name":"Mies","featured":true,"labels":[1,"2","three"]}'
+      end
+
+      it 'returns the JSON-encoded attributes' do
+        expect(request.body).to eql expected_body
+      end
+    end
+
+    context 'when the http_action is NOT :put, :patch or :post' do
+      let(:http_action) { :get }
+
+      it 'returns nil' do
+        expect(request.body).to be_nil
       end
     end
   end
 
   describe '#attributes' do
-    context 'the connection_options contain no_attributes' do
+    context 'default behaviour' do
+      let(:attributes) do
+        { name: 'Mies', featured: true, labels: [1, '2', 'three'] }
+      end
+
+      let(:expected_attributes) do
+        { name: 'Mies', featured: true, labels: [1, '2', 'three'] }
+      end
+
+      it 'returns the given attributes' do
+        expect(request.attributes).to eql expected_attributes
+      end
+
+      context 'and there are NO given attributes' do
+        let(:attributes) do
+          nil
+        end
+
+        it 'returns an empty Hash' do
+          expect(request.attributes).to eql({})
+        end
+      end
+    end
+
+    context 'when connection_options[:root_element] is present' do
       let(:connection_options) do
-        { no_attributes: true }
+        { root_element: :data }
       end
 
-      it 'returns an empty Hash' do
-        expect(request.attributes).to eql({})
-      end
-    end
-
-    context 'the connection_options do NOT contain a no_attributes' do
-      it 'does NOT return an empty Hash' do
-        expect(request.attributes).not_to eql({})
-      end
-    end
-
-    context 'the connection_options contain a root_element' do
-      let(:connection_options) do
-        { root_element: :foobar }
+      let(:attributes) do
+        { name: 'Mies', featured: true, labels: [1, '2', 'three'] }
       end
 
-      it 'packs up the attributes with the root_element' do
-        expect(request.attributes).to eql({ foobar: { name: 'Mies' } })
+      it 'returns the given attributes wrapped in the connection_options[:root_element]' do
+        expect(request.attributes).to eql({ data: { name: 'Mies', featured: true, labels: [1, '2', 'three'] } })
       end
-    end
 
-    context 'the connection_options do NOT contain a root_element' do
-      it 'does NOT pack up the attributes with the root_element' do
-        expect(request.attributes).to eql attributes
+      context 'and there are NO given attributes' do
+        let(:attributes) do
+          nil
+        end
+
+        it 'returns nil wrapped in the connection_options[:root_element]' do
+          expect(request.attributes).to eql({ data: nil })
+        end
       end
     end
   end
@@ -458,6 +528,19 @@ describe RemoteResource::Request do
 
       it 'returns the default headers while overwriting the headers according to the correct precedence' do
         expect(request.headers).to eql expected_headers
+      end
+    end
+
+    context 'when conditional_headers are present' do
+      context 'when a body is present' do
+        let(:http_action) { 'post' }
+        let(:expected_headers) do
+          { 'Accept' => 'application/json', 'User-Agent' => "RemoteResource #{RemoteResource::VERSION}", 'Content-Type' => 'application/json' }
+        end
+
+        it 'returns the default headers with the conditional_headers' do
+          expect(request.headers).to eql expected_headers
+        end
       end
     end
   end

@@ -84,71 +84,28 @@ describe RemoteResource::Base do
   end
 
   describe '.with_connection_options' do
-    let(:connection_options) { {} }
+    it 'yields the block' do
+      expect(dummy_class).to receive(:find_by).with({ username: 'foobar' }, { path_prefix: '/archive' })
+      expect(dummy_class).to receive(:create).with({ username: 'bazbar' }, { path_prefix: '/featured' })
 
-    let(:block_with_connection_options) do
-      dummy_class.with_connection_options(connection_options) do
+      dummy_class.with_connection_options({ version: '/api/v1', headers: { 'Foo' => 'Bar' } }) do
         dummy_class.find_by({ username: 'foobar' }, { path_prefix: '/archive' })
         dummy_class.create({ username: 'bazbar' }, { path_prefix: '/featured' })
       end
     end
 
-    before { allow_any_instance_of(Typhoeus::Request).to receive(:run) { double.as_null_object } }
-
-    it 'yields the block' do
-      expect(dummy_class).to receive(:find_by).with({ username: 'foobar' }, { path_prefix: '/archive' }).and_call_original
-      expect(dummy_class).to receive(:create).with({ username: 'bazbar' }, { path_prefix: '/featured' }).and_call_original
-      block_with_connection_options
-    end
-
     it 'ensures to set the threaded_connection_options back to the default' do
+      allow(dummy_class).to receive(:find_by)
+      allow(dummy_class).to receive(:create)
+
       expect(dummy_class.threaded_connection_options).to eql({})
-      block_with_connection_options
+
+      dummy_class.with_connection_options({ version: '/api/v1', headers: { 'Foo' => 'Bar' } }) do
+        dummy_class.find_by({ username: 'foobar' }, { path_prefix: '/archive' })
+        dummy_class.create({ username: 'bazbar' }, { path_prefix: '/featured' })
+      end
+
       expect(dummy_class.threaded_connection_options).to eql({})
-    end
-
-    context 'when the given connection_options contain headers' do
-      let(:connection_options) do
-        {
-          headers: { 'Foo' => 'Bar' }
-        }
-      end
-
-      it 'uses the headers of the given connection_options' do
-        expect(Typhoeus::Request).to receive(:get).with('https://foobar.com/archive/dummy.json', params: { username: 'foobar' }, headers: RemoteResource::Request::DEFAULT_HEADERS.merge({ 'Foo' => 'Bar' })).and_call_original
-        expect(Typhoeus::Request).to receive(:post).with('https://foobar.com/featured/dummy.json', body: JSON.generate({ username: 'bazbar' }), headers: RemoteResource::Request::DEFAULT_HEADERS.merge({ 'Foo' => 'Bar', 'Content-Type' => 'application/json' })).and_call_original
-        block_with_connection_options
-      end
-    end
-
-    context 'when the given connection_options contain base_url' do
-      let(:connection_options) do
-        {
-          base_url: 'https://api.foobar.eu/dummy'
-        }
-      end
-
-      it 'uses the base_url of the given connection_options' do
-        expect(Typhoeus::Request).to receive(:get).with('https://api.foobar.eu/dummy.json', params: { username: 'foobar' }, headers: RemoteResource::Request::DEFAULT_HEADERS).and_call_original
-        expect(Typhoeus::Request).to receive(:post).with('https://api.foobar.eu/dummy.json', body: JSON.generate({ username: 'bazbar' }), headers: RemoteResource::Request::DEFAULT_HEADERS.merge({ 'Content-Type' => 'application/json' })).and_call_original
-        block_with_connection_options
-      end
-    end
-
-    context 'when the given connection_options contain something else' do
-      let(:connection_options) do
-        {
-          collection: true,
-          version: '/api/v1',
-          root_element: :bazbar
-        }
-      end
-
-      it 'uses the given connection_options' do
-        expect(Typhoeus::Request).to receive(:get).with('https://foobar.com/api/v1/archive/dummies.json', params: { username: 'foobar' }, headers: RemoteResource::Request::DEFAULT_HEADERS).and_call_original
-        expect(Typhoeus::Request).to receive(:post).with('https://foobar.com/api/v1/featured/dummies.json', body:  JSON.generate({ bazbar: { username: 'bazbar' } }), headers: RemoteResource::Request::DEFAULT_HEADERS.merge({ 'Content-Type' => 'application/json' })).and_call_original
-        block_with_connection_options
-      end
     end
   end
 

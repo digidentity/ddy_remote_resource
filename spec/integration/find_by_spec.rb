@@ -23,7 +23,7 @@ RSpec.describe '.find_by' do
         id:         12,
         title:      'Lorem Ipsum',
         body:       'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-        featured: true,
+        featured:   true,
         created_at: Time.new(2015, 10, 4, 9, 30, 0),
       }
     }
@@ -53,6 +53,7 @@ RSpec.describe '.find_by' do
         expect(post.id).to eql 12
         expect(post.title).to eql 'Lorem Ipsum'
         expect(post.body).to eql 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.'
+        expect(post.featured).to eql true
         expect(post.created_at).to eql Time.new(2015, 10, 4, 9, 30, 0)
       end
     end
@@ -78,6 +79,7 @@ RSpec.describe '.find_by' do
         expect(post.id).to eql 12
         expect(post.title).to eql 'Lorem Ipsum'
         expect(post.body).to eql 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.'
+        expect(post.featured).to eql true
         expect(post.created_at).to eql Time.new(2015, 10, 4, 9, 30, 0)
       end
     end

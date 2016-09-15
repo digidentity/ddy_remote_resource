@@ -17,7 +17,7 @@ RSpec.describe '#update_attributes' do
     attribute :created_at, Time
   end
 
-  let(:resource) { Post.new(id: 12, title: 'Aliquam lobortis', featured: false, created_at: Time.new(2015, 10, 4, 9, 30, 0)) }
+  let(:resource) { Post.new(id: 12, title: 'Lorem Ipsum', body: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.', featured: true, created_at: Time.new(2015, 10, 4, 9, 30, 0)) }
 
   let(:response_body) do
     {

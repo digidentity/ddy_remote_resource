@@ -2,341 +2,349 @@ require 'spec_helper'
 
 describe RemoteResource::Querying::PersistenceMethods do
 
-  module RemoteResource
-    module Querying
-      class PersistenceMethodsDummy
-        include RemoteResource::Base
+  after(:all) { remove_const(:Post) }
 
-        self.site = 'https://foobar.com'
+  class Post
+    include RemoteResource::Base
 
-        attribute :name
+    self.site         = 'https://www.example.com'
+    self.collection   = true
+    self.root_element = :data
 
-      end
-    end
+    attribute :title, String
+    attribute :body, String
+    attribute :featured, Boolean
+    attribute :created_at, Time
   end
 
-  let(:dummy_class) { RemoteResource::Querying::PersistenceMethodsDummy }
-  let(:dummy)       { dummy_class.new }
-
   describe '.create' do
-    let(:response) { instance_double(RemoteResource::Response) }
-    let(:attributes) do
-      { name: 'Mies' }
+    let(:response_body) do
+      {
+        data: {
+          id:         12,
+          title:      'Lorem Ipsum',
+          body:       'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+          featured:   true,
+          created_at: Time.new(2015, 10, 4, 9, 30, 0),
+        }
+      }
     end
 
-    before do
-      allow_any_instance_of(dummy_class).to receive(:handle_response)
-      allow_any_instance_of(RemoteResource::Request).to receive(:perform) { response }
+    let!(:expected_request) do
+      mock_request = stub_request(:post, 'https://www.example.com/posts.json')
+      mock_request.to_return(status: 201, body: JSON.generate(response_body))
+      mock_request
     end
 
-    it 'instantiates the resource with the attributes' do
-      expect(dummy_class).to receive(:new).with(attributes).and_call_original
-      dummy_class.create attributes
+    it 'performs the HTTP request' do
+      Post.create(title: 'Lorem Ipsum', body: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.', featured: true)
+      expect(expected_request).to have_been_requested
     end
 
-    it 'performs a RemoteResource::Request' do
-      expect(RemoteResource::Request).to receive(:new).with(dummy_class, :post, attributes, {}).and_call_original
-      expect_any_instance_of(RemoteResource::Request).to receive(:perform)
-      dummy_class.create attributes
-    end
+    it 'builds the correct resource' do
+      post = Post.create(title: 'Lorem Ipsum', body: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.', featured: true)
 
-    it 'handles the RemoteResource::Response' do
-      expect_any_instance_of(dummy_class).to receive(:handle_response).with response
-      dummy_class.create attributes
+      aggregate_failures do
+        expect(post.persisted?).to eql true
+        expect(post.id).to eql 12
+        expect(post.title).to eql 'Lorem Ipsum'
+        expect(post.body).to eql 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.'
+        expect(post.featured).to eql true
+        expect(post.created_at).to eql Time.new(2015, 10, 4, 9, 30, 0)
+      end
     end
 
     it 'does NOT change the given attributes' do
-      expect { dummy_class.create(attributes) }.not_to change { attributes }.from({ name: 'Mies' })
+      attributes = { title: 'Lorem Ipsum', body: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.', featured: true }
+
+      expect { Post.create(attributes) }.not_to change { attributes }.from(attributes.dup)
     end
 
     it 'does NOT change the given connection_options' do
+      attributes         = { title: 'Lorem Ipsum', body: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.', featured: true }
       connection_options = { headers: { 'Foo' => 'Bar' } }
 
-      expect { dummy_class.create(attributes, connection_options) }.not_to change { connection_options }.from({ headers: { 'Foo' => 'Bar' } })
+      expect { Post.create(attributes, connection_options) }.not_to change { connection_options }.from(connection_options.dup)
+    end
+
+    xcontext 'return value #success? and NOT #success?' do
     end
   end
 
   describe '.destroy' do
-    let(:response) { instance_double(RemoteResource::Response) }
-
-    before do
-      allow_any_instance_of(dummy_class).to receive(:handle_response)
-      allow_any_instance_of(RemoteResource::Request).to receive(:perform) { response }
+    let(:response_body) do
+      {}
     end
 
-    it 'instantiates the resource without attributes' do
-      expect(dummy_class).to receive(:new).with(no_args()).and_call_original
-      dummy_class.destroy('15')
+    let!(:expected_request) do
+      mock_request = stub_request(:delete, 'https://www.example.com/posts/12.json')
+      mock_request.to_return(status: 204, body: response_body.to_json)
+      mock_request
     end
 
-    it 'performs a RemoteResource::Request' do
-      expect(RemoteResource::Request).to receive(:new).with(dummy_class, :delete, { id: '15' }, { no_attributes: true }).and_call_original
-      expect_any_instance_of(RemoteResource::Request).to receive(:perform)
-      dummy_class.destroy('15')
+    it 'performs the HTTP request' do
+      Post.destroy(12)
+      expect(expected_request).to have_been_requested
     end
 
-    it 'handles the RemoteResource::Response' do
-      expect_any_instance_of(dummy_class).to receive(:handle_response).with response
-      dummy_class.destroy('15')
+    xit 'builds the correct non-persistent resource' do
+      post = Post.destroy(12)
+
+      aggregate_failures do
+        expect(post.id).to eql 12
+        expect(post.persisted?).to eql false
+      end
     end
 
     it 'does NOT change the given connection_options' do
       connection_options = { headers: { 'Foo' => 'Bar' } }
 
-      expect { dummy_class.destroy('15', connection_options) }.not_to change { connection_options }.from({ headers: { 'Foo' => 'Bar' } })
+      expect { Post.destroy(12, connection_options) }.not_to change { connection_options }.from(connection_options.dup)
     end
 
-    context 'request' do
-      let(:response) { { status: 200, body: '' } }
-      before { allow_any_instance_of(RemoteResource::Request).to receive(:perform).and_call_original }
-
-      it 'generates correct request url' do
-        stub_request(:delete, 'https://foobar.com/persistence_methods_dummy/15.json').with(body: nil).to_return(response)
-        dummy_class.destroy('15')
-      end
-
-      it 'includes params' do
-        stub_request(:delete, 'https://foobar.com/persistence_methods_dummy/15.json?pseudonym=3s8e3j').with(body: nil).to_return(response)
-        dummy_class.destroy('15', params: { pseudonym: '3s8e3j' })
-      end
+    xcontext 'return value #success? and NOT #success?' do
     end
   end
 
   describe '#update_attributes' do
-    let(:dummy) { dummy_class.new id: 10 }
-
-    let(:attributes) do
-      { name: 'Noot' }
+    let(:response_body) do
+      {
+        data: {
+          id:         12,
+          title:      'Aliquam lobortis',
+          body:       'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+          featured:   true,
+          created_at: Time.new(2015, 10, 4, 9, 30, 0),
+        }
+      }
     end
 
-    before do
-      allow(dummy).to receive(:create_or_update) { dummy }
-      allow(dummy).to receive(:success?)
-    end
+    context 'when resource is persisted' do
+      let(:resource) { Post.new(id: 12, title: 'Lorem Ipsum', body: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.', featured: true, created_at: Time.new(2015, 10, 4, 9, 30, 0)) }
 
-    it 'rebuilds the resource with the attributes' do
-      expect(dummy).to receive(:rebuild_resource).with(attributes).and_call_original
-      dummy.update_attributes attributes
-    end
-
-    context 'when the id is given in the attributes' do
-      let(:attributes) do
-        { id: 14, name: 'Noot' }
+      let!(:expected_request) do
+        mock_request = stub_request(:patch, 'https://www.example.com/posts/12.json')
+        mock_request.to_return(status: 201, body: JSON.generate(response_body))
+        mock_request
       end
 
-      it 'calls #create_or_update with the attributes and given id' do
-        expect(dummy).to receive(:create_or_update).with(attributes, {})
-        dummy.update_attributes attributes
+      it 'performs the HTTP request' do
+        resource.update_attributes(title: 'Aliquam lobortis', featured: true)
+        expect(expected_request).to have_been_requested
+      end
+
+      it 'builds the correct resource' do
+        resource.update_attributes(title: 'Aliquam lobortis', featured: true)
+
+        post = resource
+
+        aggregate_failures do
+          expect(post.persisted?).to eql true
+          expect(post.id).to eql 12
+          expect(post.title).to eql 'Aliquam lobortis'
+          expect(post.body).to eql 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.'
+          expect(post.featured).to eql true
+          expect(post.created_at).to eql Time.new(2015, 10, 4, 9, 30, 0)
+        end
       end
 
       it 'does NOT change the given attributes' do
-        expect { dummy.update_attributes(attributes) }.not_to change { attributes }.from({ id: 14, name: 'Noot' })
+        attributes = { title: 'Aliquam lobortis', featured: true }
+
+        expect { resource.update_attributes(attributes) }.not_to change { attributes }.from(attributes.dup)
       end
 
       it 'does NOT change the given connection_options' do
+        attributes         = { title: 'Aliquam lobortis', featured: true }
         connection_options = { headers: { 'Foo' => 'Bar' } }
 
-        expect { dummy.update_attributes(attributes, connection_options) }.not_to change { connection_options }.from({ headers: { 'Foo' => 'Bar' } })
+        expect { resource.update_attributes(attributes, connection_options) }.not_to change { connection_options }.from(connection_options.dup)
+      end
+
+      xcontext 'return value #success? and NOT #success?' do
       end
     end
 
-    context 'when the id is NOT given in the attributes' do
-      it 'calls #create_or_update with the attributes and #id of resource' do
-        expect(dummy).to receive(:create_or_update).with(attributes.merge(id: dummy.id), {})
-        dummy.update_attributes attributes
+    context 'when resource is NOT persisted' do
+      let(:resource) { Post.new(title: 'Lorem Ipsum', body: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.', featured: true) }
+
+      let!(:expected_request) do
+        mock_request = stub_request(:post, 'https://www.example.com/posts.json')
+        mock_request.to_return(status: 201, body: JSON.generate(response_body))
+        mock_request
+      end
+
+      it 'performs the HTTP request' do
+        resource.update_attributes(title: 'Aliquam lobortis', featured: true)
+        expect(expected_request).to have_been_requested
+      end
+
+      it 'builds the correct resource' do
+        resource.update_attributes(title: 'Aliquam lobortis', featured: true)
+
+        post = resource
+
+        aggregate_failures do
+          expect(post.persisted?).to eql true
+          expect(post.id).to eql 12
+          expect(post.title).to eql 'Aliquam lobortis'
+          expect(post.body).to eql 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.'
+          expect(post.featured).to eql true
+          expect(post.created_at).to eql Time.new(2015, 10, 4, 9, 30, 0)
+        end
       end
 
       it 'does NOT change the given attributes' do
-        expect { dummy.update_attributes(attributes) }.not_to change { attributes }.from({ name: 'Noot' })
+        attributes = { title: 'Aliquam lobortis', featured: true }
+
+        expect { resource.update_attributes(attributes) }.not_to change { attributes }.from(attributes.dup)
       end
 
       it 'does NOT change the given connection_options' do
+        attributes         = { title: 'Aliquam lobortis', featured: true }
         connection_options = { headers: { 'Foo' => 'Bar' } }
 
-        expect { dummy.update_attributes(attributes, connection_options) }.not_to change { connection_options }.from({ headers: { 'Foo' => 'Bar' } })
+        expect { resource.update_attributes(attributes, connection_options) }.not_to change { connection_options }.from(connection_options.dup)
       end
-    end
 
-    context 'when the save was successful' do
-      it 'returns the resource' do
-        allow(dummy).to receive(:success?) { true }
-
-        expect(dummy.update_attributes attributes).to eql dummy
-      end
-    end
-
-    context 'when the save was NOT successful' do
-      it 'returns false' do
-        allow(dummy).to receive(:success?) { false }
-
-        expect(dummy.update_attributes attributes).to eql false
+      xcontext 'return value #success? and NOT #success?' do
       end
     end
   end
 
   describe '#save' do
-    let(:attributes) { dummy.attributes }
-
-    before do
-      allow(dummy).to receive(:create_or_update) { dummy }
-      allow(dummy).to receive(:success?)
+    let(:response_body) do
+      {
+        data: {
+          id:         12,
+          title:      'Lorem Ipsum',
+          body:       'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+          featured:   false,
+          created_at: Time.new(2015, 10, 4, 9, 30, 0),
+        }
+      }
     end
 
-    it 'calls #create_or_update with the attributes' do
-      expect(dummy).to receive(:create_or_update).with(attributes, {})
-      dummy.save
-    end
+    context 'when resource is persisted' do
+      let(:resource) { Post.new(id: 12, title: 'Lorem Ipsum', body: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.', featured: false, created_at: Time.new(2015, 10, 4, 9, 30, 0)) }
 
-    it 'does NOT change the given connection_options' do
-      connection_options = { headers: { 'Foo' => 'Bar' } }
-
-      expect { dummy.save(connection_options) }.not_to change { connection_options }.from({ headers: { 'Foo' => 'Bar' } })
-    end
-
-    context 'when the save was successful' do
-      it 'returns the resource' do
-        allow(dummy).to receive(:success?) { true }
-
-        expect(dummy.save).to eql dummy
-      end
-    end
-
-    context 'when the save was NOT successful' do
-      it 'returns false' do
-        allow(dummy).to receive(:success?) { false }
-
-        expect(dummy.save).to eql false
-      end
-    end
-  end
-
-  describe '#create_or_update' do
-    let(:response) { instance_double(RemoteResource::Response) }
-
-    before do
-      allow(dummy).to receive(:handle_response)                           { dummy }
-      allow_any_instance_of(RemoteResource::Request).to receive(:perform) { response }
-    end
-
-    context 'when the attributes contain an id' do
-      let(:attributes) do
-        { id: 10, name: 'Kees' }
+      let!(:expected_request) do
+        mock_request = stub_request(:patch, 'https://www.example.com/posts/12.json')
+        mock_request.to_return(status: 200, body: JSON.generate(response_body))
+        mock_request
       end
 
-      it 'performs a RemoteResource::Request with rest_action :patch' do
-        expect(RemoteResource::Request).to receive(:new).with(dummy, :patch, { name: 'Kees' }, { id: 10 }).and_call_original
-        expect_any_instance_of(RemoteResource::Request).to receive(:perform)
-        dummy.create_or_update attributes
+      it 'performs the HTTP request' do
+        resource.save
+        expect(expected_request).to have_been_requested
       end
 
-      it 'handles the RemoteResource::Response' do
-        expect(dummy).to receive(:handle_response).with response
-        dummy.create_or_update attributes
-      end
+      it 'builds the correct resource' do
+        resource.save
 
-      it 'does NOT change the given attributes' do
-        expect { dummy.create_or_update(attributes) }.not_to change { attributes }.from({ id: 10, name: 'Kees' })
+        post = resource
+
+        aggregate_failures do
+          expect(post.persisted?).to eql true
+          expect(post.id).to eql 12
+          expect(post.title).to eql 'Lorem Ipsum'
+          expect(post.body).to eql 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.'
+          expect(post.featured).to eql false
+          expect(post.created_at).to eql Time.new(2015, 10, 4, 9, 30, 0)
+        end
       end
 
       it 'does NOT change the given connection_options' do
         connection_options = { headers: { 'Foo' => 'Bar' } }
 
-        expect { dummy.create_or_update(attributes, connection_options) }.not_to change { connection_options }.from({ headers: { 'Foo' => 'Bar' } })
+        expect { resource.save(connection_options) }.not_to change { connection_options }.from(connection_options.dup)
+      end
+
+      xcontext 'return value #success? and NOT #success?' do
       end
     end
 
-    context 'when the attributes do NOT contain an id' do
-      let(:attributes) do
-        { name: 'Mies' }
+    context 'when resource is NOT persisted' do
+      let(:resource) { Post.new(title: 'Lorem Ipsum', body: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.', featured: false) }
+
+      let!(:expected_request) do
+        mock_request = stub_request(:post, 'https://www.example.com/posts.json')
+        mock_request.to_return(status: 201, body: JSON.generate(response_body))
+        mock_request
       end
 
-      it 'performs a RemoteResource::Request with rest_action :post' do
-        expect(RemoteResource::Request).to receive(:new).with(dummy, :post, { name: 'Mies' }, {}).and_call_original
-        expect_any_instance_of(RemoteResource::Request).to receive(:perform)
-        dummy.create_or_update attributes
+      it 'performs the HTTP request' do
+        resource.save
+        expect(expected_request).to have_been_requested
       end
 
-      it 'handles the RemoteResource::Response' do
-        expect(dummy).to receive(:handle_response).with response
-        dummy.create_or_update attributes
-      end
+      it 'builds the correct resource' do
+        resource.save
 
-      it 'does NOT change the given attributes' do
-        expect { dummy.create_or_update(attributes) }.not_to change { attributes }.from({ name: 'Mies' })
+        post = resource
+
+        aggregate_failures do
+          expect(post.persisted?).to eql true
+          expect(post.id).to eql 12
+          expect(post.title).to eql 'Lorem Ipsum'
+          expect(post.body).to eql 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.'
+          expect(post.featured).to eql false
+          expect(post.created_at).to eql Time.new(2015, 10, 4, 9, 30, 0)
+        end
       end
 
       it 'does NOT change the given connection_options' do
         connection_options = { headers: { 'Foo' => 'Bar' } }
 
-        expect { dummy.create_or_update(attributes, connection_options) }.not_to change { connection_options }.from({ headers: { 'Foo' => 'Bar' } })
+        expect { resource.save(connection_options) }.not_to change { connection_options }.from(connection_options.dup)
+      end
+
+      xcontext 'return value #success? and NOT #success?' do
       end
     end
   end
 
   describe '#destroy' do
-    let(:dummy) { dummy_class.new(id: 18) }
+    let(:resource) { Post.new(id: 12) }
 
-    let(:response) { instance_double(RemoteResource::Response) }
-
-    before do
-      allow(dummy).to receive(:handle_response)                           { dummy }
-      allow_any_instance_of(RemoteResource::Request).to receive(:perform) { response }
-      allow(dummy).to receive(:success?)
+    let(:response_body) do
+      {}
     end
 
-    it 'performs a RemoteResource::Request with rest_action :delete' do
-      expect(RemoteResource::Request).to receive(:new).with(dummy, :delete, { id: dummy.id }, { no_attributes: true }).and_call_original
-      expect_any_instance_of(RemoteResource::Request).to receive(:perform)
-      dummy.destroy
+    let!(:expected_request) do
+      mock_request = stub_request(:delete, 'https://www.example.com/posts/12.json')
+      mock_request.to_return(status: 204, body: response_body.to_json)
+      mock_request
     end
 
-    it 'handles the RemoteResource::Response' do
-      expect(dummy).to receive(:handle_response).with response
-      dummy.destroy
+    it 'performs the HTTP request' do
+      resource.destroy
+      expect(expected_request).to have_been_requested
+    end
+
+    xit 'builds the correct non-persistent resource' do
+      post = resource.destroy
+
+      aggregate_failures do
+        expect(post.id).to eql 12
+        expect(post.persisted?).to eql false
+      end
     end
 
     it 'does NOT change the given connection_options' do
       connection_options = { headers: { 'Foo' => 'Bar' } }
 
-      expect { dummy.destroy(connection_options) }.not_to change { connection_options }.from({ headers: { 'Foo' => 'Bar' } })
+      expect { resource.destroy(connection_options) }.not_to change { connection_options }.from(connection_options.dup)
     end
 
-    context 'request' do
-      let(:response) { { status: 200, body: '' } }
-      before { allow_any_instance_of(RemoteResource::Request).to receive(:perform).and_call_original }
-
-      it 'generates correct request url' do
-        stub_request(:delete, 'https://foobar.com/persistence_methods_dummy/18.json').with(body: nil).to_return(response)
-        dummy.destroy
-      end
-
-      it 'includes params' do
-        stub_request(:delete, 'https://foobar.com/persistence_methods_dummy/18.json?pseudonym=3s8e3j').with(body: nil).to_return(response)
-        dummy.destroy(params: { pseudonym: '3s8e3j' })
-      end
-    end
-
-    context 'when the destroy was successful' do
-      it 'returns the resource' do
-        allow(dummy).to receive(:success?) { true }
-
-        expect(dummy.destroy).to eql dummy
-      end
-    end
-
-    context 'when the destroy was NOT successful' do
-      it 'returns false' do
-        allow(dummy).to receive(:success?) { false }
-
-        expect(dummy.destroy).to eql false
-      end
+    xcontext 'return value #success? and NOT #success?' do
     end
 
     context 'when the id is NOT present' do
-      let(:dummy) { dummy_class.new }
+      let(:resource) { Post.new }
 
       it 'raises the RemoteResource::IdMissingError error' do
-        expect { dummy.destroy }.to raise_error(RemoteResource::IdMissingError, "`id` is missing from resource")
+        expect { resource.destroy }.to raise_error(RemoteResource::IdMissingError, "`id` is missing from resource")
       end
     end
   end

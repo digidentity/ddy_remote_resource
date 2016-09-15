@@ -19,16 +19,16 @@ require 'remote_resource/querying/finder_methods'
 require 'remote_resource/querying/persistence_methods'
 require 'remote_resource/http_errors'
 require 'remote_resource/request'
-
+require 'remote_resource/util'
 
 module RemoteResource
   RemoteResourceError = Class.new StandardError
 
   IdMissingError = Class.new(RemoteResourceError)
-  
+
   CollectionOptionKeyError = Class.new(RemoteResourceError)
 
-  RESTActionUnknown = Class.new RemoteResourceError # REST action
+  HTTPMethodUnsupported = Class.new RemoteResourceError # REST action
 
   class HTTPError < RemoteResourceError # HTTP errors
 

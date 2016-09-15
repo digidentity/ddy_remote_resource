@@ -34,7 +34,7 @@ RSpec.describe '.find' do
   describe 'default behaviour' do
     let!(:expected_request) do
       mock_request = stub_request(:get, 'https://www.example.com/posts/12.json')
-      mock_request.with(headers: expected_default_headers)
+      mock_request.with(query: nil, body: nil, headers: expected_default_headers)
       mock_request.to_return(status: 200, body: response_body.to_json)
       mock_request
     end
@@ -59,7 +59,7 @@ RSpec.describe '.find' do
   describe 'with connection_options[:params]' do
     let!(:expected_request) do
       mock_request = stub_request(:get, 'https://www.example.com/posts/12.json')
-      mock_request.with(query: { pseudonym: 'pseudonym' }, headers: expected_default_headers)
+      mock_request.with(query: { pseudonym: 'pseudonym' }, body: nil, headers: expected_default_headers)
       mock_request.to_return(status: 200, body: response_body.to_json)
       mock_request
     end
@@ -73,7 +73,7 @@ RSpec.describe '.find' do
   describe 'with connection_options[:headers]' do
     let!(:expected_request) do
       mock_request = stub_request(:get, 'https://www.example.com/posts/12.json')
-      mock_request.with(headers: { 'X-Pseudonym' => 'pseudonym' })
+      mock_request.with(query: nil, body: nil, headers: { 'X-Pseudonym' => 'pseudonym' })
       mock_request.to_return(status: 200, body: response_body.to_json)
       mock_request
     end
@@ -87,7 +87,7 @@ RSpec.describe '.find' do
   describe 'with a 404 response' do
     let!(:expected_request) do
       mock_request = stub_request(:get, 'https://www.example.com/posts/12.json')
-      mock_request.with(query: { pseudonym: 'pseudonym' }, headers: expected_default_headers.merge({ 'X-Pseudonym' => 'pseudonym' }))
+      mock_request.with(query: { pseudonym: 'pseudonym' }, body: nil, headers: expected_default_headers.merge({ 'X-Pseudonym' => 'pseudonym' }))
       mock_request.to_return(status: 404)
       mock_request
     end
@@ -114,7 +114,7 @@ RSpec.describe '.find' do
   describe 'with a 500 response' do
     let!(:expected_request) do
       mock_request = stub_request(:get, 'https://www.example.com/posts/12.json')
-      mock_request.with(query: { pseudonym: 'pseudonym' }, headers: expected_default_headers.merge({ 'X-Pseudonym' => 'pseudonym' }))
+      mock_request.with(query: { pseudonym: 'pseudonym' }, body: nil, headers: expected_default_headers.merge({ 'X-Pseudonym' => 'pseudonym' }))
       mock_request.to_return(status: 500)
       mock_request
     end

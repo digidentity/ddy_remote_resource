@@ -20,6 +20,7 @@ module RemoteResource
       include RemoteResource::Querying::PersistenceMethods
 
       attr_accessor :_response
+      attr_accessor :destroyed
 
       attribute :id
       class_attribute :root_element, instance_accessor: false
@@ -68,7 +69,11 @@ module RemoteResource
     end
 
     def persisted?
-      id.present?
+      if destroyed
+        false
+      else
+        id.present?
+      end
     end
 
     def new_record?

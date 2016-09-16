@@ -87,7 +87,7 @@ describe RemoteResource::Querying::PersistenceMethods do
       expect(expected_request).to have_been_requested
     end
 
-    xit 'builds the correct non-persistent resource' do
+    it 'builds the correct non-persistent resource' do
       post = Post.destroy(12)
 
       aggregate_failures do
@@ -322,8 +322,10 @@ describe RemoteResource::Querying::PersistenceMethods do
       expect(expected_request).to have_been_requested
     end
 
-    xit 'builds the correct non-persistent resource' do
-      post = resource.destroy
+    it 'builds the correct non-persistent resource' do
+      resource.destroy
+
+      post = resource
 
       aggregate_failures do
         expect(post.id).to eql 12

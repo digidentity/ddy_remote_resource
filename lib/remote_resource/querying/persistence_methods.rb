@@ -12,9 +12,11 @@ module RemoteResource
         end
 
         def destroy(id, connection_options = {})
-          resource = new
+          resource = new(id: id)
           response = RemoteResource::Request.new(self, :delete, {}, connection_options.merge(id: id)).perform
           resource.handle_response(response)
+          resource.destroyed = resource.success?
+          resource
         end
       end
 
@@ -33,6 +35,7 @@ module RemoteResource
         id.present? || raise(RemoteResource::IdMissingError.new("`id` is missing from resource"))
         response = RemoteResource::Request.new(self, :delete, {}, connection_options.merge(id: id)).perform
         handle_response(response)
+        self.destroyed = success?
         success? ? self : false
       end
 

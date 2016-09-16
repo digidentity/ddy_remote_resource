@@ -11,7 +11,7 @@ module RemoteResource
         end
 
         def find_by(params, connection_options = {})
-          response = RemoteResource::Request.new(self, :get, {}, connection_options.deep_merge(params: params)).perform
+          response = RemoteResource::Request.new(self, :get, {}, connection_options.deep_merge(id: params[:id], params: params.except(:id))).perform
           build_resource_from_response(response)
         end
 

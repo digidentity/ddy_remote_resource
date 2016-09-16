@@ -59,7 +59,7 @@ RSpec.describe '.find_by' do
     end
   end
 
-  xdescribe 'with params[:id]' do
+  describe 'with params[:id]' do
     let!(:expected_request) do
       mock_request = stub_request(:get, 'https://www.example.com/posts/12.json')
       mock_request.with(query: { title: 'Lorem Ipsum', featured: true }, body: nil, headers: expected_default_headers)

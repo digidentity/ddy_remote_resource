@@ -119,6 +119,22 @@ RSpec.describe RemoteResource::Base do
     end
   end
 
+  describe '#persistence' do
+    context 'when #persisted?' do
+      it 'returns the resource' do
+        dummy.id = 10
+        expect(dummy.persistence).to eql dummy
+      end
+    end
+
+    context 'when NOT #persisted?' do
+      it 'returns nil' do
+        dummy.id = nil
+        expect(dummy.persistence).to be_nil
+      end
+    end
+  end
+
   describe '#persisted?' do
     context 'when id is present' do
       it 'returns true' do
@@ -127,26 +143,41 @@ RSpec.describe RemoteResource::Base do
       end
     end
 
-    context 'when is is NOT present' do
+    context 'when id is present and destroyed is present' do
       it 'returns false' do
+        dummy.id = 10
+        dummy.destroyed = true
+        expect(dummy.persisted?).to eql false
+      end
+    end
+
+    context 'when id is NOT present' do
+      it 'returns false' do
+        dummy.id = nil
+        expect(dummy.persisted?).to eql false
+      end
+    end
+
+    context 'when id is NOT present and destroyed is present' do
+      it 'returns false' do
+        dummy.id = nil
+        dummy.destroyed = true
         expect(dummy.persisted?).to eql false
       end
     end
   end
 
   describe '#new_record?' do
-    context 'when instance persisted' do
+    context 'when #persisted?' do
       it 'returns false' do
-        allow(dummy).to receive(:persisted?) { true }
-
+        dummy.id = 10
         expect(dummy.new_record?).to eql false
       end
     end
 
-    context 'when instance does NOT persist' do
+    context 'when NOT #persisted?' do
       it 'returns true' do
-        allow(dummy).to receive(:persisted?) { false }
-
+        dummy.id = nil
         expect(dummy.new_record?).to eql true
       end
     end

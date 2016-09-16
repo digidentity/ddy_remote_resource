@@ -68,6 +68,10 @@ module RemoteResource
       @connection_options ||= RemoteResource::ConnectionOptions.new(self.class)
     end
 
+    def persistence
+      self if persisted?
+    end
+
     def persisted?
       if destroyed
         false

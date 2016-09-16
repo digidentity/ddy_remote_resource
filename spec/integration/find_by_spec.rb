@@ -125,16 +125,16 @@ RSpec.describe '.find_by' do
       expect { Post.find_by({ featured: false }, params: { pseudonym: 'pseudonym' }, headers: { 'X-Pseudonym' => 'pseudonym' }, path_postfix: '/current') }.to raise_error RemoteResource::HTTPNotFound
     end
 
-    xit 'adds metadata to the raised error' do
+    it 'adds metadata to the raised error' do
       begin
         Post.find_by({ featured: false }, params: { pseudonym: 'pseudonym' }, headers: { 'X-Pseudonym' => 'pseudonym' }, path_postfix: '/current')
       rescue RemoteResource::HTTPNotFound => error
         aggregate_failures do
-          expect(error.message).to eql 'RemoteResource HTTP request failed, with status 404'
-          expect(error.request_url).to eql 'https://www.example.com/posts/12.json'
+          expect(error.message).to eql 'HTTP request failed for Post with response_code=404 with http_action=get with request_url=https://www.example.com/posts/current.json'
+          expect(error.request_url).to eql 'https://www.example.com/posts/current.json'
           expect(error.response_code).to eql 404
-          expect(error.request_params).to eql({ pseudonym: 'pseudonym' })
-          expect(error.request_headers).to eql({ 'User-Agent' => 'Typhoeus - https://github.com/typhoeus/typhoeus', 'Accept' => 'application/json', 'X-Pseudonym' => 'pseudonym' })
+          expect(error.request_query).to eql(RemoteResource::Util.encode_params_to_query({ pseudonym: 'pseudonym', featured: false }))
+          expect(error.request_headers).to eql(expected_default_headers.merge({ 'X-Pseudonym' => 'pseudonym' }))
         end
       end
     end
@@ -152,16 +152,16 @@ RSpec.describe '.find_by' do
       expect { Post.find_by({ featured: false }, params: { pseudonym: 'pseudonym' }, headers: { 'X-Pseudonym' => 'pseudonym' }, path_postfix: '/current') }.to raise_error RemoteResource::HTTPServerError
     end
 
-    xit 'adds metadata to the raised error' do
+    it 'adds metadata to the raised error' do
       begin
         Post.find_by({ featured: false }, params: { pseudonym: 'pseudonym' }, headers: { 'X-Pseudonym' => 'pseudonym' }, path_postfix: '/current')
       rescue RemoteResource::HTTPServerError => error
         aggregate_failures do
-          expect(error.message).to eql 'foo'
-          expect(error.request_url).to eql 'https://www.example.com/posts/12.json'
+          expect(error.message).to eql 'HTTP request failed for Post with response_code=500 with http_action=get with request_url=https://www.example.com/posts/current.json'
+          expect(error.request_url).to eql 'https://www.example.com/posts/current.json'
           expect(error.response_code).to eql 500
-          expect(error.request_params).to eql({ pseudonym: 'pseudonym' })
-          expect(error.request_headers).to eql({ 'User-Agent' => 'Typhoeus - https://github.com/typhoeus/typhoeus', 'Accept' => 'application/json', 'X-Pseudonym' => 'pseudonym' })
+          expect(error.request_query).to eql(RemoteResource::Util.encode_params_to_query({ pseudonym: 'pseudonym', featured: false }))
+          expect(error.request_headers).to eql(expected_default_headers.merge({ 'X-Pseudonym' => 'pseudonym' }))
         end
       end
     end

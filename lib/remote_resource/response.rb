@@ -26,6 +26,10 @@ module RemoteResource
       original_response.response_code
     end
 
+    def response_headers
+      original_response.headers
+    end
+
     def sanitized_response_body
       return empty_hash if response_body.blank?
       return empty_hash if parsed_response_body.blank?

@@ -159,17 +159,16 @@ RSpec.describe '#save' do
         expect { resource.save({ headers: { 'X-Pseudonym' => 'pseudonym' } }) }.to raise_error RemoteResource::HTTPServerError
       end
 
-      xit 'adds metadata to the raised error' do
+      it 'adds metadata to the raised error' do
         begin
           resource.save({ headers: { 'X-Pseudonym' => 'pseudonym' } })
         rescue RemoteResource::HTTPServerError => error
           aggregate_failures do
-            expect(error.message).to eql 'foo'
-            expect(error.request_url).to eql 'https://www.example.com/posts.json'
+            expect(error.message).to eql 'HTTP request failed for Post with response_code=500 with http_action=patch with request_url=https://www.example.com/posts/12.json'
+            expect(error.request_url).to eql 'https://www.example.com/posts/12.json'
             expect(error.response_code).to eql 500
-            expect(error.request_params).to eql({})
-            expect(error.request_body).to eql(expected_request_body)
-            expect(error.request_headers).to eql({ 'User-Agent' => 'Typhoeus - https://github.com/typhoeus/typhoeus', 'Accept' => 'application/json', 'X-Pseudonym' => 'pseudonym' })
+            expect(error.request_query).to be_nil
+            expect(error.request_headers).to eql(expected_default_headers.merge({ 'X-Pseudonym' => 'pseudonym' }))
           end
         end
       end
@@ -304,17 +303,16 @@ RSpec.describe '#save' do
         expect { resource.save({ headers: { 'X-Pseudonym' => 'pseudonym' } }) }.to raise_error RemoteResource::HTTPServerError
       end
 
-      xit 'adds metadata to the raised error' do
+      it 'adds metadata to the raised error' do
         begin
           resource.save({ headers: { 'X-Pseudonym' => 'pseudonym' } })
         rescue RemoteResource::HTTPServerError => error
           aggregate_failures do
-            expect(error.message).to eql 'foo'
+            expect(error.message).to eql 'HTTP request failed for Post with response_code=500 with http_action=post with request_url=https://www.example.com/posts.json'
             expect(error.request_url).to eql 'https://www.example.com/posts.json'
             expect(error.response_code).to eql 500
-            expect(error.request_params).to eql({})
-            expect(error.request_body).to eql(expected_request_body)
-            expect(error.request_headers).to eql({ 'User-Agent' => 'Typhoeus - https://github.com/typhoeus/typhoeus', 'Accept' => 'application/json', 'X-Pseudonym' => 'pseudonym' })
+            expect(error.request_query).to be_nil
+            expect(error.request_headers).to eql(expected_default_headers.merge({ 'X-Pseudonym' => 'pseudonym' }))
           end
         end
       end

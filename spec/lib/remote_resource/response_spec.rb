@@ -15,7 +15,7 @@ describe RemoteResource::Response do
   end
 
   describe 'Typhoeus::Response' do
-    let(:typhoeus_options)  { { body: 'typhoeus_response_body', code: 200 } }
+    let(:typhoeus_options)  { { body: 'typhoeus_response_body', code: 200, headers: { 'Content-Type' => 'application/json', 'Server' => 'nginx/1.4.6 (Ubuntu)' } } }
     let(:typhoeus_response) { Typhoeus::Response.new typhoeus_options }
     let(:response)          { described_class.new typhoeus_response }
 
@@ -35,6 +35,12 @@ describe RemoteResource::Response do
     describe '#response_code' do
       it 'returns the response code of the original response' do
         expect(response.response_code).to eql 200
+      end
+    end
+
+    describe '#response_headers' do
+      it 'returns the response headers of the original response' do
+        expect(response.response_headers).to eql({ 'Content-Type' => 'application/json', 'Server' => 'nginx/1.4.6 (Ubuntu)' })
       end
     end
   end

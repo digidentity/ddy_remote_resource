@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe RemoteResource::REST do
+RSpec.describe RemoteResource::REST do
 
   module RemoteResource
     class RESTDummy

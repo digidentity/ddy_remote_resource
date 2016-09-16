@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe RemoteResource::UrlNaming do
+RSpec.describe RemoteResource::UrlNaming do
 
   module RemoteResource
     class UrlNamingDummy

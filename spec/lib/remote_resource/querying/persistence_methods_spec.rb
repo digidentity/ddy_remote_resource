@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe RemoteResource::Querying::PersistenceMethods do
+RSpec.describe RemoteResource::Querying::PersistenceMethods do
 
   class Post
     include RemoteResource::Base

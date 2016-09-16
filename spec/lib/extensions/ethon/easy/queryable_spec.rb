@@ -1,7 +1,7 @@
 require 'ethon'
 require_relative '../../../../../lib/extensions/ethon/easy/queryable'
 
-describe Ethon::Easy::Queryable, order: :defined do
+RSpec.describe Ethon::Easy::Queryable, order: :defined do
 
   let(:hash)    { {} }
   let!(:easy)   { Ethon::Easy.new }

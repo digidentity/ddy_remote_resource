@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe RemoteResource::Collection do
+RSpec.describe RemoteResource::Collection do
 
   module RemoteResource
     class CollectionDummy

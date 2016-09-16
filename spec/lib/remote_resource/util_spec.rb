@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe RemoteResource::Util do
+RSpec.describe RemoteResource::Util do
 
   describe '.filter_params' do
     let(:scenarios) do

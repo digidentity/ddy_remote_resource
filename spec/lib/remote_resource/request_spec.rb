@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe RemoteResource::Request do
+RSpec.describe RemoteResource::Request do
 
   module RemoteResource
     class RequestDummy

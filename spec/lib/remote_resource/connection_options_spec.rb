@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe RemoteResource::ConnectionOptions do
+RSpec.describe RemoteResource::ConnectionOptions do
 
   module RemoteResource
     class ConnectionOptionsDummy

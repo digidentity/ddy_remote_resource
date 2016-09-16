@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe RemoteResource::Builder do
+RSpec.describe RemoteResource::Builder do
 
   module RemoteResource
     class BuilderDummy

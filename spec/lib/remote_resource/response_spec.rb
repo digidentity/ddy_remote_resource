@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe RemoteResource::Response do
+RSpec.describe RemoteResource::Response do
 
   describe '#original_response' do
     it 'is private' do

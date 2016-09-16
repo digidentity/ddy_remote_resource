@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe RemoteResource::Querying::FinderMethods do
+RSpec.describe RemoteResource::Querying::FinderMethods do
 
   class Post
     include RemoteResource::Base

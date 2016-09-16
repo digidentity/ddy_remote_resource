@@ -2,8 +2,6 @@ require 'spec_helper'
 
 RSpec.describe '.all' do
 
-  after(:all) { remove_const(:Post) }
-
   class Post
     include RemoteResource::Base
 

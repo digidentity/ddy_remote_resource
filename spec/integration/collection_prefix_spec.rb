@@ -2,9 +2,6 @@ require 'spec_helper'
 
 RSpec.describe 'connection_options[:collection_prefix] and connection_options[:collection_options]' do
 
-  after(:all) { remove_const(:Post) }
-  after(:all) { remove_const(:Comment) }
-
   class Post
     include RemoteResource::Base
 

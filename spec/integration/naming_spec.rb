@@ -2,8 +2,6 @@ require 'spec_helper'
 
 RSpec.describe 'connection_options for naming' do
 
-  after(:all) { remove_const(:Post) }
-
   class Post
     include RemoteResource::Base
 

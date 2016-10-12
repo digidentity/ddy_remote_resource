@@ -14,8 +14,8 @@ module RemoteResource
         warn '[DEPRECATION] `.app_host` is deprecated. Please use a different method to determine the site.'
       end
 
-      def base_url
-        warn '[DEPRECATION] `.base_url` is deprecated. Please use the connection_options[:base_url] when querying instead.'
+      def base_url(connection_options = {})
+        RemoteResource::UrlNamingDetermination.new(self, self.connection_options.to_hash.merge(connection_options)).base_url(connection_options[:id], check_collection_options: false)
       end
 
       def use_relative_model_naming?

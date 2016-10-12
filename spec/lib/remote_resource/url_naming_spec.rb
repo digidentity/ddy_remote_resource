@@ -42,9 +42,14 @@ RSpec.describe RemoteResource::UrlNaming do
   end
 
   describe '.base_url' do
-    it 'warns that the method is deprecated' do
-      expect(dummy_class).to receive(:warn).with('[DEPRECATION] `.base_url` is deprecated. Please use the connection_options[:base_url] when querying instead.')
-      dummy_class.base_url
+    it 'returns the base URL which will be used to make the request URL' do
+      aggregate_failures do
+        expect(dummy_class.base_url).to eql 'https://foobar.com/url_naming_dummy'
+        expect(dummy_class.base_url(version: '/api/v2')).to eql 'https://foobar.com/api/v2/url_naming_dummy'
+        expect(dummy_class.base_url(id: 10, collection: true)).to eql 'https://foobar.com/url_naming_dummies/10'
+        expect(dummy_class.base_url(id: 10, collection: true, collection_prefix: '/parent/:parent_id' )).to eql 'https://foobar.com/parent/:parent_id/url_naming_dummies/10'
+        expect(dummy_class.base_url(id: 10, collection: true, collection_prefix: '/parent/:parent_id', collection_options: { parent_id: 18 } )).to eql 'https://foobar.com/parent/18/url_naming_dummies/10'
+      end
     end
   end
 

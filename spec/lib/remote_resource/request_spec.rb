@@ -118,16 +118,26 @@ RSpec.describe RemoteResource::Request do
 
     shared_examples 'a conditional construct for the response' do
       context 'when the response is #success?' do
-        it 'returns a RemoteResource::Response object' do
-          expect(request.perform).to be_a RemoteResource::Response
+        it 'returns a RemoteResource::Response object with the request' do
+          aggregate_failures do
+            result = request.perform
+
+            expect(result).to be_a RemoteResource::Response
+            expect(result.request).to eql request
+          end
         end
       end
 
       context 'when the response is #unprocessable_entity? (response_code=422)' do
         let(:response_code) { 422 }
 
-        it 'returns a RemoteResource::Response object' do
-          expect(request.perform).to be_a RemoteResource::Response
+        it 'returns a RemoteResource::Response object with the request' do
+          aggregate_failures do
+            result = request.perform
+
+            expect(result).to be_a RemoteResource::Response
+            expect(result.request).to eql request
+          end
         end
       end
 

@@ -42,7 +42,7 @@ module RemoteResource
       SUPPORTED_HTTP_METHODS.include?(http_action) || raise(RemoteResource::HTTPMethodUnsupported, "Requested HTTP method=#{http_action.to_s} is NOT supported, the HTTP action MUST be a supported HTTP action=#{SUPPORTED_HTTP_METHODS.join(', ')}")
 
       connection_response = connection.public_send(http_action, request_url, params: query, body: body, headers: headers)
-      response            = RemoteResource::Response.new(connection_response, connection_options)
+      response            = RemoteResource::Response.new(connection_response, connection_options.merge(request: self, connection_request: connection_response.request))
 
       if response.success? || response.unprocessable_entity?
         response

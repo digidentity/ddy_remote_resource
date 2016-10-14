@@ -19,11 +19,12 @@ module RemoteResource
       include RemoteResource::Querying::FinderMethods
       include RemoteResource::Querying::PersistenceMethods
 
-      attr_accessor :_response
+      attr_accessor :last_request, :last_response, :meta
       attr_accessor :destroyed
 
-      attribute :id
       class_attribute :root_element, instance_accessor: false
+
+      attribute :id
     end
 
     def self.global_headers=(headers)
@@ -85,7 +86,7 @@ module RemoteResource
     end
 
     def success?
-      _response.success? && !errors?
+      last_response.success? && !errors?
     end
 
     def errors?
@@ -94,20 +95,19 @@ module RemoteResource
 
     def handle_response(response)
       if response.unprocessable_entity?
-        rebuild_resource_from_response(response).tap do |resource|
-          resource.assign_errors_from_response response
-        end
+        rebuild_resource_from_response(response)
+        assign_errors_from_response(response)
       else
         rebuild_resource_from_response(response)
-      end
-    end
-
-    def assign_response(response)
-      @_response = response
+      end and self
     end
 
     def assign_errors_from_response(response)
-      assign_errors response.error_messages_response_body
+      assign_errors(response.errors)
+    end
+
+    def _response
+      warn '[DEPRECATION] `._response` is deprecated. Please use `.last_response` instead.'
     end
 
     private

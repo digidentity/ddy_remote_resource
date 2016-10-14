@@ -8,27 +8,27 @@ RSpec.describe RemoteResource::Collection do
 
       self.site = 'https://foobar.com'
 
-      attr_accessor :username
+      attr_accessor :name
     end
   end
 
   let(:dummy_class) { RemoteResource::CollectionDummy }
   let(:dummy)       { dummy_class.new }
 
-  let(:response) { RemoteResource::Response.new double.as_null_object }
-  let(:response_meta) { { total: '1' } }
-  let(:response_hash) do
-    { _response: response, meta: response_meta }
+  let(:request) { instance_double(RemoteResource::Request) }
+  let(:response) { instance_double(RemoteResource::Response) }
+  let(:options) do
+    { last_request: request, last_response: response, meta: { 'total' => 10 } }
   end
 
   let(:resources_collection) do
     [
-      { id: 1, username: 'mies_1' },
-      { id: 2, username: 'mies_2' }
+      { 'id' => 1, 'name' => 'mies_1' },
+      { 'id' => 2, 'name' => 'mies_2' }
     ]
   end
 
-  let(:collection) { described_class.new dummy_class, resources_collection, response_hash }
+  let(:collection) { described_class.new(dummy_class, resources_collection, options) }
 
   specify { expect(described_class).to include Enumerable }
 
@@ -66,9 +66,9 @@ RSpec.describe RemoteResource::Collection do
 
   describe '#each' do
     context 'when the resources_collection is an Array' do
-      it 'instantiates each element in the resources_collection as resource' do
-        expect(dummy_class).to receive(:new).with(resources_collection[0].merge(response_hash)).and_call_original
-        expect(dummy_class).to receive(:new).with(resources_collection[1].merge(response_hash)).and_call_original
+      it 'instantiates each element in the resources_collection as resource with the given options' do
+        expect(dummy_class).to receive(:new).with(resources_collection[0].merge(options)).and_call_original
+        expect(dummy_class).to receive(:new).with(resources_collection[1].merge(options)).and_call_original
         collection.all?
       end
 
@@ -78,24 +78,38 @@ RSpec.describe RemoteResource::Collection do
 
       context 'Enumerable' do
         it 'includes the resources' do
-          expect(collection[0]).to be_a RemoteResource::CollectionDummy
-          expect(collection[1]).to be_a RemoteResource::CollectionDummy
+          aggregate_failures do
+            expect(collection[0]).to be_a RemoteResource::CollectionDummy
+            expect(collection[1]).to be_a RemoteResource::CollectionDummy
+          end
         end
 
         it 'includes the instantiated resources' do
-          expect(collection[0].username).to eql 'mies_1'
-          expect(collection[1].username).to eql 'mies_2'
+          aggregate_failures do
+            expect(collection[0].id).to eql 1
+            expect(collection[0].name).to eql 'mies_1'
+
+            expect(collection[1].id).to eql 2
+            expect(collection[1].name).to eql 'mies_2'
+          end
         end
 
-        it 'includes the responses in the instantiated resources' do
-          expect(collection[0]._response).to eql response
-          expect(collection[1]._response).to eql response
+        it 'includes the last request, last response and meta information in the instantiated resources' do
+          aggregate_failures do
+            expect(collection[0].last_request).to eql request
+            expect(collection[0].last_response).to eql response
+            expect(collection[0].meta).to eql({ 'total' => 10 })
+
+            expect(collection[1].last_request).to eql request
+            expect(collection[1].last_response).to eql response
+            expect(collection[1].meta).to eql({ 'total' => 10 })
+          end
         end
       end
 
       it 'returns the same objects each time' do
         expected = collection.collect(&:object_id)
-        actual = collection.collect(&:object_id)
+        actual   = collection.collect(&:object_id)
 
         aggregate_failures do
           expect(expected.length).to eq(2)
@@ -138,26 +152,79 @@ RSpec.describe RemoteResource::Collection do
   end
 
   describe '#success?' do
-    context 'when response is successful' do
-      before { allow(response).to receive(:success?) { true } }
-
+    context 'when last response is successful' do
       it 'returns true' do
+        collection.last_response = instance_double(RemoteResource::Response, success?: true)
+
         expect(collection.success?).to eql true
       end
     end
 
-    context 'when response is NOT successful' do
-      before { allow(response).to receive(:success?) { false } }
-
+    context 'when last response is NOT successful' do
       it 'returns false' do
+        collection.last_response = instance_double(RemoteResource::Response, success?: false)
+
         expect(collection.success?).to eql false
       end
     end
   end
 
+  describe '#last_request' do
+    context 'when last request is in the options' do
+      it 'returns the last request of the options' do
+        expect(collection.last_request).to eql request
+      end
+    end
+
+    context 'when last request is set' do
+      let(:other_request) { instance_double(RemoteResource::Request) }
+
+      it 'returns the set request' do
+        collection.last_request = other_request
+
+        expect(collection.last_request).to eql other_request
+      end
+    end
+  end
+
+  describe '#last_response' do
+    context 'when last response is in the options' do
+      it 'returns the last response of the options' do
+        expect(collection.last_response).to eql response
+      end
+    end
+
+    context 'when last response is set' do
+      let(:other_response) { instance_double(RemoteResource::Response) }
+
+      it 'returns the set response' do
+        collection.last_response = other_response
+
+        expect(collection.last_response).to eql other_response
+      end
+    end
+  end
+
   describe '#meta' do
-    it 'returns :meta' do
-      expect(collection.meta).to eql(response_meta)
+    context 'when meta information is in the options' do
+      it 'returns the meta information of the options' do
+        expect(collection.meta).to eql({ 'total' => 10 })
+      end
+    end
+
+    context 'when meta is set' do
+      it 'returns the set meta information' do
+        collection.meta = { 'total' => 15 }
+
+        expect(collection.meta).to eql({ 'total' => 15 })
+      end
+    end
+  end
+
+  describe '#_response' do
+    it 'warns that the method is deprecated' do
+      expect(collection).to receive(:warn).with('[DEPRECATION] `._response` is deprecated. Please use `.last_response` instead.')
+      collection._response
     end
   end
 

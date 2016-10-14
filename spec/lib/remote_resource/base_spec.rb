@@ -8,6 +8,8 @@ RSpec.describe RemoteResource::Base do
 
       self.site = 'https://foobar.com'
 
+      attr_accessor :name
+
     end
   end
 
@@ -184,47 +186,42 @@ RSpec.describe RemoteResource::Base do
   end
 
   describe '#success?' do
-    let(:response) { instance_double(RemoteResource::Response) }
+    context 'when last response is successful' do
+      it 'returns true' do
+        dummy.last_response = instance_double(RemoteResource::Response, success?: true)
 
-    before { allow(dummy).to receive(:_response) { response } }
-
-    context 'when response is successful' do
-      before { allow(response).to receive(:success?) { true } }
-
-      context 'and the resource has NO errors present' do
-        it 'returns true' do
-          expect(dummy.success?).to eql true
-        end
-      end
-
-      context 'and the resource has errors present' do
-        it 'returns false' do
-          dummy.errors.add :id, 'must be present'
-
-          expect(dummy.success?).to eql false
-        end
+        expect(dummy.success?).to eql true
       end
     end
 
-    context 'when response is NOT successful' do
-      before { allow(response).to receive(:success?) { false } }
-
+    context 'when last response is successful and (validation) errors are present' do
       it 'returns false' do
+        dummy.last_response = instance_double(RemoteResource::Response, success?: true)
+        dummy.errors.add(:id, 'is invalid')
+
+        expect(dummy.success?).to eql false
+      end
+    end
+
+    context 'when last response is NOT successful' do
+      it 'returns false' do
+        dummy.last_response = instance_double(RemoteResource::Response, success?: false)
+
         expect(dummy.success?).to eql false
       end
     end
   end
 
   describe '#errors?' do
-    context 'when resource has errors present' do
+    context 'when (validation) errors are present' do
       it 'returns true' do
-        dummy.errors.add :id, 'must be present'
+        dummy.errors.add(:id, 'is invalid')
 
         expect(dummy.errors?).to eql true
       end
     end
 
-    context 'when resource has NO errors present' do
+    context 'when (validation) errors are NOT present' do
       it 'returns false' do
         expect(dummy.errors?).to eql false
       end
@@ -232,55 +229,70 @@ RSpec.describe RemoteResource::Base do
   end
 
   describe '#handle_response' do
-    let(:response) { instance_double(RemoteResource::Response) }
-
-    before { allow(dummy).to receive(:rebuild_resource_from_response) { dummy } }
-
     context 'when the response is a unprocessable_entity' do
-      before do
-        allow(response).to receive(:unprocessable_entity?) { true }
+      let(:response) { instance_double(RemoteResource::Response, success?: false, unprocessable_entity?: true, attributes: {}, errors: { 'name' => ['is required'] }, meta: {}, request: instance_double(RemoteResource::Request)) }
 
-        allow(dummy).to receive(:assign_errors_from_response)
+      it 'calls #rebuild_resource_from_response with the response' do
+        expect(dummy).to receive(:rebuild_resource_from_response).with(response).and_call_original
+        dummy.handle_response(response)
       end
 
-      it 'rebuilds the resource from the response' do
-        expect(dummy).to receive(:rebuild_resource_from_response).with response
-        dummy.handle_response response
+      it 'calls #assign_errors_from_response with the response' do
+        expect(dummy).to receive(:assign_errors_from_response).with(response).and_call_original
+        dummy.handle_response(response)
       end
 
-      it 'assigns the errors from the response to the resource' do
-        expect(dummy).to receive(:assign_errors_from_response).with response
-        dummy.handle_response response
+      it 'returns the same resource' do
+        expected_object_id = dummy.object_id
+
+        expect(dummy.handle_response(response).object_id).to eql expected_object_id
       end
     end
 
     context 'when the response is NOT a unprocessable_entity' do
-      before { allow(response).to receive(:unprocessable_entity?) { false } }
+      let(:response) { instance_double(RemoteResource::Response, success?: true, unprocessable_entity?: false, attributes: { 'id' => 12, 'name' => 'Mies' }, errors: {}, meta: {}, request: instance_double(RemoteResource::Request)) }
 
-      it 'rebuilds the resource from the response' do
-        expect(dummy).to receive(:rebuild_resource_from_response).with response
-        dummy.handle_response response
+      it 'calls #rebuild_resource_from_response with the response' do
+        expect(dummy).to receive(:rebuild_resource_from_response).with(response).and_call_original
+        dummy.handle_response(response)
+      end
+
+      it 'does NOT calls #assign_errors_from_response' do
+        expect(dummy).not_to receive(:assign_errors_from_response)
+        dummy.handle_response(response)
+      end
+
+      it 'returns the same resource' do
+        expected_object_id = dummy.object_id
+
+        expect(dummy.handle_response(response).object_id).to eql expected_object_id
       end
     end
   end
 
-  describe '#assign_response' do
-    let(:response) { instance_double(RemoteResource::Response) }
+  describe '#assign_errors_from_response' do
+    let(:response) { instance_double(RemoteResource::Response, success?: false, unprocessable_entity?: true, attributes: {}, errors: { 'name' => ['is required'], 'virtual_attribute' => ['is invalid'] }, meta: {}, request: instance_double(RemoteResource::Request)) }
 
-    it 'assigns the #_response' do
-      expect{ dummy.assign_response response }.to change{ dummy._response }.from(nil).to response
+    it 'calls #assign_errors with the errors of the response' do
+      expect(dummy).to receive(:assign_errors).with(response.errors).and_call_original
+      dummy.assign_errors_from_response(response)
+    end
+
+    it 'assigns the errors of the response' do
+      expect(dummy.errors).to be_blank
+
+      dummy.assign_errors_from_response(response)
+
+      expect(dummy.errors).to be_present
+      expect(dummy.errors[:name]).to match_array ['is required']
+      expect(dummy.errors[:base]).to match_array ['is invalid']
     end
   end
 
-  describe '#assign_errors_from_response' do
-    let(:response)                      { instance_double(RemoteResource::Response) }
-    let(:error_messages_response_body)  { double('error_messages_response_body') }
-
-    it 'calls the #assign_errors method with the #error_messages_response_body of the response' do
-      allow(response).to receive(:error_messages_response_body) { error_messages_response_body }
-
-      expect(dummy).to receive(:assign_errors).with error_messages_response_body
-      dummy.assign_errors_from_response response
+  describe '#_response' do
+    it 'warns that the method is deprecated' do
+      expect(dummy).to receive(:warn).with('[DEPRECATION] `._response` is deprecated. Please use `.last_response` instead.')
+      dummy._response
     end
   end
 

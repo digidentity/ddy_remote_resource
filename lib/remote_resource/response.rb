@@ -1,81 +1,63 @@
 module RemoteResource
   class Response
 
-    attr_reader :original_response, :original_request
-    private :original_response, :original_request
+    def initialize(connection_response, connection_options = {})
+      @connection_response = connection_response
+      @connection_request  = connection_options[:connection_request]
+      @request             = connection_options[:request]
+      @connection_options  = connection_options
+    end
 
-    def initialize(response, connection_options = {})
-      @original_response  = response
-      @original_request   = response.request
-      @connection_options = connection_options
+    def request
+      @request
     end
 
     def success?
-      original_response.success?
+      @connection_response.success?
     end
 
     def unprocessable_entity?
       response_code == 422
     end
 
-    def response_body
-      original_response.body
-    end
-
     def response_code
-      original_response.response_code
+      @response_code ||= @connection_response.response_code
     end
 
-    def response_headers
-      original_response.headers
+    def headers
+      @headers ||= @connection_response.headers
     end
 
-    def sanitized_response_body
-      return empty_hash if response_body.blank?
-      return empty_hash if parsed_response_body.blank?
-
-      unpacked_parsed_response_body
+    def body
+      @body ||= @connection_response.body
     end
 
-    def sanitized_response_meta
-      return empty_hash if response_body.blank?
-      return empty_hash if parsed_response_body.blank?
-
-      return parsed_response_body['meta'] if parsed_response_body.try :has_key?, 'meta'
-
-      empty_hash
-    end
-
-    def error_messages_response_body
-      return empty_hash if response_body.blank?
-      return empty_hash if parsed_response_body.blank?
-
-      return parsed_response_body["errors"]          if parsed_response_body.try :has_key?, "errors"
-      return unpacked_parsed_response_body["errors"] if unpacked_parsed_response_body.try :has_key?, "errors"
-
-      empty_hash
-    end
-
-    def parsed_response_body
-      @parsed_response_body ||= JSON.parse response_body
-    rescue JSON::ParserError
-      nil
-    end
-
-    private
-
-    def empty_hash
-      {}
-    end
-
-    def unpacked_parsed_response_body
-      root_element = @connection_options[:root_element].presence
-
-      if root_element
-        parsed_response_body[root_element.to_s]
-      else
-        parsed_response_body
+    def parsed_body
+      @parsed_body ||= begin
+        JSON.parse(body.to_s)
+      rescue JSON::ParserError
+        {}
       end
+    end
+
+    def attributes
+      @attributes ||= begin
+        root_element = @connection_options[:root_element]
+
+        if root_element.present?
+          parsed_body[root_element.to_s]
+        else
+          parsed_body
+        end.presence || {}
+      end
+    end
+
+    def errors
+      @errors ||= parsed_body['errors'].presence || attributes['errors'].presence || {}
+    end
+
+    def meta
+      @meta ||= parsed_body['meta'].presence || {}
     end
 
   end

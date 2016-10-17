@@ -97,7 +97,7 @@ Post.find(12, connection_options)
 
 Post.all(connection_options)
 
-Post.create({ title: Our awesome post', featured: true }, connection_options)
+Post.create({ title:'Our awesome post', featured: true }, connection_options)
 
 post          = Post.new(id: 12)
 post.title    = 'Our awesome post'
@@ -110,7 +110,7 @@ post.save(connection_options)
 You can make custom requests by using the REST methods directly. The following REST methods are defined: the `.get`, `.put`, `.patch` and `.post` class methods or the `#get`, `#put`, `#patch` and `#post` instance methods.
 
 ```ruby
-Post.post(title: Our awesome post', featured: true) #=> RemoteResource::Response
+Post.post(title: 'Our awesome post', featured: true) #=> RemoteResource::Response
 ```
 
 ### Connection options

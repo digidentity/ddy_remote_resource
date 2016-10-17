@@ -45,7 +45,7 @@ module RemoteResource
         root_element = @connection_options[:root_element]
 
         if root_element.present?
-          parsed_body[root_element.to_s]
+          parsed_body.try(:key?, root_element.to_s) && parsed_body[root_element.to_s]
         else
           parsed_body
         end.presence || {}
@@ -53,11 +53,11 @@ module RemoteResource
     end
 
     def errors
-      @errors ||= parsed_body['errors'].presence || attributes['errors'].presence || {}
+      @errors ||= parsed_body.try(:key?, 'errors') && parsed_body['errors'].presence || attributes.try(:key?, 'errors') && attributes['errors'].presence || {}
     end
 
     def meta
-      @meta ||= parsed_body['meta'].presence || {}
+      @meta ||= parsed_body.try(:key?, 'meta') && parsed_body['meta'].presence || {}
     end
 
   end

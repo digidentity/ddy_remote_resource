@@ -130,6 +130,17 @@ RSpec.describe RemoteResource::Response do
       end
     end
 
+    context 'when connection_options[:root_element] is present and the parsed response body has NO keys' do
+      let(:connection_options) do
+        { root_element: :data, collection: true }
+      end
+      let(:connection_response) { Typhoeus::Response.new(mock: true, code: 200, body: [{ id: 12, name: 'Mies' }].to_json, headers: { 'Content-Type' => 'application/json', 'Server' => 'nginx/1.4.6 (Ubuntu)' }) }
+
+      it 'returns an empty Hash' do
+        expect(response.attributes).to eql({})
+      end
+    end
+
     context 'when the parsed response body is NOT present' do
       let(:connection_response) { Typhoeus::Response.new(mock: true, code: 500, body: '', headers: { 'Content-Type' => 'application/json', 'Server' => 'nginx/1.4.6 (Ubuntu)' }) }
 
@@ -164,6 +175,25 @@ RSpec.describe RemoteResource::Response do
         expect(response.errors).to eql({})
       end
     end
+
+    context 'when the parsed response body does NOT contain keys' do
+      let(:connection_response) { Typhoeus::Response.new(mock: true, code: 200, body: [{ id: 12, name: 'Mies' }].to_json, headers: { 'Content-Type' => 'application/json', 'Server' => 'nginx/1.4.6 (Ubuntu)' }) }
+
+      it 'returns an empty Hash' do
+        expect(response.errors).to eql({})
+      end
+    end
+
+    context 'when the attributes do NOT contain keys, e.g. when connection_options[:root_element] is present' do
+      let(:connection_options) do
+        { root_element: :data, collection: true }
+      end
+      let(:connection_response) { Typhoeus::Response.new(mock: true, code: 200, body: { data: [{ id: 12, name: 'Mies' }] }.to_json, headers: { 'Content-Type' => 'application/json', 'Server' => 'nginx/1.4.6 (Ubuntu)' }) }
+
+      it 'returns an empty Hash' do
+        expect(response.errors).to eql({})
+      end
+    end
   end
 
   describe '#meta' do
@@ -179,6 +209,14 @@ RSpec.describe RemoteResource::Response do
     end
 
     context 'when the parsed response body does NOT contain "meta"' do
+      it 'returns an empty Hash' do
+        expect(response.meta).to eql({})
+      end
+    end
+
+    context 'when the parsed response body does NOT contain keys' do
+      let(:connection_response) { Typhoeus::Response.new(mock: true, code: 200, body: [{ id: 12, name: 'Mies' }].to_json, headers: { 'Content-Type' => 'application/json', 'Server' => 'nginx/1.4.6 (Ubuntu)' }) }
+
       it 'returns an empty Hash' do
         expect(response.meta).to eql({})
       end

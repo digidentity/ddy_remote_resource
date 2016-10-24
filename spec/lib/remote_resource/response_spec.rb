@@ -1,247 +1,224 @@
 require 'spec_helper'
 
-describe RemoteResource::Response do
+RSpec.describe RemoteResource::Response do
 
-  describe '#original_response' do
-    it 'is private' do
-      expect(described_class.private_method_defined?(:original_response)).to be_truthy
+  module RemoteResource
+    class ResponseDummy
+      include RemoteResource::Base
+
+      self.site = 'http://www.foobar.com'
+
+      attr_accessor :name
+
     end
   end
 
-  describe '#original_request' do
-    it 'is private' do
-      expect(described_class.private_method_defined?(:original_request)).to be_truthy
+  let(:dummy_class) { RemoteResource::ResponseDummy }
+  let(:dummy)       { dummy_class.new(id: '12') }
+
+  let(:connection_options) do
+    { collection: true }
+  end
+  let(:request)             { RemoteResource::Request.new(dummy_class, :post, { name: 'Mies' }, connection_options) }
+  let(:connection_response) { Typhoeus::Response.new(mock: true, code: 201, body: { id: 12, name: 'Mies' }.to_json, headers: { 'Content-Type' => 'application/json', 'Server' => 'nginx/1.4.6 (Ubuntu)' }) }
+  let(:connection_request)  { Typhoeus::Request.new('http://www.foobar.com/response_dummies.json', method: :post, body: { name: 'Mies' }.to_json, headers: { 'Content-Type' => 'application/json' }) }
+
+  let(:response) { described_class.new(connection_response, connection_options.merge(request: request, connection_request: connection_request)) }
+
+  describe '#request' do
+    it 'returns the RemoteResource::Request' do
+      aggregate_failures do
+        expect(response.request).to be_a RemoteResource::Request
+        expect(response.request).to eql request
+      end
     end
   end
 
-  describe 'Typhoeus::Response' do
-    let(:typhoeus_options)  { { body: 'typhoeus_response_body', code: 200 } }
-    let(:typhoeus_response) { Typhoeus::Response.new typhoeus_options }
-    let(:response)          { described_class.new typhoeus_response }
-
-    describe '#success?' do
-      it 'calls the Typhoeus::Response#success?' do
-        expect(typhoeus_response).to receive(:success?)
-        response.success?
+  describe '#success?' do
+    context 'when the response is successful' do
+      it 'returns true' do
+        expect(response.success?).to eql true
       end
     end
 
-    describe '#response_body' do
-      it 'returns the response body of the original response' do
-        expect(response.response_body).to eql 'typhoeus_response_body'
-      end
-    end
+    context 'when the response is NOT successful' do
+      let(:connection_response) { Typhoeus::Response.new(mock: true, code: 422, body: { errors: { name: ['is invalid'] } }.to_json, headers: { 'Content-Type' => 'application/json', 'Server' => 'nginx/1.4.6 (Ubuntu)' }) }
 
-    describe '#response_code' do
-      it 'returns the response code of the original response' do
-        expect(response.response_code).to eql 200
+      it 'returns false' do
+        expect(response.success?).to eql false
       end
     end
   end
 
   describe '#unprocessable_entity?' do
-    let(:response) { described_class.new double.as_null_object }
-
     context 'when the response code is 422' do
-      it 'returns true' do
-        allow(response).to receive(:response_code) { 422 }
+      let(:connection_response) { Typhoeus::Response.new(mock: true, code: 422, body: { errors: { name: ['is invalid'] } }.to_json, headers: { 'Content-Type' => 'application/json', 'Server' => 'nginx/1.4.6 (Ubuntu)' }) }
 
-        expect(response.unprocessable_entity?).to be_truthy
+      it 'returns true' do
+        expect(response.unprocessable_entity?).to eql true
       end
     end
 
     context 'when the response code is NOT 422' do
       it 'returns false' do
-        allow(response).to receive(:response_code) { 200 }
-
-        expect(response.unprocessable_entity?).to be_falsey
+        expect(response.unprocessable_entity?).to eql false
       end
     end
   end
 
-  describe '#sanitized_response_body' do
-    let(:response) { described_class.new double.as_null_object }
+  describe '#response_code' do
+    it 'returns the response code' do
+      expect(response.response_code).to eql 201
+    end
+  end
 
-    before { allow(response).to receive(:response_body) { response_body } }
+  describe '#headers' do
+    it 'returns the response headers' do
+      expect(response.headers).to eql({ 'Content-Type' => 'application/json', 'Server' => 'nginx/1.4.6 (Ubuntu)' })
+    end
+  end
 
-    context 'when response_body is nil' do
-      let(:response_body) { nil }
+  describe '#body' do
+    it 'returns the response body' do
+      expect(response.body).to eql '{"id":12,"name":"Mies"}'
+    end
+  end
+
+  describe '#parsed_body' do
+    it 'returns the parsed JSON of the response body' do
+      expect(response.parsed_body).to eql({ 'id' => 12, 'name' => 'Mies' })
+    end
+
+    context 'when the response body is nil' do
+      let(:connection_response) { Typhoeus::Response.new(mock: true, code: 500, body: nil, headers: { 'Content-Type' => 'application/json', 'Server' => 'nginx/1.4.6 (Ubuntu)' }) }
 
       it 'returns an empty Hash' do
-        expect(response.sanitized_response_body).to eql({})
+        expect(response.parsed_body).to eql({})
       end
     end
 
-    context 'when response_body is empty' do
-      let(:response_body) { '' }
+    context 'when the response body is empty' do
+      let(:connection_response) { Typhoeus::Response.new(mock: true, code: 500, body: '', headers: { 'Content-Type' => 'application/json', 'Server' => 'nginx/1.4.6 (Ubuntu)' }) }
 
       it 'returns an empty Hash' do
-        expect(response.sanitized_response_body).to eql({})
+        expect(response.parsed_body).to eql({})
       end
     end
 
-    context 'when response_body is NOT parseable' do
-      let(:response_body) { 'foo' }
-
-      before { allow(JSON).to receive(:parse).and_raise JSON::ParserError }
+    context 'when the response body is NOT JSON' do
+      let(:connection_response) { Typhoeus::Response.new(mock: true, code: 500, body: 'foo', headers: { 'Content-Type' => 'application/json', 'Server' => 'nginx/1.4.6 (Ubuntu)' }) }
 
       it 'returns an empty Hash' do
-        expect(response.sanitized_response_body).to eql({})
-      end
-    end
-
-    context 'when response_body is parseable' do
-      context 'and the connection_options contain a root_element' do
-        let(:connection_options) { { root_element: :foobar } }
-        let(:response)           { described_class.new double.as_null_object, connection_options }
-
-        let(:response_body)      { '{"foobar":{"id":"12"}}' }
-
-        it 'returns the parsed response_body unpacked from the root_element' do
-          expect(response.sanitized_response_body).to match({ "id" => "12" })
-        end
-      end
-
-      context 'and the connection_options do NOT contain a root_element' do
-        let(:response_body) { '{"id":"12"}' }
-
-        it 'returns the parsed response_body' do
-          expect(response.sanitized_response_body).to match({ "id" => "12" })
-        end
+        expect(response.parsed_body).to eql({})
       end
     end
   end
 
-  describe '#sanitized_response_meta' do
-    let(:response) { described_class.new double.as_null_object }
+  describe '#attributes' do
+    it 'returns the attributes from the parsed response body' do
+      expect(response.attributes).to eql({ 'id' => 12, 'name' => 'Mies' })
+    end
 
-    before { allow(response).to receive(:response_body) { response_body } }
+    context 'when connection_options[:root_element] is present' do
+      let(:connection_options) do
+        { root_element: :data, collection: true }
+      end
+      let(:connection_response) { Typhoeus::Response.new(mock: true, code: 201, body: { data: { id: 12, name: 'Mies' } }.to_json, headers: { 'Content-Type' => 'application/json', 'Server' => 'nginx/1.4.6 (Ubuntu)' }) }
 
-    context 'when response_body is nil' do
-      let(:response_body) { nil }
-
-      it 'returns an empty Hash' do
-        expect(response.sanitized_response_meta).to eql({})
+      it 'returns the attributes wrapped in the connection_options[:root_element] from the parsed response body' do
+        expect(response.attributes).to eql({ 'id' => 12, 'name' => 'Mies' })
       end
     end
 
-    context 'when response_body is empty' do
-      let(:response_body) { '' }
+    context 'when connection_options[:root_element] is present and the parsed response body has NO keys' do
+      let(:connection_options) do
+        { root_element: :data, collection: true }
+      end
+      let(:connection_response) { Typhoeus::Response.new(mock: true, code: 200, body: [{ id: 12, name: 'Mies' }].to_json, headers: { 'Content-Type' => 'application/json', 'Server' => 'nginx/1.4.6 (Ubuntu)' }) }
 
       it 'returns an empty Hash' do
-        expect(response.sanitized_response_meta).to eql({})
+        expect(response.attributes).to eql({})
       end
     end
 
-    context 'when response_body is NOT parseable' do
-      let(:response_body) { 'foo' }
-
-      before { allow(JSON).to receive(:parse).and_raise JSON::ParserError }
+    context 'when the parsed response body is NOT present' do
+      let(:connection_response) { Typhoeus::Response.new(mock: true, code: 500, body: '', headers: { 'Content-Type' => 'application/json', 'Server' => 'nginx/1.4.6 (Ubuntu)' }) }
 
       it 'returns an empty Hash' do
-        expect(response.sanitized_response_meta).to eql({})
-      end
-    end
-
-    context 'when response_body is parseable' do
-      context 'and the connection_options contain a root_element' do
-        let(:connection_options) { { root_element: :foobar } }
-        let(:response)           { described_class.new double.as_null_object, connection_options }
-
-        let(:response_body)      { '{"foobar":{"id":"12"},"meta":{"total":"1"}}' }
-
-        it 'returns the parsed meta from root' do
-          expect(response.sanitized_response_meta).to match({ 'total' => '1' })
-        end
-      end
-
-      context 'and the connection_options do NOT contain a root_element' do
-        let(:response_body) { '{"id":"12","meta":{"total":"1"}}' }
-
-        it 'returns the parsed meta from root' do
-          expect(response.sanitized_response_meta).to match({ 'total' => '1' })
-        end
+        expect(response.attributes).to eql({})
       end
     end
   end
 
-  describe '#error_messages_response_body' do
-    let(:response) { described_class.new double.as_null_object }
+  describe '#errors' do
+    context 'when the parsed response body contains "errors"' do
+      let(:connection_response) { Typhoeus::Response.new(mock: true, code: 422, body: { errors: { name: ['is invalid'] } }.to_json, headers: { 'Content-Type' => 'application/json', 'Server' => 'nginx/1.4.6 (Ubuntu)' }) }
 
-    before { allow(response).to receive(:response_body) { response_body } }
-
-    context 'when response_body is nil' do
-      let(:response_body) { nil }
-
-      it 'returns an empty Hash' do
-        expect(response.error_messages_response_body).to eql({})
+      it 'returns the errors from the parsed response body' do
+        expect(response.errors).to eql({ 'name' => ['is invalid'] })
       end
     end
 
-    context 'when response_body is empty' do
-      let(:response_body) { '' }
+    context 'when the attributes contains "errors", e.g. when connection_options[:root_element] is present' do
+      let(:connection_options) do
+        { root_element: :data, collection: true }
+      end
+      let(:connection_response) { Typhoeus::Response.new(mock: true, code: 422, body: { data: { errors: { name: ['is invalid'] } } }.to_json, headers: { 'Content-Type' => 'application/json', 'Server' => 'nginx/1.4.6 (Ubuntu)' }) }
 
-      it 'returns an empty Hash' do
-        expect(response.error_messages_response_body).to eql({})
+      it 'returns the errors from the attributes' do
+        expect(response.errors).to eql({ 'name' => ['is invalid'] })
       end
     end
 
-    context 'when response_body is NOT parseable' do
-      let(:response_body) { 'foo' }
-
-      before { allow(JSON).to receive(:parse).and_raise JSON::ParserError }
-
+    context 'when the "errors" are NOT present' do
       it 'returns an empty Hash' do
-        expect(response.error_messages_response_body).to eql({})
+        expect(response.errors).to eql({})
       end
     end
 
-    context 'when response_body is parseable' do
-      context 'and the connection_options contain a root_element' do
-        let(:connection_options) { { root_element: :foobar } }
-        let(:response)           { described_class.new double.as_null_object, connection_options }
+    context 'when the parsed response body does NOT contain keys' do
+      let(:connection_response) { Typhoeus::Response.new(mock: true, code: 200, body: [{ id: 12, name: 'Mies' }].to_json, headers: { 'Content-Type' => 'application/json', 'Server' => 'nginx/1.4.6 (Ubuntu)' }) }
 
-        context 'and the response_body contains an error key' do
-          let(:response_body) { '{"errors":{"foo":["is required"]}}' }
-
-          it 'returns the error_messages in the parsed response_body' do
-            expect(response.error_messages_response_body).to eql({ "foo"=>["is required"] })
-          end
-        end
-
-        context 'and the response_body contains an error key packed in the root_element' do
-          let(:response_body) { '{"foobar":{"errors":{"foo":["is required"]}}}' }
-
-          it 'returns the error_messages in the parsed response_body unpacked from the root_element' do
-            expect(response.error_messages_response_body).to eql({ "foo"=>["is required"] })
-          end
-        end
-
-        context 'and the response_body does NOT contain an error key' do
-          let(:response_body) { '{"id":"12"}' }
-
-          it 'returns an empty Hash' do
-            expect(response.error_messages_response_body).to eql({})
-          end
-        end
+      it 'returns an empty Hash' do
+        expect(response.errors).to eql({})
       end
+    end
 
-      context 'and the connection_options do NOT contain a root_element' do
-        context 'and the response_body contains an error key' do
-          let(:response_body) { '{"errors":{"foo":["is required"]}}' }
+    context 'when the attributes do NOT contain keys, e.g. when connection_options[:root_element] is present' do
+      let(:connection_options) do
+        { root_element: :data, collection: true }
+      end
+      let(:connection_response) { Typhoeus::Response.new(mock: true, code: 200, body: { data: [{ id: 12, name: 'Mies' }] }.to_json, headers: { 'Content-Type' => 'application/json', 'Server' => 'nginx/1.4.6 (Ubuntu)' }) }
 
-          it 'returns the error_messages in the parsed response_body' do
-            expect(response.error_messages_response_body).to eql({ "foo"=>["is required"] })
-          end
-        end
+      it 'returns an empty Hash' do
+        expect(response.errors).to eql({})
+      end
+    end
+  end
 
-        context 'and the response_body does NOT contain an error key' do
-          let(:response_body) { '{"id":"12"}' }
+  describe '#meta' do
+    context 'when the parsed response body contains "meta"' do
+      let(:connection_options) do
+        { root_element: :data, collection: true }
+      end
+      let(:connection_response) { Typhoeus::Response.new(mock: true, code: 201, body: { data: { id: 12, name: 'Mies' }, meta: { total: 10 } }.to_json, headers: { 'Content-Type' => 'application/json', 'Server' => 'nginx/1.4.6 (Ubuntu)' }) }
 
-          it 'returns an empty Hash' do
-            expect(response.error_messages_response_body).to eql({})
-          end
-        end
+      it 'returns the meta information from the parsed response body' do
+        expect(response.meta).to eql({ 'total' => 10 })
+      end
+    end
+
+    context 'when the parsed response body does NOT contain "meta"' do
+      it 'returns an empty Hash' do
+        expect(response.meta).to eql({})
+      end
+    end
+
+    context 'when the parsed response body does NOT contain keys' do
+      let(:connection_response) { Typhoeus::Response.new(mock: true, code: 200, body: [{ id: 12, name: 'Mies' }].to_json, headers: { 'Content-Type' => 'application/json', 'Server' => 'nginx/1.4.6 (Ubuntu)' }) }
+
+      it 'returns an empty Hash' do
+        expect(response.meta).to eql({})
       end
     end
   end

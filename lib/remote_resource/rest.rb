@@ -1,28 +1,24 @@
 module RemoteResource
   module REST
-    extend ActiveSupport::Concern
 
-    ACTIONS = [:get, :put, :patch, :post, :delete]
-
-    module ClassMethods
-
-      RemoteResource::REST::ACTIONS.each do |action|
-        define_method action do |*args|
-          attributes         = args[0] || {}
-          connection_options = args[1] || {}
-
-          RemoteResource::Request.new(self, action, attributes, connection_options).perform
-        end
-      end
+    def get(attributes = {}, connection_options = {})
+      RemoteResource::Request.new(self, __method__, attributes, connection_options).perform
     end
 
-    RemoteResource::REST::ACTIONS.each do |action|
-      define_method action do |*args|
-        attributes         = args[0] || {}
-        connection_options = args[1] || {}
+    def put(attributes = {}, connection_options = {})
+      RemoteResource::Request.new(self, __method__, attributes, connection_options).perform
+    end
 
-        RemoteResource::Request.new(self, action, attributes, connection_options).perform
-      end
+    def patch(attributes = {}, connection_options = {})
+      RemoteResource::Request.new(self, __method__, attributes, connection_options).perform
+    end
+
+    def post(attributes = {}, connection_options = {})
+      RemoteResource::Request.new(self, __method__, attributes, connection_options).perform
+    end
+
+    def delete(attributes = {}, connection_options = {})
+      RemoteResource::Request.new(self, __method__, attributes, connection_options).perform
     end
 
   end

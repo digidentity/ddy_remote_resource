@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe RemoteResource::Builder do
+RSpec.describe RemoteResource::Builder do
 
   module RemoteResource
     class BuilderDummy
@@ -8,7 +8,7 @@ describe RemoteResource::Builder do
 
       self.site = 'https://foobar.com'
 
-      attr_accessor :username
+      attr_accessor :name
 
     end
   end
@@ -16,245 +16,241 @@ describe RemoteResource::Builder do
   let(:dummy_class) { RemoteResource::BuilderDummy }
   let(:dummy)       { dummy_class.new }
 
+  let(:request) { instance_double(RemoteResource::Request) }
+  let(:response) { instance_double(RemoteResource::Response, request: request, attributes: {}, meta: { 'total' => 10 }) }
+
   describe '.build_resource_from_response' do
-    let(:response)                { RemoteResource::Response.new double.as_null_object }
-    let(:sanitized_response_body) do
-      { "id" => "12", "username" => "foobar" }
-    end
-    let(:sanitized_response_meta) do
-      { 'total' => '1'}
+    let(:response) { instance_double(RemoteResource::Response, request: request, attributes: { 'id' => 12, 'name' => 'Mies' }, meta: { 'total' => 10 }) }
+
+    it 'returns the instantiated resource from the response' do
+      result = dummy_class.build_resource_from_response(response)
+
+      aggregate_failures do
+        expect(result).to be_a dummy_class
+        expect(result.id).to eql 12
+        expect(result.name).to eql 'Mies'
+      end
     end
 
-    before do
-      allow(response).to receive(:sanitized_response_body) { sanitized_response_body }
-      allow(response).to receive(:sanitized_response_meta) { sanitized_response_meta }
-    end
+    it 'includes the last request, last response and meta information in the instantiated resource' do
+      result = dummy_class.build_resource_from_response(response)
 
-    it 'calls the .build_resource' do
-      expect(dummy_class).to receive(:build_resource).with sanitized_response_body, { _response: an_instance_of(RemoteResource::Response), meta: sanitized_response_meta }
-      dummy_class.build_resource_from_response response
+      aggregate_failures do
+        expect(result.last_request).to eql request
+        expect(result.last_response).to eql response
+        expect(result.meta).to eql({ 'total' => 10 })
+      end
     end
   end
 
   describe '.build_resource' do
-    let(:response)      { RemoteResource::Response.new double.as_null_object }
-    let(:response_hash) { dummy_class.send :response_hash, response }
+    let(:collection) do
+      { 'id' => 12, 'name' => 'Mies' }
+    end
 
-    context 'when collection is a Hash' do
-      let(:collection) do
-        { "id" => "12", "username" => "foobar" }
-      end
+    it 'instantiates the resource from the given collection and options' do
+      expect(dummy_class).to receive(:new).with(collection.merge({ meta: 'meta' })).and_call_original
+      dummy_class.build_resource(collection, { meta: 'meta' })
+    end
 
-      context 'and response_hash is given' do
-        it 'instantiates the resource with the collection AND response_hash' do
-          expect(dummy_class).to receive(:new).with(collection.merge(response_hash)).and_call_original
-          dummy_class.build_resource collection, response_hash
-        end
+    it 'returns the instantiated resource' do
+      result = dummy_class.build_resource(collection)
 
-        it 'returns the resource' do
-          expect(dummy_class.build_resource collection, response_hash).to be_a dummy_class
-        end
-      end
-
-      context 'and NO response_hash is given' do
-        it 'instantiates the resource with the collection' do
-          expect(dummy_class).to receive(:new).with(collection).and_call_original
-          dummy_class.build_resource collection
-        end
-
-        it 'returns the resource' do
-          expect(dummy_class.build_resource collection).to be_a dummy_class
-        end
+      aggregate_failures do
+        expect(result).to be_a dummy_class
+        expect(result.id).to eql 12
+        expect(result.name).to eql 'Mies'
       end
     end
 
-    context 'when collection is NOT a Hash' do
-      let(:collection) { [] }
-
+    context 'when the given collection is NOT a Hash' do
       it 'returns nil' do
-        expect(dummy_class.build_resource collection, response_hash).to be_nil
+        aggregate_failures do
+          expect(dummy_class.build_resource(nil)).to be_nil
+          expect(dummy_class.build_resource([])).to be_nil
+          expect(dummy_class.build_resource('')).to be_nil
+        end
       end
     end
   end
 
   describe '.build_collection_from_response' do
-    let(:response)                { RemoteResource::Response.new double.as_null_object }
-    let(:sanitized_response_body) do
+    let(:attributes) do
       [
-        { "id" => "10", "username" => "foobar" },
-        { "id" => "11", "username" => "bazbar" },
-        { "id" => "12", "username" => "aapmies" }
+        { 'id' => 10, 'name' => 'Mies' },
+        { 'id' => 11, 'name' => 'Aap' },
+        { 'id' => 12, 'name' => 'Noot' }
       ]
     end
-    let(:sanitized_response_meta) do
-      { 'total' => '3'}
+    let(:response) { instance_double(RemoteResource::Response, request: request, attributes: attributes, meta: { 'total' => 10 }) }
+
+    it 'returns the collection of instantiated resources from the response' do
+      result = dummy_class.build_collection_from_response(response)
+
+      aggregate_failures do
+        expect(result).to be_a RemoteResource::Collection
+        expect(result[0]).to be_a dummy_class
+        expect(result[0].id).to eql 10
+        expect(result[0].name).to eql 'Mies'
+        expect(result[1]).to be_a dummy_class
+        expect(result[1].id).to eql 11
+        expect(result[1].name).to eql 'Aap'
+        expect(result[2]).to be_a dummy_class
+        expect(result[2].id).to eql 12
+        expect(result[2].name).to eql 'Noot'
+      end
     end
 
-    before do
-      allow(response).to receive(:sanitized_response_body) { sanitized_response_body }
-      allow(response).to receive(:sanitized_response_meta) { sanitized_response_meta }
-    end
+    it 'includes the last request, last response and meta information in the collection of instantiated resources' do
+      result = dummy_class.build_collection_from_response(response)
 
-    it 'calls the .build_collection' do
-      expect(dummy_class).to receive(:build_collection).with sanitized_response_body, { _response: an_instance_of(RemoteResource::Response), meta: sanitized_response_meta }
-      dummy_class.build_collection_from_response response
+      aggregate_failures do
+        expect(result.last_request).to eql request
+        expect(result.last_response).to eql response
+        expect(result.meta).to eql({ 'total' => 10 })
+      end
     end
   end
 
   describe '.build_collection' do
-    let(:response)      { RemoteResource::Response.new double.as_null_object }
-    let(:response_hash) { dummy_class.send :response_hash, response }
+    let(:collection) do
+      [
+        { 'id' => 10, 'name' => 'Mies' },
+        { 'id' => 11, 'name' => 'Aap' },
+        { 'id' => 12, 'name' => 'Noot' }
+      ]
+    end
 
-    context 'when collection is an Array' do
-      let(:collection) do
-        [
-          { "id" => "10", "username" => "foobar" },
-          { "id" => "11", "username" => "bazbar" },
-          { "id" => "12", "username" => "aapmies" }
-        ]
-      end
+    it 'instantiates collection of resources from the given collection and options' do
+      expect(RemoteResource::Collection).to receive(:new).with(dummy_class, collection, { meta: 'meta' }).and_call_original
+      dummy_class.build_collection(collection, { meta: 'meta' })
+    end
 
-      context 'and response_hash is given' do
-        it 'instantiates a RemoteResource::Collection with the class, collection AND response_hash' do
-          expect(RemoteResource::Collection).to receive(:new).with(dummy_class, collection, response_hash).and_call_original
-          dummy_class.build_collection collection, response_hash
-        end
+    it 'returns the collection of instantiated resources' do
+      result = dummy_class.build_collection(collection)
 
-        it 'returns the resources' do
-          resources = dummy_class.build_collection collection, response_hash
-          resources.each { |resource| expect(resource).to be_a dummy_class }
-        end
-      end
-
-      context 'and NO response_hash is given' do
-        it 'instantiates a RemoteResource::Collection with the class and collection' do
-          expect(RemoteResource::Collection).to receive(:new).with(dummy_class, collection, {}).and_call_original
-          dummy_class.build_collection collection
-        end
-
-        it 'returns the resources' do
-          resources = dummy_class.build_collection collection
-          resources.each { |resource| expect(resource).to be_a dummy_class }
-        end
+      aggregate_failures do
+        expect(result).to be_a RemoteResource::Collection
+        expect(result[0]).to be_a dummy_class
+        expect(result[0].id).to eql 10
+        expect(result[0].name).to eql 'Mies'
+        expect(result[1]).to be_a dummy_class
+        expect(result[1].id).to eql 11
+        expect(result[1].name).to eql 'Aap'
+        expect(result[2]).to be_a dummy_class
+        expect(result[2].id).to eql 12
+        expect(result[2].name).to eql 'Noot'
       end
     end
 
-    context 'when collection is NOT an Array' do
-      let(:collection) { {} }
-
+    context 'when the given collection is NOT an Array' do
       it 'returns nil' do
-        expect(dummy_class.build_collection collection, response_hash).to be_nil
+        aggregate_failures do
+          expect(dummy_class.build_collection(nil)).to be_nil
+          expect(dummy_class.build_collection({})).to be_nil
+          expect(dummy_class.build_collection('')).to be_nil
+        end
       end
     end
   end
 
   describe '#rebuild_resource_from_response' do
-    let(:response)                { RemoteResource::Response.new double.as_null_object }
-    let(:sanitized_response_body) do
-      { "id" => "12", "username" => "foobar" }
-    end
-    let(:sanitized_response_meta) do
-      { 'total' => '1'}
+    let(:response) { instance_double(RemoteResource::Response, request: request, attributes: { 'name' => 'Mies' }, meta: { 'total' => 10 }) }
+
+    before { dummy.id = 12 }
+
+    it 'returns the same resource' do
+      expected_object_id = dummy.object_id
+
+      result = dummy.rebuild_resource_from_response(response)
+
+      expect(result.object_id).to eql expected_object_id
     end
 
-    before do
-      allow(response).to receive(:sanitized_response_body) { sanitized_response_body }
-      allow(response).to receive(:sanitized_response_meta) { sanitized_response_meta }
+    it 'updates the resource from the response' do
+      aggregate_failures do
+        expect(dummy.id).to eql 12
+        expect(dummy.name).to be_blank
+      end
+
+      dummy.rebuild_resource_from_response(response)
+
+      aggregate_failures do
+        expect(dummy.id).to eql 12
+        expect(dummy.name).to eql 'Mies'
+      end
     end
 
-    it 'calls the #rebuild_resource' do
-      expect(dummy).to receive(:rebuild_resource).with sanitized_response_body, { _response: an_instance_of(RemoteResource::Response), meta: sanitized_response_meta }
-      dummy.rebuild_resource_from_response response
+    it 'includes the last request, last response and meta information in the resource' do
+      aggregate_failures do
+        expect(dummy.last_request).to be_blank
+        expect(dummy.last_response).to be_blank
+        expect(dummy.meta).to be_blank
+      end
+
+      dummy.rebuild_resource_from_response(response)
+
+      aggregate_failures do
+        expect(dummy.last_request).to eql request
+        expect(dummy.last_response).to eql response
+        expect(dummy.meta).to eql({ 'total' => 10 })
+      end
     end
   end
 
   describe '#rebuild_resource' do
-    let(:response)      { RemoteResource::Response.new double.as_null_object }
-    let(:response_hash) { dummy.send :response_hash, response }
-
-    before do
-      dummy.id       = nil
-      dummy.username = "foo"
+    let(:collection) do
+      { 'name' => 'Mies' }
     end
 
-    context 'when the collection is a Hash' do
-      let(:collection) do
-        { "id" => "12", "username" => "foobar" }
+    before { dummy.id = 12 }
+
+    it 'returns the same resource' do
+      expected_object_id = dummy.object_id
+
+      result = dummy.rebuild_resource(collection)
+
+      expect(result.object_id).to eql expected_object_id
+    end
+
+    it 'updates the resource, using mass-assignment, from the given collection and options' do
+      expect(dummy).to receive(:attributes=).with(collection.merge({ meta: 'meta' })).and_call_original
+      dummy.rebuild_resource(collection, { meta: 'meta' })
+    end
+
+    it 'updates the resource' do
+      aggregate_failures do
+        expect(dummy.id).to eql 12
+        expect(dummy.name).to be_blank
       end
 
-      context 'and response_hash is given' do
-        it 'mass-assigns the attributes of the resource with the collection AND with response_hash' do
-          expect(dummy.id).to be_nil
-          expect(dummy.username).to eql 'foo'
-          expect(dummy._response).to be_nil
+      dummy.rebuild_resource(collection)
 
-          dummy.rebuild_resource collection, response_hash
-
-          expect(dummy.id).to eql '12'
-          expect(dummy.username).to eql 'foobar'
-          expect(dummy._response).to be_a RemoteResource::Response
-        end
-
-        it 'returns the resource' do
-          expect(dummy.rebuild_resource collection, response_hash).to be_a dummy_class
-        end
+      aggregate_failures do
+        expect(dummy.id).to eql 12
+        expect(dummy.name).to eql 'Mies'
       end
+    end
 
-      context 'and NO response_hash is given' do
-        it 'mass-assigns the attributes of the resource with the collection' do
-          expect(dummy.id).to be_nil
-          expect(dummy.username).to eql 'foo'
-          expect(dummy._response).to be_nil
-
-          dummy.rebuild_resource collection
-
-          expect(dummy.id).to eql '12'
-          expect(dummy.username).to eql 'foobar'
-          expect(dummy._response).to be_nil
-        end
-
-        it 'returns the resource' do
-          expect(dummy.rebuild_resource collection).to be_a dummy_class
+    context 'when the given collection is NOT a Hash' do
+      it 'does NOT update the resource' do
+        aggregate_failures do
+          expect { dummy.rebuild_resource(nil) }.not_to change { dummy.attributes }.from({ id: 12 })
+          expect { dummy.rebuild_resource([]) }.not_to change { dummy.attributes }.from({ id: 12 })
+          expect { dummy.rebuild_resource('') }.not_to change { dummy.attributes }.from({ id: 12 })
         end
       end
     end
 
-    context 'when the collection is something else' do
-      let(:collection)  { 'foobar' }
-
-      context 'and response_hash is given' do
-        it 'assigns the response_hash of the resource' do
-          expect(dummy.id).to be_nil
-          expect(dummy.username).to eql 'foo'
-          expect(dummy._response).to be_nil
-
-          dummy.rebuild_resource collection, response_hash
-
-          expect(dummy.id).to be_nil
-          expect(dummy.username).to eql 'foo'
-          expect(dummy._response).to be_a RemoteResource::Response
-        end
-
-        it 'returns the resource' do
-          expect(dummy.rebuild_resource collection, response_hash).to be_a dummy_class
-        end
-      end
-
-      context 'and NO response_hash is given' do
-        it 'does NOT assign the response_hash of the resource' do
-          expect(dummy.id).to be_nil
-          expect(dummy.username).to eql 'foo'
-          expect(dummy._response).to be_nil
-
-          dummy.rebuild_resource collection
-
-          expect(dummy.id).to be_nil
-          expect(dummy.username).to eql 'foo'
-          expect(dummy._response).to be_nil
-        end
-
-        it 'returns the resource' do
-          expect(dummy.rebuild_resource collection).to be_a dummy_class
+    context 'when the given collection is NOT a Hash and options are given' do
+      it 'updates the resource with only the options' do
+        aggregate_failures do
+          dummy.meta = nil
+          expect { dummy.rebuild_resource(nil, meta: { 'total' => 10 }) }.to change { dummy.meta }.to({ 'total' => 10 })
+          dummy.meta = nil
+          expect { dummy.rebuild_resource([], meta: { 'total' => 10 }) }.to change { dummy.meta }.to({ 'total' => 10 })
+          dummy.meta = nil
+          expect { dummy.rebuild_resource('', meta: { 'total' => 10 }) }.to change { dummy.meta }.to({ 'total' => 10 })
         end
       end
     end

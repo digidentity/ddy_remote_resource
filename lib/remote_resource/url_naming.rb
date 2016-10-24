@@ -10,22 +10,16 @@ module RemoteResource
 
     module ClassMethods
 
-      def app_host(app, env = 'development')
-        CONFIG[env.to_sym][:apps][app.to_sym]
+      def app_host(*_)
+        warn '[DEPRECATION] `.app_host` is deprecated. Please use a different method to determine the site.'
       end
 
-      def base_url
-        determined_url_naming.base_url
+      def base_url(connection_options = {})
+        RemoteResource::UrlNamingDetermination.new(self, self.connection_options.to_hash.merge(connection_options)).base_url(connection_options[:id], check_collection_options: false)
       end
 
       def use_relative_model_naming?
         true
-      end
-
-      private
-
-      def determined_url_naming
-        RemoteResource::UrlNamingDetermination.new self
       end
 
     end

@@ -1,7 +1,7 @@
 require 'ethon'
 require_relative '../../../../../lib/extensions/ethon/easy/queryable'
 
-describe Ethon::Easy::Queryable do
+RSpec.describe Ethon::Easy::Queryable, order: :defined do
 
   let(:hash)    { {} }
   let!(:easy)   { Ethon::Easy.new }
@@ -70,7 +70,7 @@ describe Ethon::Easy::Queryable do
       end
 
       context "when file" do
-        let(:file) { File.open("spec/spec_helper.rb") }
+        let(:file) { File.open("spec/fixtures/text_file.txt") }
         let(:file_info) { params.method(:file_info).call(file) }
         let(:hash) { {:a => {:b => [file]}} }
         let(:mime_type) { file_info[1] }
@@ -82,7 +82,7 @@ describe Ethon::Easy::Queryable do
         context "when MIME" do
           context "when mime type" do
             it "sets mime type to text" do
-              expect(mime_type).to eq("application/x-ruby")
+              expect(mime_type).to eq("text/plain")
             end
           end
 

@@ -2,8 +2,6 @@ module RemoteResource
   module Base
     extend ActiveSupport::Concern
 
-    OPTIONS = [:base_url, :site, :headers, :version, :path_prefix, :path_postfix, :collection_prefix, :content_type, :collection, :collection_name, :root_element]
-
     included do
       include Virtus.model
       extend ActiveModel::Naming
@@ -14,15 +12,19 @@ module RemoteResource
       include RemoteResource::Builder
       include RemoteResource::UrlNaming
       include RemoteResource::Connection
+
+      extend RemoteResource::REST
       include RemoteResource::REST
 
       include RemoteResource::Querying::FinderMethods
       include RemoteResource::Querying::PersistenceMethods
 
-      attr_accessor :_response
+      attr_accessor :last_request, :last_response, :meta
+      attr_accessor :destroyed
+
+      class_attribute :root_element, instance_accessor: false
 
       attribute :id
-      class_attribute :root_element, instance_accessor: false
     end
 
     def self.global_headers=(headers)
@@ -45,8 +47,7 @@ module RemoteResource
 
       def with_connection_options(connection_options = {})
         begin
-          threaded_connection_options
-          Thread.current[threaded_connection_options_thread_name].merge! connection_options
+          Thread.current[threaded_connection_options_thread_name] = threaded_connection_options.merge(connection_options)
           yield
         ensure
           Thread.current[threaded_connection_options_thread_name] = nil
@@ -68,8 +69,16 @@ module RemoteResource
       @connection_options ||= RemoteResource::ConnectionOptions.new(self.class)
     end
 
+    def persistence
+      self if persisted?
+    end
+
     def persisted?
-      id.present?
+      if destroyed
+        false
+      else
+        id.present?
+      end
     end
 
     def new_record?
@@ -77,7 +86,7 @@ module RemoteResource
     end
 
     def success?
-      _response.success? && !errors?
+      last_response.success? && !errors?
     end
 
     def errors?
@@ -86,30 +95,33 @@ module RemoteResource
 
     def handle_response(response)
       if response.unprocessable_entity?
-        rebuild_resource_from_response(response).tap do |resource|
-          resource.assign_errors_from_response response
-        end
+        rebuild_resource_from_response(response)
+        assign_errors_from_response(response)
       else
         rebuild_resource_from_response(response)
-      end
-    end
-
-    def assign_response(response)
-      @_response = response
+      end and self
     end
 
     def assign_errors_from_response(response)
-      assign_errors response.error_messages_response_body
+      assign_errors(response.errors)
+    end
+
+    def _response
+      warn '[DEPRECATION] `._response` is deprecated. Please use `.last_response` instead.'
     end
 
     private
 
     def assign_errors(error_messages)
-      return unless error_messages.respond_to? :each
+      return unless error_messages.respond_to?(:each)
 
       error_messages.each do |attribute, attribute_errors|
-        attribute_errors.each do |error|
-          self.errors.add attribute, error
+        attribute_errors.each do |attribute_error|
+          if respond_to?(attribute)
+            self.errors.add(attribute, attribute_error)
+          else
+            self.errors.add(:base, attribute_error)
+          end
         end
       end
     end

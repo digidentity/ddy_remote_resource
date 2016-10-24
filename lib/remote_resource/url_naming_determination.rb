@@ -14,9 +14,7 @@ module RemoteResource
       path_prefix  = connection_options.fetch(:path_prefix, resource_klass.path_prefix)
       path_postfix = connection_options.fetch(:path_postfix, resource_klass.path_postfix)
 
-      id           = "/#{id}" if id.present?
-
-      "#{site}#{version.presence}#{path_prefix.presence}#{collection_prefix(check_collection_options)}/#{url_safe_relative_name}#{id}#{path_postfix.presence}"
+      File.join(site.to_s, version.to_s, path_prefix.to_s, collection_prefix(check_collection_options).to_s, url_safe_relative_name, id.to_s, path_postfix.to_s).chomp('/')
     end
 
     def collection_prefix(check_collection_options)

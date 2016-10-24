@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe RemoteResource::Connection do
+RSpec.describe RemoteResource::Connection do
 
   module RemoteResource
     class ConnectionDummy
@@ -20,41 +20,50 @@ describe RemoteResource::Connection do
     end
   end
 
-  describe '.content_type' do
-    let!(:original_content_type) { dummy_class.content_type }
-
-    context 'when content_type is set' do
-      it 'returns the given content_type' do
-        dummy_class.content_type = '.html'
-
-        expect(dummy_class.content_type).to eql '.html'
-
-        dummy_class.content_type = original_content_type
-      end
+  describe '.default_headers' do
+    it 'returns an empty Hash' do
+      expect(dummy_class.default_headers).to eql({})
     end
+  end
 
-    context 'when NO content_type is set' do
-      it 'returns the default content_type' do
-        expect(dummy_class.content_type).to eql '.json'
-      end
+  describe '.content_type=' do
+    it 'warns that the method is deprecated' do
+      expect(dummy_class).to receive(:warn).with('[DEPRECATION] `.content_type=` is deprecated. Please use `.extension=` instead.')
+      dummy_class.content_type = '.json'
+    end
+  end
+
+  describe '.content_type' do
+    it 'warns that the method is deprecated' do
+      expect(dummy_class).to receive(:warn).with('[DEPRECATION] `.content_type` is deprecated. Please use `.extension` instead.')
+      dummy_class.content_type
+    end
+  end
+
+  describe '.extra_headers=' do
+    it 'warns that the method is deprecated' do
+      expect(dummy_class).to receive(:warn).with('[DEPRECATION] `.extra_headers=` is deprecated. Please overwrite the .headers method to set custom headers.')
+      dummy_class.extra_headers = '.json'
+    end
+  end
+
+  describe '.extra_headers' do
+    it 'warns that the method is deprecated' do
+      expect(dummy_class).to receive(:warn).with('[DEPRECATION] `.extra_headers` is deprecated. Please overwrite the .headers method to set custom headers.')
+      dummy_class.extra_headers
+    end
+  end
+
+  describe '.headers=' do
+    it 'warns that the method is not used to set custom headers' do
+      expect(dummy_class).to receive(:warn).with('[WARNING] `.headers=` can not be used to set custom headers. Please overwrite the .headers method to set custom headers.')
+      dummy_class.headers = { 'Foo' => 'Bar' }
     end
   end
 
   describe '.headers' do
-    context 'when .extra_headers are set' do
-      it 'returns the default headers merged with the set .extra_headers' do
-        dummy_class.extra_headers = { "Foo" => "Bar" }
-
-        expect(dummy_class.headers).to eql({ "Accept" => "application/json", "Foo" => "Bar" })
-
-        dummy_class.extra_headers = nil
-      end
-    end
-
-    context 'when NO .extra_headers are set' do
-      it 'returns the default headers' do
-        expect(dummy_class.headers).to eql({ "Accept" => "application/json" })
-      end
+    it 'returns an empty Hash' do
+      expect(dummy_class.headers).to eql({})
     end
   end
 

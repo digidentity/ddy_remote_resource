@@ -1,8 +1,7 @@
 require 'spec_helper'
 
-describe RemoteResource::VERSION do
-
-  it { should eql '0.4.11' }
+RSpec.describe RemoteResource::VERSION do
+  it { is_expected.to eql '1.0.0.rc5' }
 end
 
 

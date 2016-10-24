@@ -12,9 +12,11 @@ module RemoteResource
         end
 
         def destroy(id, connection_options = {})
-          resource = new
-          response = RemoteResource::Request.new(self, :delete, { id: id }, connection_options.reverse_merge(no_attributes: true)).perform
+          resource = new(id: id)
+          response = RemoteResource::Request.new(self, :delete, {}, connection_options.merge(id: id)).perform
           resource.handle_response(response)
+          resource.destroyed = resource.success?
+          resource
         end
       end
 
@@ -29,20 +31,23 @@ module RemoteResource
         success? ? self : false
       end
 
-      def create_or_update(attributes = {}, connection_options = {})
-        if attributes.has_key?(:id)
-          response = RemoteResource::Request.new(self, :patch, attributes, connection_options).perform
-        else
-          response = RemoteResource::Request.new(self, :post, attributes, connection_options).perform
-        end
-        handle_response(response)
-      end
-
       def destroy(connection_options = {})
         id.present? || raise(RemoteResource::IdMissingError.new("`id` is missing from resource"))
-        response = RemoteResource::Request.new(self, :delete, { id: id }, connection_options.reverse_merge(no_attributes: true)).perform
+        response = RemoteResource::Request.new(self, :delete, {}, connection_options.merge(id: id)).perform
         handle_response(response)
+        self.destroyed = success?
         success? ? self : false
+      end
+
+      private
+
+      def create_or_update(attributes = {}, connection_options = {})
+        if attributes.has_key?(:id) && attributes[:id].present?
+          response = RemoteResource::Request.new(self, :patch, attributes.except(:id), connection_options.merge(id: attributes[:id])).perform
+        else
+          response = RemoteResource::Request.new(self, :post, attributes.except(:id), connection_options).perform
+        end
+        handle_response(response)
       end
 
     end

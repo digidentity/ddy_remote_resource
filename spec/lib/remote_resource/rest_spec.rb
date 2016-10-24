@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe RemoteResource::REST do
+RSpec.describe RemoteResource::REST do
 
   module RemoteResource
     class RESTDummy
@@ -32,7 +32,7 @@ describe RemoteResource::REST do
   before { allow_any_instance_of(RemoteResource::Request).to receive(:perform) { response } }
 
   describe '.get' do
-    it 'performs a RemoteResource::Request with the rest_action :get' do
+    it 'performs a RemoteResource::Request with the http_action :get' do
       expect(RemoteResource::Request).to receive(:new).with(dummy_class, :get, params, connection_options).and_call_original
       expect_any_instance_of(RemoteResource::Request).to receive(:perform)
       dummy_class.get params, connection_options
@@ -40,7 +40,7 @@ describe RemoteResource::REST do
   end
 
   describe '.put' do
-    it 'performs a RemoteResource::Request with the rest_action :put' do
+    it 'performs a RemoteResource::Request with the http_action :put' do
       expect(RemoteResource::Request).to receive(:new).with(dummy_class, :put, attributes, connection_options).and_call_original
       expect_any_instance_of(RemoteResource::Request).to receive(:perform)
       dummy_class.put attributes, connection_options
@@ -48,7 +48,7 @@ describe RemoteResource::REST do
   end
 
   describe '.patch' do
-    it 'performs a RemoteResource::Request with the rest_action :patch' do
+    it 'performs a RemoteResource::Request with the http_action :patch' do
       expect(RemoteResource::Request).to receive(:new).with(dummy_class, :patch, attributes, connection_options).and_call_original
       expect_any_instance_of(RemoteResource::Request).to receive(:perform)
       dummy_class.patch attributes, connection_options
@@ -56,7 +56,7 @@ describe RemoteResource::REST do
   end
 
   describe '.post' do
-    it 'performs a RemoteResource::Request with the rest_action :post' do
+    it 'performs a RemoteResource::Request with the http_action :post' do
       expect(RemoteResource::Request).to receive(:new).with(dummy_class, :post, attributes, connection_options).and_call_original
       expect_any_instance_of(RemoteResource::Request).to receive(:perform)
       dummy_class.post attributes, connection_options
@@ -64,7 +64,7 @@ describe RemoteResource::REST do
   end
 
   describe '.delete' do
-    it 'performs a RemoteResource::Request with the rest_action :delete' do
+    it 'performs a RemoteResource::Request with the http_action :delete' do
       expect(RemoteResource::Request).to receive(:new).with(dummy_class, :delete, attributes, connection_options).and_call_original
       expect_any_instance_of(RemoteResource::Request).to receive(:perform)
       dummy_class.delete(attributes, connection_options)
@@ -72,7 +72,7 @@ describe RemoteResource::REST do
   end
 
   describe '#get' do
-    it 'performs a RemoteResource::Request with the rest_action :get' do
+    it 'performs a RemoteResource::Request with the http_action :get' do
       expect(RemoteResource::Request).to receive(:new).with(dummy, :get, params, connection_options).and_call_original
       expect_any_instance_of(RemoteResource::Request).to receive(:perform)
       dummy.get params, connection_options
@@ -80,7 +80,7 @@ describe RemoteResource::REST do
   end
 
   describe '#put' do
-    it 'performs a RemoteResource::Request with the rest_action :put' do
+    it 'performs a RemoteResource::Request with the http_action :put' do
       expect(RemoteResource::Request).to receive(:new).with(dummy, :put, attributes, connection_options).and_call_original
       expect_any_instance_of(RemoteResource::Request).to receive(:perform)
       dummy.put attributes, connection_options
@@ -88,7 +88,7 @@ describe RemoteResource::REST do
   end
 
   describe '#patch' do
-    it 'performs a RemoteResource::Request with the rest_action :patch' do
+    it 'performs a RemoteResource::Request with the http_action :patch' do
       expect(RemoteResource::Request).to receive(:new).with(dummy, :patch, attributes, connection_options).and_call_original
       expect_any_instance_of(RemoteResource::Request).to receive(:perform)
       dummy.patch attributes, connection_options
@@ -96,7 +96,7 @@ describe RemoteResource::REST do
   end
 
   describe '#post' do
-    it 'performs a RemoteResource::Request with the rest_action :post' do
+    it 'performs a RemoteResource::Request with the http_action :post' do
       expect(RemoteResource::Request).to receive(:new).with(dummy, :post, attributes, connection_options).and_call_original
       expect_any_instance_of(RemoteResource::Request).to receive(:perform)
       dummy.post attributes, connection_options
@@ -104,7 +104,7 @@ describe RemoteResource::REST do
   end
 
   describe '#delete' do
-    it 'performs a RemoteResource::Request with the rest_action :delete' do
+    it 'performs a RemoteResource::Request with the http_action :delete' do
       expect(RemoteResource::Request).to receive(:new).with(dummy, :delete, attributes, connection_options).and_call_original
       expect_any_instance_of(RemoteResource::Request).to receive(:perform)
       dummy.delete(attributes, connection_options)

@@ -116,6 +116,15 @@ RSpec.describe RemoteResource::Collection do
           expect(expected).to eql(actual)
         end
       end
+
+      it 'expands the whole collection so that finder methods will not restrict the collection' do
+        found_collection = collection.find { |element| element.id == 1 }
+
+        aggregate_failures do
+          expect(found_collection).to be_present
+          expect(collection.size).to eql 2
+        end
+      end
     end
 
     context 'when the resources_collection is NOT an Array' do

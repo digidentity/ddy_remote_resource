@@ -14,17 +14,17 @@ module RemoteResource
     end
 
     def each(&block)
-      if resources_collection.is_a?(Array)
-        if defined?(@collection)
-          @collection.each(&block)
-        else
-          @collection = []
-          resources_collection.each do |element|
-            record = resource_klass.new(element.merge(@options))
-            @collection.push(record)
-            yield(record)
-          end
+      return nil if !resources_collection.is_a?(Array)
+
+      if defined?(@collection)
+        @collection.each(&block)
+      else
+        @collection = []
+        resources_collection.each do |element|
+          record = resource_klass.new(element.merge(@options))
+          @collection.push(record)
         end
+        @collection.each(&block)
       end
     end
 

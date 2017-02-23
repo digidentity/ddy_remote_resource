@@ -27,8 +27,8 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'guard-rspec', '~> 4.7'
   spec.add_development_dependency 'terminal-notifier-guard', '~> 1.6'
 
-  spec.add_runtime_dependency 'activesupport', '~> 4.1'
-  spec.add_runtime_dependency 'activemodel', '~> 4.1'
+  spec.add_runtime_dependency 'activesupport', '>= 4.1', '< 6'
+  spec.add_runtime_dependency 'activemodel', '>= 4.1', '< 6'
   spec.add_runtime_dependency 'virtus', '~> 1.0', '>= 1.0.4'
   spec.add_runtime_dependency 'mime-types', '~> 2.0'
   spec.add_runtime_dependency 'ethon', '~> 0.7', '>= 0.7.1'

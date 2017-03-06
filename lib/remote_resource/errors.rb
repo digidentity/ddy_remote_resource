@@ -39,15 +39,15 @@ module RemoteResource
     end
 
     def response_code
-      @response.response_code
+      @response.code
     end
 
     def response_body
-      @response.response_body # TODO: Filter sensitive information using: RemoteResource::Util.filter_params
+      @response.body # TODO: Filter sensitive information using: RemoteResource::Util.filter_params
     end
 
     def response_headers
-      @response.response_headers
+      @response.headers
     end
 
     def to_s

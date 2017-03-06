@@ -24,6 +24,8 @@ module RemoteResource
       @response_code ||= @connection_response.response_code
     end
 
+    alias_method :code, :response_code
+
     def headers
       @headers ||= @connection_response.headers
     end

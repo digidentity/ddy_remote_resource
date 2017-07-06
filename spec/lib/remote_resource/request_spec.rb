@@ -29,6 +29,10 @@ RSpec.describe RemoteResource::Request do
 
   let(:request) { described_class.new(resource, http_action, attributes, connection_options) }
 
+  before do
+    Thread.current[:request_id] = nil
+  end
+
   describe '#resource_klass' do
     context 'when the resource is a RemoteResource class' do
       let(:resource) { dummy_class }
@@ -528,13 +532,28 @@ RSpec.describe RemoteResource::Request do
     end
 
     context 'when conditional_headers are present' do
+      let(:http_action) { 'post' }
+
       context 'when a body is present' do
-        let(:http_action) { 'post' }
         let(:expected_headers) do
           { 'Accept' => 'application/json', 'User-Agent' => "RemoteResource #{RemoteResource::VERSION}", 'Content-Type' => 'application/json' }
         end
 
         it 'returns the default headers with the conditional_headers' do
+          expect(request.headers).to eql expected_headers
+        end
+      end
+
+      context 'when Thread.current[:request_id] is present' do
+        before do
+          Thread.current[:request_id] = 'CASCADING-REQUEST-ID'
+        end
+
+        let(:expected_headers) do
+          { 'Accept' => 'application/json', 'User-Agent' => "RemoteResource #{RemoteResource::VERSION}", 'Content-Type' => 'application/json', 'X-Request-Id' => 'CASCADING-REQUEST-ID' }
+        end
+
+        it 'returns the default headers with the X-Request-Id header' do
           expect(request.headers).to eql expected_headers
         end
       end

@@ -528,13 +528,32 @@ RSpec.describe RemoteResource::Request do
     end
 
     context 'when conditional_headers are present' do
+      let(:http_action) { 'post' }
+
       context 'when a body is present' do
-        let(:http_action) { 'post' }
         let(:expected_headers) do
           { 'Accept' => 'application/json', 'User-Agent' => "RemoteResource #{RemoteResource::VERSION}", 'Content-Type' => 'application/json' }
         end
 
         it 'returns the default headers with the conditional_headers' do
+          expect(request.headers).to eql expected_headers
+        end
+      end
+
+      context 'when Thread.current[:request_id] is present' do
+        before do
+          Thread.current[:request_id] = 'CASCADING-REQUEST-ID'
+        end
+
+        after do
+          Thread.current[:request_id] = nil
+        end
+
+        let(:expected_headers) do
+          { 'Accept' => 'application/json', 'User-Agent' => "RemoteResource #{RemoteResource::VERSION}", 'Content-Type' => 'application/json', 'X-Request-Id' => 'CASCADING-REQUEST-ID' }
+        end
+
+        it 'returns the default headers with the X-Request-Id header' do
           expect(request.headers).to eql expected_headers
         end
       end

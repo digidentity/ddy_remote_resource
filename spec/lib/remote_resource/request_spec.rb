@@ -29,10 +29,6 @@ RSpec.describe RemoteResource::Request do
 
   let(:request) { described_class.new(resource, http_action, attributes, connection_options) }
 
-  before do
-    Thread.current[:request_id] = nil
-  end
-
   describe '#resource_klass' do
     context 'when the resource is a RemoteResource class' do
       let(:resource) { dummy_class }
@@ -547,6 +543,10 @@ RSpec.describe RemoteResource::Request do
       context 'when Thread.current[:request_id] is present' do
         before do
           Thread.current[:request_id] = 'CASCADING-REQUEST-ID'
+        end
+
+        after do
+          Thread.current[:request_id] = nil
         end
 
         let(:expected_headers) do

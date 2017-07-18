@@ -80,6 +80,36 @@ RSpec.describe '.all' do
     end
   end
 
+  describe 'with an empty response' do
+    let(:response_body) do
+      {
+        data: []
+      }
+    end
+
+    let!(:expected_request) do
+      mock_request = stub_request(:get, 'https://www.example.com/posts.json')
+      mock_request.with(query: nil, body: nil, headers: expected_default_headers)
+      mock_request.to_return(status: 200, body: response_body.to_json)
+      mock_request
+    end
+
+    it 'performs the correct HTTP GET request' do
+      Post.all
+      expect(expected_request).to have_been_requested
+    end
+
+    it 'builds the correct collection of resources' do
+      posts = Post.all
+
+      aggregate_failures do
+        expect(posts).to respond_to :each
+        expect(posts.to_a).to eql []
+        expect(posts.size).to eql 0
+      end
+    end
+  end
+
   describe 'with connection_options[:params]' do
     let!(:expected_request) do
       mock_request = stub_request(:get, 'https://www.example.com/posts.json')

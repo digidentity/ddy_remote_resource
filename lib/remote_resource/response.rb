@@ -44,13 +44,20 @@ module RemoteResource
 
     def attributes
       @attributes ||= begin
-        root_element = @connection_options[:root_element]
+        root_element = @connection_options[:root_element].to_s
+        data         = nil
 
         if root_element.present?
-          parsed_body.try(:key?, root_element.to_s) && parsed_body[root_element.to_s]
+          data = parsed_body.try(:key?, root_element) && parsed_body[root_element]
         else
-          parsed_body
-        end.presence || {}
+          data = parsed_body
+        end
+
+        if data.is_a?(Array)
+          data
+        else
+          data.presence || {}
+        end
       end
     end
 

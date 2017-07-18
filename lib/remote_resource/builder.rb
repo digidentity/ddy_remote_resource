@@ -21,6 +21,8 @@ module RemoteResource
       def build_collection(collection, options = {})
         if collection.is_a?(Array)
           RemoteResource::Collection.new(self, collection, options)
+        else
+          []
         end
       end
     end

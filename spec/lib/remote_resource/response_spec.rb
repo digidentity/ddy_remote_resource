@@ -141,6 +141,14 @@ RSpec.describe RemoteResource::Response do
       end
     end
 
+    context 'when the parsed response body is an empty Array' do
+      let(:connection_response) { Typhoeus::Response.new(mock: true, code: 200, body: [].to_json, headers: { 'Content-Type' => 'application/json', 'Server' => 'nginx/1.4.6 (Ubuntu)' }) }
+
+      it 'returns an empty Array' do
+        expect(response.attributes).to eql([])
+      end
+    end
+
     context 'when the parsed response body is NOT present' do
       let(:connection_response) { Typhoeus::Response.new(mock: true, code: 500, body: '', headers: { 'Content-Type' => 'application/json', 'Server' => 'nginx/1.4.6 (Ubuntu)' }) }
 

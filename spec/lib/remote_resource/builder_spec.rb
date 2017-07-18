@@ -144,11 +144,11 @@ RSpec.describe RemoteResource::Builder do
     end
 
     context 'when the given collection is NOT an Array' do
-      it 'returns nil' do
+      it 'returns an empty Array' do
         aggregate_failures do
-          expect(dummy_class.build_collection(nil)).to be_nil
-          expect(dummy_class.build_collection({})).to be_nil
-          expect(dummy_class.build_collection('')).to be_nil
+          expect(dummy_class.build_collection(nil)).to eql([])
+          expect(dummy_class.build_collection({})).to eql([])
+          expect(dummy_class.build_collection('')).to eql([])
         end
       end
     end

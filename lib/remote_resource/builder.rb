@@ -19,11 +19,9 @@ module RemoteResource
       end
 
       def build_collection(collection, options = {})
-        if collection.is_a?(Array)
-          RemoteResource::Collection.new(self, collection, options)
-        else
-          []
-        end
+        collection.is_a?(Array) || raise(ArgumentError, '`collection` must be an Array')
+
+        RemoteResource::Collection.new(self, collection, options)
       end
     end
 

@@ -96,7 +96,7 @@ RSpec.describe 'connection_options for naming' do
   end
 
   describe 'connection_options[:path_postfix]' do
-    let(:response_body) do
+    let(:response_body_singular) do
       {
         data: {
           id:         12,
@@ -108,15 +108,29 @@ RSpec.describe 'connection_options for naming' do
       }
     end
 
+    let(:response_body_collection) do
+      {
+        data: [
+                {
+                  id:         12,
+                  title:      'Aliquam lobortis',
+                  body:       'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+                  featured:   false,
+                  created_at: Time.new(2015, 10, 4, 9, 30, 0),
+                }
+              ]
+      }
+    end
+
     let!(:expected_request_singular) do
       mock_request = stub_request(:get, 'https://www.example.com/posts/12/featured.json')
-      mock_request.to_return(status: 200, body: response_body.to_json)
+      mock_request.to_return(status: 200, body: response_body_singular.to_json)
       mock_request
     end
 
     let!(:expected_request_collection) do
       mock_request = stub_request(:get, 'https://www.example.com/posts/featured.json')
-      mock_request.to_return(status: 200, body: response_body.to_json)
+      mock_request.to_return(status: 200, body: response_body_collection.to_json)
       mock_request
     end
 

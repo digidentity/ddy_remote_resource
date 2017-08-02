@@ -137,50 +137,67 @@ RSpec.describe RemoteResource::Base do
     end
   end
 
-  describe '#persisted?' do
+  describe '#persisted?, #new_record? and #destroyed?' do
     context 'when id is present' do
-      it 'returns true' do
+      it 'returns the correct lifecycle predicates' do
         dummy.id = 10
-        expect(dummy.persisted?).to eql true
+
+        aggregate_failures do
+          expect(dummy.persisted?).to eql true
+          expect(dummy.new_record?).to eql false
+          expect(dummy.destroyed?).to eql false
+        end
       end
     end
 
-    context 'when id is present and destroyed is present' do
-      it 'returns false' do
+    context 'when id is present and @destroyed flag is present' do
+      it 'returns the correct lifecycle predicates' do
         dummy.id = 10
         dummy.destroyed = true
-        expect(dummy.persisted?).to eql false
+
+        aggregate_failures do
+          expect(dummy.persisted?).to eql false
+          expect(dummy.new_record?).to eql false
+          expect(dummy.destroyed?).to eql true
+        end
       end
     end
 
     context 'when id is NOT present' do
-      it 'returns false' do
+      it 'returns the correct lifecycle predicates' do
         dummy.id = nil
-        expect(dummy.persisted?).to eql false
+
+        aggregate_failures do
+          expect(dummy.persisted?).to eql false
+          expect(dummy.new_record?).to eql true
+          expect(dummy.destroyed?).to eql false
+        end
       end
     end
 
-    context 'when id is NOT present and destroyed is present' do
-      it 'returns false' do
+    context 'when id is NOT present and @persisted flag is present' do
+      it 'returns the correct lifecycle predicates' do
+        dummy.id = nil
+        dummy.persisted = true
+
+        aggregate_failures do
+          expect(dummy.persisted?).to eql true
+          expect(dummy.new_record?).to eql false
+          expect(dummy.destroyed?).to eql false
+        end
+      end
+    end
+
+    context 'when id is NOT present and @destroyed flag is present' do
+      it 'returns the correct lifecycle predicates' do
         dummy.id = nil
         dummy.destroyed = true
-        expect(dummy.persisted?).to eql false
-      end
-    end
-  end
 
-  describe '#new_record?' do
-    context 'when #persisted?' do
-      it 'returns false' do
-        dummy.id = 10
-        expect(dummy.new_record?).to eql false
-      end
-    end
-
-    context 'when NOT #persisted?' do
-      it 'returns true' do
-        dummy.id = nil
-        expect(dummy.new_record?).to eql true
+        aggregate_failures do
+          expect(dummy.persisted?).to eql false
+          expect(dummy.new_record?).to eql false
+          expect(dummy.destroyed?).to eql true
+        end
       end
     end
   end

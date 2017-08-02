@@ -55,11 +55,9 @@ module RemoteResource
       message << " with response_code=#{response_code}" if response_code.present?
       message << " with http_action=#{http_action}"
       message << " with request_url=#{request_url}"
-      # message << " with request_query=#{request_query}" if request_query.present? # TODO: Test usability of error message whether to include this
-      # message << " with request_body=#{request_body}" if request_body.present? # TODO: Test usability of error message whether to include this
-      # message << " with response_body=#{response_body}" if response_body.present? # TODO: Test usability of error message whether to include this
       message
     end
+
   end
 
   HTTPRedirectionError = Class.new(HTTPError) # HTTP 3xx

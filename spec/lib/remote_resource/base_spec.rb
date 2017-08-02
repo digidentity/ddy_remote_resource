@@ -227,6 +227,32 @@ RSpec.describe RemoteResource::Base do
         expect(dummy.success?).to eql false
       end
     end
+
+    context 'when last response is NOT successful and #success flag is present' do
+      it 'returns true' do
+        dummy.last_response = instance_double(RemoteResource::Response, success?: false)
+        dummy.success = true
+
+        expect(dummy.success?).to eql true
+      end
+    end
+
+    context 'when last response is NOT present' do
+      it 'returns false' do
+        dummy.last_response = nil
+
+        expect(dummy.success?).to eql false
+      end
+    end
+
+    context 'when last response is NOT present and #success flag is present' do
+      it 'returns true' do
+        dummy.last_response = nil
+        dummy.success = true
+
+        expect(dummy.success?).to eql true
+      end
+    end
   end
 
   describe '#errors?' do

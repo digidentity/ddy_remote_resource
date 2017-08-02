@@ -20,7 +20,7 @@ module RemoteResource
       include RemoteResource::Querying::PersistenceMethods
 
       attr_accessor :last_request, :last_response, :meta
-      attr_writer :destroyed, :persisted
+      attr_writer :destroyed, :persisted, :success
 
       class_attribute :root_element, instance_accessor: false
 
@@ -90,7 +90,7 @@ module RemoteResource
     end
 
     def success?
-      last_response.success? && !errors?
+      !!@success || (last_response.present? && last_response.success? && !errors?)
     end
 
     def errors?

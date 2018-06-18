@@ -30,7 +30,7 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency 'activesupport', '>= 4.1', '< 6'
   spec.add_runtime_dependency 'activemodel', '>= 4.1', '< 6'
   spec.add_runtime_dependency 'virtus', '~> 1.0', '>= 1.0.4'
-  spec.add_runtime_dependency 'mime-types', '~> 2.0'
+  spec.add_runtime_dependency 'mime-types', '~> 3.0'
   spec.add_runtime_dependency 'ethon', '~> 0.7', '>= 0.7.1'
   spec.add_runtime_dependency 'typhoeus', '~> 0.7', '>= 0.7.0'
 end

@@ -106,7 +106,7 @@ module RemoteResource
     def conditional_headers
       headers = {}
       headers = headers.merge(DEFAULT_CONTENT_TYPE) if body.present?
-      headers = headers.merge({ 'X-Request-Id' => Thread.current[:request_id] }) if Thread.current[:request_id].present?
+      headers = headers.merge({ 'X-Request-Id' => RequestStore.store[:request_id] }) if RequestStore.store[:request_id].present?
       headers
     end
 

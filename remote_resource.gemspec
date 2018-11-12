@@ -33,4 +33,5 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency 'mime-types', '~> 3.0'
   spec.add_runtime_dependency 'ethon', '~> 0.7', '>= 0.7.1'
   spec.add_runtime_dependency 'typhoeus', '~> 0.7', '>= 0.7.0'
+  spec.add_runtime_dependency 'request_store', '~> 1.4.1'
 end

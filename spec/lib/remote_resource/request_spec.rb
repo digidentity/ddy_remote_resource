@@ -540,13 +540,13 @@ RSpec.describe RemoteResource::Request do
         end
       end
 
-      context 'when Thread.current[:request_id] is present' do
+      context 'when RequestStore.store[:request_id] is present' do
         before do
-          Thread.current[:request_id] = 'CASCADING-REQUEST-ID'
+          RequestStore.store[:request_id] = 'CASCADING-REQUEST-ID'
         end
 
         after do
-          Thread.current[:request_id] = nil
+          RequestStore.store[:request_id] = nil
         end
 
         let(:expected_headers) do

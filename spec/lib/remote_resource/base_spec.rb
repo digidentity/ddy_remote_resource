@@ -81,7 +81,7 @@ RSpec.describe RemoteResource::Base do
     end
 
     it 'sets the name of Thread variable with the implemented class' do
-      expect(dummy_class.threaded_connection_options).to eql Thread.current['remote_resource.dummy.threaded_connection_options']
+      expect(dummy_class.threaded_connection_options).to eql RequestStore.store['remote_resource.dummy.threaded_connection_options']
     end
   end
 

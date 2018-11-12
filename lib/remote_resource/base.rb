@@ -28,11 +28,11 @@ module RemoteResource
     end
 
     def self.global_headers=(headers)
-      Thread.current[:global_headers] = headers
+      RequestStore.store[:global_headers] = headers
     end
 
     def self.global_headers
-      Thread.current[:global_headers] ||= {}
+      RequestStore.store[:global_headers] ||= {}
     end
 
     module ClassMethods
@@ -42,15 +42,15 @@ module RemoteResource
       end
 
       def threaded_connection_options
-        Thread.current[threaded_connection_options_thread_name] ||= {}
+        RequestStore.store[threaded_connection_options_thread_name] ||= {}
       end
 
       def with_connection_options(connection_options = {})
         begin
-          Thread.current[threaded_connection_options_thread_name] = threaded_connection_options.merge(connection_options)
+          RequestStore.store[threaded_connection_options_thread_name] = threaded_connection_options.merge(connection_options)
           yield
         ensure
-          Thread.current[threaded_connection_options_thread_name] = nil
+          RequestStore.store[threaded_connection_options_thread_name] = nil
         end
       end
 

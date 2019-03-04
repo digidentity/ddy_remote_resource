@@ -18,10 +18,10 @@ RSpec.describe RemoteResource::Request do
   end
 
   let(:dummy_class) { RemoteResource::RequestDummy }
-  let(:dummy)       { dummy_class.new id: '12' }
+  let(:dummy) { dummy_class.new id: '12' }
 
-  let(:resource)           { dummy_class }
-  let(:http_action)        { :get }
+  let(:resource) { dummy_class }
+  let(:http_action) { :get }
   let(:connection_options) { {} }
   let(:attributes) do
     { name: 'Mies' }
@@ -68,6 +68,7 @@ RSpec.describe RemoteResource::Request do
 
     let(:block_connection_options) do
       {
+        json_spec:    'From .with_connection_options',
         root_element: 'From .with_connection_options',
         version:      'From .with_connection_options',
         path_prefix:  'From .with_connection_options'
@@ -85,6 +86,7 @@ RSpec.describe RemoteResource::Request do
       {
         site:              'From Klass.site',
         root_element:      'From connection_options[]',
+        json_spec:         'From .with_connection_options',
         version:           'From .with_connection_options',
         path_prefix:       'From .with_connection_options',
         path_postfix:      'From connection_options[]',
@@ -270,7 +272,7 @@ RSpec.describe RemoteResource::Request do
       let(:expected_request_url) { '' }
 
       it 'raises the RemoteResource::HTTPMethodUnsupported error' do
-        expect{ request.perform }.to raise_error RemoteResource::HTTPMethodUnsupported, 'Requested HTTP method=foo is NOT supported, the HTTP action MUST be a supported HTTP action=get, put, patch, post, delete'
+        expect { request.perform }.to raise_error RemoteResource::HTTPMethodUnsupported, 'Requested HTTP method=foo is NOT supported, the HTTP action MUST be a supported HTTP action=get, put, patch, post, delete'
       end
     end
   end
@@ -367,7 +369,7 @@ RSpec.describe RemoteResource::Request do
 
       context 'when connection_options does NOT include collection_options' do
         it 'raises error' do
-          expect{ request.request_url }.to raise_error(RemoteResource::CollectionOptionKeyError)
+          expect { request.request_url }.to raise_error(RemoteResource::CollectionOptionKeyError)
         end
       end
     end
@@ -473,6 +475,30 @@ RSpec.describe RemoteResource::Request do
         end
       end
     end
+
+    context 'when connection_options[:json_spec] == :json_api' do
+      let(:connection_options) do
+        { json_spec: :json_api }
+      end
+
+      let(:attributes) do
+        { id: 1, name: 'Mies', featured: true, labels: [1, '2', 'three'] }
+      end
+
+      it 'returns the given attributes wrapped in the json api spec' do
+        expect(request.attributes).to eql({ data: { id: 1, type: "RequestDummy", attributes: { name: 'Mies', featured: true, labels: [1, '2', 'three'] } } })
+      end
+
+      context 'and there are NO given attributes' do
+        let(:attributes) do
+          nil
+        end
+
+        it 'returns nil wrapped in the connection_options[:root_element]' do
+          expect(request.attributes).to eql({ data: {} })
+        end
+      end
+    end
   end
 
   describe '#headers' do
@@ -506,7 +532,7 @@ RSpec.describe RemoteResource::Request do
       end
 
       before { RemoteResource::Base.global_headers = { 'User-Agent' => 'From RemoteResource::Base.global_headers', 'X-Locale' => 'From RemoteResource::Base.global_headers' } }
-      after  { RemoteResource::Base.global_headers = nil }
+      after { RemoteResource::Base.global_headers = nil }
 
       it 'returns the default headers while overwriting the headers according to the correct precedence' do
         expect(request.headers).to eql expected_headers
@@ -562,7 +588,7 @@ RSpec.describe RemoteResource::Request do
 
   describe '#raise_http_error' do
     let(:connection_response) { instance_double(Typhoeus::Response, request: instance_double(Typhoeus::Request)) }
-    let(:response)            { RemoteResource::Response.new(connection_response, connection_options) }
+    let(:response) { RemoteResource::Response.new(connection_response, connection_options) }
 
     context 'when the response code is 301, 302, 303 or 307' do
       response_codes = [301, 302, 303, 307]

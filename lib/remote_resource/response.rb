@@ -44,19 +44,29 @@ module RemoteResource
 
     def attributes
       @attributes ||= begin
-        root_element = @connection_options[:root_element].to_s
-        data         = nil
-
-        if root_element.present?
-          data = parsed_body.try(:key?, root_element) && parsed_body[root_element]
+        if @connection_options[:json_spec] == :json_api
+          data = parsed_body.fetch("data", {})
+          if data.is_a?(Array)
+            data.map { |row| row["attributes"].merge({ "id" => row["id"] }) }
+          elsif data.key?("attributes")
+            data["attributes"].merge({ "id" => data["id"] })
+          else
+            data
+          end
         else
-          data = parsed_body
-        end
+          root_element = @connection_options[:root_element].to_s
 
-        if data.is_a?(Array)
-          data
-        else
-          data.presence || {}
+          if root_element.present?
+            data = parsed_body.try(:key?, root_element) && parsed_body[root_element]
+          else
+            data = parsed_body
+          end
+
+          if data.is_a?(Array)
+            data
+          else
+            data.presence || {}
+          end
         end
       end
     end

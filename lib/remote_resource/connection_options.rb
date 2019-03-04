@@ -1,7 +1,7 @@
 module RemoteResource
   class ConnectionOptions
 
-    AVAILABLE_OPTIONS = [:site, :headers, :default_headers, :version, :path_prefix, :path_postfix, :collection_prefix, :extension, :collection, :collection_name, :root_element].freeze
+    AVAILABLE_OPTIONS = [:site, :headers, :default_headers, :version, :path_prefix, :path_postfix, :collection_prefix, :extension, :collection, :collection_name, :root_element, :json_spec].freeze
 
     attr_reader :base_class
 

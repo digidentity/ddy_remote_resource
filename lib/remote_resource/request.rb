@@ -84,12 +84,20 @@ module RemoteResource
     end
 
     def attributes
-      root_element = connection_options[:root_element]
-
-      if root_element.present?
-        { root_element => @attributes }
+      if connection_options[:json_spec] == :json_api
+        if @attributes
+          { data: { id: @attributes[:id], type: resource_klass.name.demodulize, attributes: @attributes.except(:id) } }
+        else
+          { data: {} }
+        end
       else
-        @attributes || {}
+        root_element = connection_options[:root_element]
+
+        if root_element.present?
+          { root_element => @attributes }
+        else
+          @attributes || {}
+        end
       end
     end
 
@@ -114,25 +122,44 @@ module RemoteResource
 
     def raise_http_error(request, response)
       case response.try(:response_code)
-      when 301, 302, 303, 307 then raise RemoteResource::HTTPRedirectionError.new(request, response)
-      when 400 then raise RemoteResource::HTTPBadRequest.new(request, response)
-      when 401 then raise RemoteResource::HTTPUnauthorized.new(request, response)
-      when 403 then raise RemoteResource::HTTPForbidden.new(request, response)
-      when 404 then raise RemoteResource::HTTPNotFound.new(request, response)
-      when 405 then raise RemoteResource::HTTPMethodNotAllowed.new(request, response)
-      when 406 then raise RemoteResource::HTTPNotAcceptable.new(request, response)
-      when 408 then raise RemoteResource::HTTPRequestTimeout.new(request, response)
-      when 409 then raise RemoteResource::HTTPConflict.new(request, response)
-      when 410 then raise RemoteResource::HTTPGone.new(request, response)
-      when 418 then raise RemoteResource::HTTPTeapot.new(request, response)
-      when 444 then raise RemoteResource::HTTPNoResponse.new(request, response)
-      when 494 then raise RemoteResource::HTTPRequestHeaderTooLarge.new(request, response)
-      when 495 then raise RemoteResource::HTTPCertError.new(request, response)
-      when 496 then raise RemoteResource::HTTPNoCert.new(request, response)
-      when 497 then raise RemoteResource::HTTPToHTTPS.new(request, response)
-      when 499 then raise RemoteResource::HTTPClientClosedRequest.new(request, response)
-      when 400..499 then raise RemoteResource::HTTPClientError.new(request, response)
-      when 500..599 then raise RemoteResource::HTTPServerError.new(request, response)
+      when 301, 302, 303, 307 then
+        raise RemoteResource::HTTPRedirectionError.new(request, response)
+      when 400 then
+        raise RemoteResource::HTTPBadRequest.new(request, response)
+      when 401 then
+        raise RemoteResource::HTTPUnauthorized.new(request, response)
+      when 403 then
+        raise RemoteResource::HTTPForbidden.new(request, response)
+      when 404 then
+        raise RemoteResource::HTTPNotFound.new(request, response)
+      when 405 then
+        raise RemoteResource::HTTPMethodNotAllowed.new(request, response)
+      when 406 then
+        raise RemoteResource::HTTPNotAcceptable.new(request, response)
+      when 408 then
+        raise RemoteResource::HTTPRequestTimeout.new(request, response)
+      when 409 then
+        raise RemoteResource::HTTPConflict.new(request, response)
+      when 410 then
+        raise RemoteResource::HTTPGone.new(request, response)
+      when 418 then
+        raise RemoteResource::HTTPTeapot.new(request, response)
+      when 444 then
+        raise RemoteResource::HTTPNoResponse.new(request, response)
+      when 494 then
+        raise RemoteResource::HTTPRequestHeaderTooLarge.new(request, response)
+      when 495 then
+        raise RemoteResource::HTTPCertError.new(request, response)
+      when 496 then
+        raise RemoteResource::HTTPNoCert.new(request, response)
+      when 497 then
+        raise RemoteResource::HTTPToHTTPS.new(request, response)
+      when 499 then
+        raise RemoteResource::HTTPClientClosedRequest.new(request, response)
+      when 400..499 then
+        raise RemoteResource::HTTPClientError.new(request, response)
+      when 500..599 then
+        raise RemoteResource::HTTPServerError.new(request, response)
       else
         raise RemoteResource::HTTPError.new(request, response)
       end

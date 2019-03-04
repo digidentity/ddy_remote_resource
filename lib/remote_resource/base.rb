@@ -23,6 +23,7 @@ module RemoteResource
       attr_writer :destroyed, :persisted, :success
 
       class_attribute :root_element, instance_accessor: false
+      class_attribute :json_spec, instance_accessor: false
 
       attribute :id
     end

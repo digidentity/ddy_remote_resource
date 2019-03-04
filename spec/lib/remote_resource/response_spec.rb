@@ -14,14 +14,14 @@ RSpec.describe RemoteResource::Response do
   end
 
   let(:dummy_class) { RemoteResource::ResponseDummy }
-  let(:dummy)       { dummy_class.new(id: '12') }
+  let(:dummy) { dummy_class.new(id: '12') }
 
   let(:connection_options) do
     { collection: true }
   end
-  let(:request)             { RemoteResource::Request.new(dummy_class, :post, { name: 'Mies' }, connection_options) }
+  let(:request) { RemoteResource::Request.new(dummy_class, :post, { name: 'Mies' }, connection_options) }
   let(:connection_response) { Typhoeus::Response.new(mock: true, code: 201, body: { id: 12, name: 'Mies' }.to_json, headers: { 'Content-Type' => 'application/json', 'Server' => 'nginx/1.4.6 (Ubuntu)' }) }
-  let(:connection_request)  { Typhoeus::Request.new('http://www.foobar.com/response_dummies.json', method: :post, body: { name: 'Mies' }.to_json, headers: { 'Content-Type' => 'application/json' }) }
+  let(:connection_request) { Typhoeus::Request.new('http://www.foobar.com/response_dummies.json', method: :post, body: { name: 'Mies' }.to_json, headers: { 'Content-Type' => 'application/json' }) }
 
   let(:response) { described_class.new(connection_response, connection_options.merge(request: request, connection_request: connection_request)) }
 
@@ -154,6 +154,36 @@ RSpec.describe RemoteResource::Response do
 
       it 'returns an empty Hash' do
         expect(response.attributes).to eql({})
+      end
+    end
+
+    context 'with the json_api spec' do
+      let(:connection_options) do
+        { root_element: :data, json_spec: :json_api }
+      end
+
+      context "single response" do
+        let(:connection_response) { Typhoeus::Response.new(mock: true, code: 201, body: { data: { id: 12, attributes: { name: 'Mies' } } }.to_json, headers: { 'Content-Type' => 'application/json', 'Server' => 'nginx/1.4.6 (Ubuntu)' }) }
+
+        it 'parses the attributes from the nested hash' do
+          expect(response.attributes).to eql({ 'id' => 12, 'name' => 'Mies' })
+        end
+      end
+
+      context "empty response" do
+        let(:connection_response) { Typhoeus::Response.new(mock: true, code: 204, body: {}.to_json, headers: { 'Content-Type' => 'application/json', 'Server' => 'nginx/1.4.6 (Ubuntu)' }) }
+
+        it 'parses the attributes from the nested hash' do
+          expect(response.attributes).to eql({})
+        end
+      end
+
+      context "collection response" do
+        let(:connection_response) { Typhoeus::Response.new(mock: true, code: 201, body: { data: [{ id: 12, attributes: { name: 'Mies' } }] }.to_json, headers: { 'Content-Type' => 'application/json', 'Server' => 'nginx/1.4.6 (Ubuntu)' }) }
+
+        it 'parses the attributes from the nested hash' do
+          expect(response.attributes).to eql(['id' => 12, 'name' => 'Mies'])
+        end
       end
     end
   end

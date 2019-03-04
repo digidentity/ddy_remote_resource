@@ -24,7 +24,7 @@ RSpec.describe RemoteResource::ConnectionOptions do
   end
 
   let(:dummy_class) { RemoteResource::ConnectionOptionsDummy }
-  let(:dummy)       { dummy_class.new }
+  let(:dummy) { dummy_class.new }
 
   let(:connection_options) { described_class.new dummy_class }
 
@@ -59,8 +59,8 @@ RSpec.describe RemoteResource::ConnectionOptions do
   describe '#merge' do
     let(:custom_connection_options) do
       {
-        site: 'https://dummy.foobar.com',
-        version: '/api/v2',
+        site:         'https://dummy.foobar.com',
+        version:      '/api/v2',
         root_element: :test_dummy_api
       }
     end
@@ -91,7 +91,8 @@ RSpec.describe RemoteResource::ConnectionOptions do
         collection_prefix: '/parent/:parent_id',
         collection:        true,
         collection_name:   nil,
-        root_element:      :test_dummy
+        root_element:      :test_dummy,
+        json_spec:         nil
       }
     end
 

@@ -76,7 +76,7 @@ module RemoteResource
     def body
       @body ||= begin
         if [:put, :patch, :post].include?(http_action)
-          JSON.generate(attributes)
+          attributes.to_json
         else
           nil
         end

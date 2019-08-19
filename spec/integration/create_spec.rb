@@ -44,7 +44,7 @@ RSpec.describe '.create' do
 
     let!(:expected_request) do
       mock_request = stub_request(:post, 'https://www.example.com/posts.json')
-      mock_request.with(query: nil, body: JSON.generate(expected_request_body), headers: expected_default_headers)
+      mock_request.with(query: nil, body: expected_request_body.to_json, headers: expected_default_headers)
       mock_request.to_return(status: 201, body: JSON.generate(response_body))
       mock_request
     end
@@ -81,7 +81,7 @@ RSpec.describe '.create' do
 
     let!(:expected_request) do
       mock_request = stub_request(:post, 'https://www.example.com/posts.json')
-      mock_request.with(query: nil, body: JSON.generate(expected_request_body), headers: expected_default_headers.merge({ 'X-Pseudonym' => 'pseudonym' }))
+      mock_request.with(query: nil, body: expected_request_body.to_json, headers: expected_default_headers.merge({ 'X-Pseudonym' => 'pseudonym' }))
       mock_request.to_return(status: 201, body: JSON.generate(response_body))
       mock_request
     end
@@ -114,7 +114,7 @@ RSpec.describe '.create' do
 
     let!(:expected_request) do
       mock_request = stub_request(:post, 'https://www.example.com/posts.json')
-      mock_request.with(query: nil, body: JSON.generate(expected_request_body), headers: expected_default_headers)
+      mock_request.with(query: nil, body: expected_request_body.to_json, headers: expected_default_headers)
       mock_request.to_return(status: 422, body: JSON.generate(response_body))
       mock_request
     end

@@ -16,6 +16,10 @@ module RemoteResource
       @connection_response.success?
     end
 
+    def timed_out?
+      @connection_response.timed_out?
+    end
+
     def unprocessable_entity?
       response_code == 422
     end

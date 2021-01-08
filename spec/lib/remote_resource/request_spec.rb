@@ -168,7 +168,9 @@ RSpec.describe RemoteResource::Request do
       let(:expected_connection_options) { request.connection_options }
 
       it 'makes a GET request with the connection_options[:params] as query' do
-        expect(connection).to receive(:get).with(expected_request_url, params: expected_params, body: expected_body, headers: expected_headers).and_call_original
+        expect(connection).to receive(:get).with(expected_request_url, params: expected_params,
+                                                 body: expected_body, headers: expected_headers,
+                                                 connecttimeout: 30, timeout: 120).and_call_original
         request.perform
       end
 
@@ -191,7 +193,9 @@ RSpec.describe RemoteResource::Request do
       let(:expected_connection_options) { request.connection_options }
 
       it 'makes a PUT request with the attributes as body' do
-        expect(connection).to receive(:put).with(expected_request_url, params: expected_params, body: expected_body, headers: expected_headers).and_call_original
+        expect(connection).to receive(:put).with(expected_request_url, params: expected_params,
+                                                 body: expected_body, headers: expected_headers,
+                                                 connecttimeout: 30, timeout: 120).and_call_original
         request.perform
       end
 
@@ -214,7 +218,9 @@ RSpec.describe RemoteResource::Request do
       let(:expected_connection_options) { request.connection_options }
 
       it 'makes a PATCH request with the attributes as body' do
-        expect(connection).to receive(:patch).with(expected_request_url, params: expected_params, body: expected_body, headers: expected_headers).and_call_original
+        expect(connection).to receive(:patch).with(expected_request_url, params: expected_params,
+                                                   body: expected_body, headers: expected_headers,
+                                                   connecttimeout: 30, timeout: 120).and_call_original
         request.perform
       end
 
@@ -237,7 +243,9 @@ RSpec.describe RemoteResource::Request do
       let(:expected_connection_options) { request.connection_options }
 
       it 'makes a POST request with the attributes as body' do
-        expect(connection).to receive(:post).with(expected_request_url, params: expected_params, body: expected_body, headers: expected_headers).and_call_original
+        expect(connection).to receive(:post).with(expected_request_url, params: expected_params,
+                                                  body: expected_body, headers: expected_headers,
+                                                  connecttimeout: 30, timeout: 120).and_call_original
         request.perform
       end
 
@@ -260,7 +268,9 @@ RSpec.describe RemoteResource::Request do
       let(:expected_connection_options) { request.connection_options }
 
       it 'makes a DELETE request with the connection_options[:params] as query' do
-        expect(connection).to receive(:delete).with(expected_request_url, params: expected_params, body: expected_body, headers: expected_headers).and_call_original
+        expect(connection).to receive(:delete).with(expected_request_url, params: expected_params,
+                                                    body: expected_body, headers: expected_headers,
+                                                    connecttimeout: 30, timeout: 120).and_call_original
         request.perform
       end
 
@@ -586,9 +596,36 @@ RSpec.describe RemoteResource::Request do
     end
   end
 
+  describe '#timeout_options' do
+    it 'is not given by default' do
+      expect(request.connection_options).not_to include :connecttimeout, :timeout
+    end
+
+    context 'with custom timeouts' do
+      let(:connection_options) do
+        { connecttimeout: 1, timeout: 2 }
+      end
+
+      it 'sets the timeouts from connection_options' do
+        aggregate_failures do
+          expect(request.connection_options[:connecttimeout]).to eq 1
+          expect(request.connection_options[:timeout]).to eq 2
+        end
+      end
+    end
+  end
+
   describe '#raise_http_error' do
-    let(:connection_response) { instance_double(Typhoeus::Response, request: instance_double(Typhoeus::Request)) }
+    let(:connection_response) { instance_double(Typhoeus::Response, request: instance_double(Typhoeus::Request), timed_out?: false) }
     let(:response) { RemoteResource::Response.new(connection_response, connection_options) }
+
+    context 'when the response has timed out' do
+      let(:connection_response) { instance_double(Typhoeus::Response, request: instance_double(Typhoeus::Request), timed_out?: true) }
+
+      it 'raises a RemoteResource::HTTPRequestTimeout' do
+        expect { request.send(:raise_http_error, request, response) }.to raise_error RemoteResource::HTTPRequestTimeout
+      end
+    end
 
     context 'when the response code is 301, 302, 303 or 307' do
       response_codes = [301, 302, 303, 307]

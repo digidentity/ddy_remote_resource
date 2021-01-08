@@ -14,6 +14,9 @@ module RemoteResource
 
     DEFAULT_EXTENSION = '.json'.freeze
 
+    DEFAULT_CONNECT_TIMEOUT = 30
+    DEFAULT_READ_TIMEOUT = 120
+
     attr_reader :resource, :resource_klass, :http_action, :attributes
 
     def initialize(resource, http_action, attributes = {}, connection_options = {})
@@ -41,7 +44,7 @@ module RemoteResource
     def perform
       SUPPORTED_HTTP_METHODS.include?(http_action) || raise(RemoteResource::HTTPMethodUnsupported, "Requested HTTP method=#{http_action.to_s} is NOT supported, the HTTP action MUST be a supported HTTP action=#{SUPPORTED_HTTP_METHODS.join(', ')}")
 
-      connection_response = connection.public_send(http_action, request_url, params: query, body: body, headers: headers)
+      connection_response = connection.public_send(http_action, request_url, params: query, body: body, headers: headers, **timeout_options)
       response            = RemoteResource::Response.new(connection_response, connection_options.merge(request: self, connection_request: connection_response.request))
 
       if response.success? || response.unprocessable_entity?
@@ -118,47 +121,57 @@ module RemoteResource
       headers
     end
 
+    def timeout_options
+      connecttimeout = connection_options[:connecttimeout].presence || DEFAULT_CONNECT_TIMEOUT
+      timeout = connection_options[:timeout].presence || DEFAULT_READ_TIMEOUT
+
+      { connecttimeout: connecttimeout, timeout: timeout }
+    end
+
     private
 
     def raise_http_error(request, response)
+      # Special case if a request has a time out, as Typhoeus does not set a 408 response_code
+      raise RemoteResource::HTTPRequestTimeout.new(request, response) if response.timed_out?
+
       case response.try(:response_code)
       when 301, 302, 303, 307 then
         raise RemoteResource::HTTPRedirectionError.new(request, response)
-      when 400 then
+      when 400
         raise RemoteResource::HTTPBadRequest.new(request, response)
-      when 401 then
+      when 401
         raise RemoteResource::HTTPUnauthorized.new(request, response)
-      when 403 then
+      when 403
         raise RemoteResource::HTTPForbidden.new(request, response)
-      when 404 then
+      when 404
         raise RemoteResource::HTTPNotFound.new(request, response)
-      when 405 then
+      when 405
         raise RemoteResource::HTTPMethodNotAllowed.new(request, response)
-      when 406 then
+      when 406
         raise RemoteResource::HTTPNotAcceptable.new(request, response)
-      when 408 then
+      when 408
         raise RemoteResource::HTTPRequestTimeout.new(request, response)
-      when 409 then
+      when 409
         raise RemoteResource::HTTPConflict.new(request, response)
-      when 410 then
+      when 410
         raise RemoteResource::HTTPGone.new(request, response)
-      when 418 then
+      when 418
         raise RemoteResource::HTTPTeapot.new(request, response)
-      when 444 then
+      when 444
         raise RemoteResource::HTTPNoResponse.new(request, response)
-      when 494 then
+      when 494
         raise RemoteResource::HTTPRequestHeaderTooLarge.new(request, response)
-      when 495 then
+      when 495
         raise RemoteResource::HTTPCertError.new(request, response)
-      when 496 then
+      when 496
         raise RemoteResource::HTTPNoCert.new(request, response)
-      when 497 then
+      when 497
         raise RemoteResource::HTTPToHTTPS.new(request, response)
-      when 499 then
+      when 499
         raise RemoteResource::HTTPClientClosedRequest.new(request, response)
-      when 400..499 then
+      when 400..499
         raise RemoteResource::HTTPClientError.new(request, response)
-      when 500..599 then
+      when 500..599
         raise RemoteResource::HTTPServerError.new(request, response)
       else
         raise RemoteResource::HTTPError.new(request, response)

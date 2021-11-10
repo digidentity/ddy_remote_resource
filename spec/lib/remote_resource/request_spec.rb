@@ -682,6 +682,17 @@ RSpec.describe RemoteResource::Request do
       end
     end
 
+    context 'when the response code is 0 and no other error is raised' do
+      it 'raises a RemoteResource::HTTPError with correct error message' do
+        allow(response).to receive(:response_code) { 0 }
+        allow(connection_response).to receive(:return_code) { :ssl_connect }
+        allow(connection_response).to receive(:response_code) { 0 }
+
+        error_message = 'HTTP request failed for RemoteResource::RequestDummy with response_code=0 with return_code=ssl_connect with http_action=get with request_url=http://www.foobar.com/request_dummy.json'
+        expect { request.send(:raise_http_error, request, response) }.to raise_error RemoteResource::HTTPError, error_message
+      end
+    end
+
     context 'when the response code is nothing and no other error is raised' do
       it 'raises a RemoteResource::HTTPError' do
         allow(response).to receive(:response_code) { nil }

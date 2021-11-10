@@ -42,6 +42,12 @@ module RemoteResource
       @response.code
     end
 
+    # The return code can contain additional information when response_code=0
+    # see https://curl.se/libcurl/c/libcurl-errors.html for the full list
+    def return_code
+      @response.return_code
+    end
+
     def response_body
       @response.body # TODO: Filter sensitive information using: RemoteResource::Util.filter_params
     end
@@ -53,6 +59,7 @@ module RemoteResource
     def to_s
       message = "HTTP request failed for #{resource_klass}"
       message << " with response_code=#{response_code}" if response_code.present?
+      message << " with return_code=#{return_code}" if return_code.present? && response_code.zero?
       message << " with http_action=#{http_action}"
       message << " with request_url=#{request_url}"
       message

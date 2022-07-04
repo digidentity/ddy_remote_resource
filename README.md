@@ -1,3 +1,5 @@
+[![Build Status](https://app.travis-ci.com/digidentity/ddy_remote_resource.svg?token=mVPURD2PVoqUVtqpx3sA&branch=main)](https://app.travis-ci.com/digidentity/ddy_remote_resource)
+
 # RemoteResource
 
 RemoteResource is a gem to consume resources with REST services.

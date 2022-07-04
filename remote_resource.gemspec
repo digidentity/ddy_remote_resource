@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.email         = ['development@digidentity.com']
   spec.summary       = %q{RemoteResource, a gem to use resources with REST services.}
   spec.description   = %q{RemoteResource, a gem to use resources with REST services. A replacement for ActiveResource gem.}
-  spec.homepage      = ''
+  spec.homepage      = 'https://github.com/digidentity/ddy_remote_resource'
   spec.license       = 'MIT'
 
   spec.files         = `git ls-files -z`.split("\x0")

@@ -21,8 +21,8 @@ RSpec.describe '#save' do
         id:         12,
         title:      'Lorem Ipsum',
         body:       'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-        featured:   false,
         created_at: Time.new(2015, 10, 4, 9, 30, 0),
+        featured:   false
       }
     }
   end
@@ -39,8 +39,8 @@ RSpec.describe '#save' do
         data: {
           title:      'Lorem Ipsum',
           body:       'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-          featured:   false,
           created_at: Time.new(2015, 10, 4, 9, 30, 0),
+          featured:   false
         }
       }
     end
@@ -103,8 +103,8 @@ RSpec.describe '#save' do
           data: {
             title:      'Lore',
             body:       '',
-            featured:   true,
             created_at: Time.new(2015, 10, 4, 9, 30, 0),
+            featured:   true
           }
         }
       end
@@ -181,8 +181,8 @@ RSpec.describe '#save' do
         data: {
           title:      'Lorem Ipsum',
           body:       'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-          featured:   false,
           created_at: nil,
+          featured:   false
         }
       }
     end
@@ -246,8 +246,8 @@ RSpec.describe '#save' do
           data: {
             title:      'Lore',
             body:       '',
-            featured:   true,
-            created_at: nil
+            created_at: nil,
+            featured:   true
           }
         }
       end

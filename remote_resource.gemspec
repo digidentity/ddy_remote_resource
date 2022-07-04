@@ -6,7 +6,7 @@ require 'remote_resource/version'
 Gem::Specification.new do |spec|
   spec.name          = 'ddy_remote_resource'
   spec.version       = RemoteResource::VERSION
-  spec.authors       = ['Digidentity', 'Jan van der Pas']
+  spec.authors       = ['Digidentity', 'Johnny Dongelmans', 'Jan van der Pas']
   spec.email         = ['development@digidentity.com']
   spec.summary       = %q{RemoteResource, a gem to use resources with REST services.}
   spec.description   = %q{RemoteResource, a gem to use resources with REST services. A replacement for ActiveResource gem.}
@@ -22,13 +22,13 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'rake', '~> 10.4'
   spec.add_development_dependency 'rspec', '~> 3.1'
   spec.add_development_dependency 'pry', '~> 0.10'
-  # spec.add_development_dependency 'webmock', '~> 1.24'
+  spec.add_development_dependency 'webmock', '~> 3'
   spec.add_development_dependency 'guard', '~> 2.14'
   spec.add_development_dependency 'guard-rspec', '~> 4.7'
   spec.add_development_dependency 'terminal-notifier-guard', '~> 1.6'
 
-  spec.add_runtime_dependency 'activesupport', '>= 4.1', '< 7'
-  spec.add_runtime_dependency 'activemodel', '>= 4.1', '< 7'
+  spec.add_runtime_dependency 'activesupport', '>= 4.1', '< 8'
+  spec.add_runtime_dependency 'activemodel', '>= 4.1', '< 8'
   spec.add_runtime_dependency 'virtus', '~> 1.0', '>= 1.0.4'
   spec.add_runtime_dependency 'mime-types', '~> 3.0'
   spec.add_runtime_dependency 'ethon'

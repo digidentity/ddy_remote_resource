@@ -30,7 +30,7 @@ module RemoteResource
             raise(RemoteResource::CollectionOptionKeyError, "`collection_prefix` variable `#{key}` is missing from `collection_options`") if check_collection_options
             value = key
           end
-          URI.parser.escape(value.to_s)
+            URI::DEFAULT_PARSER.escape(value.to_s)
         end
       end
     end

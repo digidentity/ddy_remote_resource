@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-RSpec.describe '.find_by' do
+RSpec.describe '.find_by!' do
 
   class Post
     include RemoteResource::Base
@@ -40,12 +40,12 @@ RSpec.describe '.find_by' do
     end
 
     it 'performs the correct HTTP GET request' do
-      Post.find_by({ title: 'Lorem Ipsum', featured: true }, path_postfix: '/current')
+      Post.find_by!({ title: 'Lorem Ipsum', featured: true }, path_postfix: '/current')
       expect(expected_request).to have_been_requested
     end
 
     it 'builds the correct resource' do
-      post = Post.find_by({ title: 'Lorem Ipsum', featured: true }, path_postfix: '/current')
+      post = Post.find_by!({ title: 'Lorem Ipsum', featured: true }, path_postfix: '/current')
 
       aggregate_failures do
         expect(post.id).to eql 12
@@ -66,12 +66,12 @@ RSpec.describe '.find_by' do
     end
 
     it 'performs the correct HTTP GET request' do
-      Post.find_by({ id: 12, title: 'Lorem Ipsum', featured: true })
+      Post.find_by!({ id: 12, title: 'Lorem Ipsum', featured: true })
       expect(expected_request).to have_been_requested
     end
 
     it 'builds the correct resource' do
-      post = Post.find_by({ id: 12, title: 'Lorem Ipsum', featured: true })
+      post = Post.find_by!({ id: 12, title: 'Lorem Ipsum', featured: true })
 
       aggregate_failures do
         expect(post.id).to eql 12
@@ -92,7 +92,7 @@ RSpec.describe '.find_by' do
     end
 
     it 'performs the correct HTTP GET request' do
-      Post.find_by({ title: 'Lorem Ipsum', featured: true }, params: { pseudonym: 'pseudonym' }, path_postfix: '/current')
+      Post.find_by!({ title: 'Lorem Ipsum', featured: true }, params: { pseudonym: 'pseudonym' }, path_postfix: '/current')
       expect(expected_request).to have_been_requested
     end
   end
@@ -106,7 +106,7 @@ RSpec.describe '.find_by' do
     end
 
     it 'performs the correct HTTP GET request' do
-      Post.find_by({ title: 'Lorem Ipsum', featured: true }, headers: { 'X-Pseudonym' => 'pseudonym' }, path_postfix: '/current')
+      Post.find_by!({ title: 'Lorem Ipsum', featured: true }, headers: { 'X-Pseudonym' => 'pseudonym' }, path_postfix: '/current')
       expect(expected_request).to have_been_requested
     end
   end
@@ -120,12 +120,12 @@ RSpec.describe '.find_by' do
     end
 
     it 'raises the not found error' do
-      expect { Post.find_by({ featured: false }, params: { pseudonym: 'pseudonym' }, headers: { 'X-Pseudonym' => 'pseudonym' }, path_postfix: '/current') }.to raise_error RemoteResource::HTTPNotFound
+      expect { Post.find_by!({ featured: false }, params: { pseudonym: 'pseudonym' }, headers: { 'X-Pseudonym' => 'pseudonym' }, path_postfix: '/current') }.to raise_error RemoteResource::HTTPNotFound
     end
 
     it 'adds metadata to the raised error' do
       begin
-        Post.find_by({ featured: false }, params: { pseudonym: 'pseudonym' }, headers: { 'X-Pseudonym' => 'pseudonym' }, path_postfix: '/current')
+        Post.find_by!({ featured: false }, params: { pseudonym: 'pseudonym' }, headers: { 'X-Pseudonym' => 'pseudonym' }, path_postfix: '/current')
       rescue RemoteResource::HTTPNotFound => error
         aggregate_failures do
           expect(error.message).to eql 'HTTP request failed for Post with response_code=404 with http_action=get with request_url=https://www.example.com/posts/current.json'
@@ -134,19 +134,6 @@ RSpec.describe '.find_by' do
           expect(error.request_query).to eql(RemoteResource::Util.encode_params_to_query({ pseudonym: 'pseudonym', featured: false }))
           expect(error.request_headers).to eql(expected_default_headers.merge({ 'X-Pseudonym' => 'pseudonym' }))
         end
-      end
-    end
-
-    context 'with RemoteResource.find_by_raises_if_resource_not_found set to false' do
-      around do |example|
-        RemoteResource.find_by_raises_if_resource_not_found, @original_setting = false, RemoteResource.find_by_raises_if_resource_not_found
-        example.run
-        RemoteResource.find_by_raises_if_resource_not_found = @original_setting
-      end
-
-      it 'returns nil' do
-        result = Post.find_by({ featured: false }, params: { pseudonym: 'pseudonym' }, headers: { 'X-Pseudonym' => 'pseudonym' }, path_postfix: '/current')
-        expect(result).to eql nil
       end
     end
   end
@@ -160,12 +147,12 @@ RSpec.describe '.find_by' do
     end
 
     it 'raises the server error' do
-      expect { Post.find_by({ featured: false }, params: { pseudonym: 'pseudonym' }, headers: { 'X-Pseudonym' => 'pseudonym' }, path_postfix: '/current') }.to raise_error RemoteResource::HTTPServerError
+      expect { Post.find_by!({ featured: false }, params: { pseudonym: 'pseudonym' }, headers: { 'X-Pseudonym' => 'pseudonym' }, path_postfix: '/current') }.to raise_error RemoteResource::HTTPServerError
     end
 
     it 'adds metadata to the raised error' do
       begin
-        Post.find_by({ featured: false }, params: { pseudonym: 'pseudonym' }, headers: { 'X-Pseudonym' => 'pseudonym' }, path_postfix: '/current')
+        Post.find_by!({ featured: false }, params: { pseudonym: 'pseudonym' }, headers: { 'X-Pseudonym' => 'pseudonym' }, path_postfix: '/current')
       rescue RemoteResource::HTTPServerError => error
         aggregate_failures do
           expect(error.message).to eql 'HTTP request failed for Post with response_code=500 with http_action=get with request_url=https://www.example.com/posts/current.json'

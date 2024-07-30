@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+- Deprecate `.find_by` raising an error
+
+  To make RemoteResource behave more like ActiveRecord add a `.find_by!` method
+  that raises if the record isn't found. `.find_by` raising an error is
+  deprecated. In version 2.0 `.find_by` wil return `nil` instead.
+
 ## [1.3.2] - 2023-08-08
 
 ### Added

@@ -11,6 +11,11 @@ module RemoteResource
           resource.handle_response(response)
         end
 
+        def create!(attributes = {}, connection_options = {})
+          resource = create(attributes, connection_options)
+          resource.success? ? resource : raise(ResourceInvalid.new(resource))
+        end
+
         def destroy(id, connection_options = {})
           resource = new(id: id)
           response = RemoteResource::Request.new(self, :delete, {}, connection_options.merge(id: id)).perform

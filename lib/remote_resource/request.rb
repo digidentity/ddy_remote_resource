@@ -78,10 +78,11 @@ module RemoteResource
 
     def body
       @body ||= begin
-        if [:put, :patch, :post].include?(http_action)
+        case http_action
+        when :put, :patch, :post
           attributes.to_json
-        elsif http_action == :get && connection_options[:force_get_params_in_body]
-          connection_options[:params].to_json
+        when :get
+          connection_options[:params].to_json if connection_options[:force_get_params_in_body]
         else
           nil
         end

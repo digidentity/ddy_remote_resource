@@ -399,9 +399,9 @@ RSpec.describe RemoteResource::Request do
         expect(CGI.unescape(request.query)).to eql expected_query
       end
 
-      context "when connection_options[:use_body] is present" do
+      context "when connection_options[:force_get_params_in_body] is present" do
         let(:connection_options) do
-          { root_element: :data, use_body: true, params: { pseudonym: 'pseudonym', labels: [1, '2', 'three'], pagination: { page: 5, limit: 15, ordered: true } } }
+          { root_element: :data, force_get_params_in_body: true, params: { pseudonym: 'pseudonym', labels: [1, '2', 'three'], pagination: { page: 5, limit: 15, ordered: true } } }
         end
 
         it 'returns nil' do
@@ -438,10 +438,10 @@ RSpec.describe RemoteResource::Request do
       end
     end
 
-    context 'when the http_action is :get and connection_options[:use_body] is present' do
+    context 'when the http_action is :get and connection_options[:force_get_params_in_body] is present' do
       let(:http_action) { :get }
       let(:connection_options) do
-        { use_body: true, params: { pseudonym: 'pseudonym', labels: [1, '2', 'three'] } }
+        { force_get_params_in_body: true, params: { pseudonym: 'pseudonym', labels: [1, '2', 'three'] } }
       end
 
       let(:expected_body) do
@@ -453,7 +453,7 @@ RSpec.describe RemoteResource::Request do
       end
     end
 
-    context "when the http_action is :get and connection_options[:params][:use_body] is not present" do
+    context "when the http_action is :get and connection_options[:params][:force_get_params_in_body] is not present" do
       let(:http_action) { :get }
 
       it 'returns nil' do

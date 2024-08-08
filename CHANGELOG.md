@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.3.2] - 2023-08-08
+
 ### Added
 
 - Allow using request body for GET requests by passing `force_get_params_in_body: true`.

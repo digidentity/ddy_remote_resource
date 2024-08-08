@@ -15,7 +15,7 @@ jobs:
 
     strategy:
       matrix:
-        ruby-version: [3.1, 3.2, 3.3 # Define the Ruby versions to test against
+        ruby-version: [3.1, 3.2, 3.3] # Define the Ruby versions to test against
 
     steps:
     - name: Check out code

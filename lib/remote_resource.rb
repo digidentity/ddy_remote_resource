@@ -6,7 +6,9 @@ require 'request_store'
 
 require_relative 'extensions/ethon/easy/queryable'
 
+require "remote_resource/railtie" if defined?(Rails::Railtie)
 require 'remote_resource/version'
+require 'remote_resource/deprecator'
 require 'remote_resource/errors'
 require 'remote_resource/base'
 require 'remote_resource/collection'

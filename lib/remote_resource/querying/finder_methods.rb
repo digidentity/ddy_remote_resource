@@ -11,6 +11,15 @@ module RemoteResource
         end
 
         def find_by(params, connection_options = {})
+          RemoteResource.deprecator.warn <<-DEPRECATION.strip_heredoc
+            [RemoteResource] `find_by` will not raise in the next major version.
+            Use `find_by!` instead.
+          DEPRECATION
+          response = RemoteResource::Request.new(self, :get, {}, connection_options.deep_merge(id: params[:id], params: params.except(:id))).perform
+          build_resource_from_response(response)
+        end
+
+        def find_by!(params, connection_options = {})
           response = RemoteResource::Request.new(self, :get, {}, connection_options.deep_merge(id: params[:id], params: params.except(:id))).perform
           build_resource_from_response(response)
         end

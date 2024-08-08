@@ -68,7 +68,7 @@ module RemoteResource
       @query ||= begin
         params = connection_options[:params]
 
-        if params.present?
+        if params.present? && !connection_options[:force_get_params_in_body]
           RemoteResource::Util.encode_params_to_query(params)
         else
           nil
@@ -78,8 +78,11 @@ module RemoteResource
 
     def body
       @body ||= begin
-        if [:put, :patch, :post].include?(http_action)
+        case http_action
+        when :put, :patch, :post
           attributes.to_json
+        when :get
+          connection_options[:params].to_json if connection_options[:force_get_params_in_body]
         else
           nil
         end

@@ -126,6 +126,85 @@ RSpec.describe RemoteResource::Querying::PersistenceMethods do
     end
   end
 
+  describe '.create!' do
+    context 'when resource is persisted' do
+      let(:response_body) do
+        {
+          data: {
+            id:         12,
+            title:      'Lorem Ipsum',
+            body:       'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+            featured:   true,
+            created_at: Time.new(2015, 10, 4, 9, 30, 0),
+          }
+        }
+      end
+
+      let!(:expected_request) do
+        mock_request = stub_request(:post, 'https://www.example.com/posts.json')
+        mock_request.to_return(status: 201, body: JSON.generate(response_body))
+        mock_request
+      end
+
+      it 'performs the HTTP request' do
+        Post.create!(title: 'Lorem Ipsum', body: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.', featured: true)
+        expect(expected_request).to have_been_requested
+      end
+
+      it 'builds the correct resource' do
+        post = Post.create!(title: 'Lorem Ipsum', body: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.', featured: true)
+
+        aggregate_failures do
+          expect(post.persisted?).to eql true
+          expect(post.id).to eql 12
+          expect(post.title).to eql 'Lorem Ipsum'
+          expect(post.body).to eql 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.'
+          expect(post.featured).to eql true
+          expect(post.created_at).to eql Time.new(2015, 10, 4, 9, 30, 0)
+        end
+      end
+
+      it 'does NOT change the given attributes' do
+        attributes = { title: 'Lorem Ipsum', body: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.', featured: true }
+
+        expect { Post.create!(attributes) }.not_to change { attributes }.from(attributes.dup)
+      end
+
+      it 'does NOT change the given connection_options' do
+        attributes         = { title: 'Lorem Ipsum', body: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.', featured: true }
+        connection_options = { headers: { 'Foo' => 'Bar' } }
+
+        expect { Post.create!(attributes, connection_options) }.not_to change { connection_options }.from(connection_options.dup)
+      end
+    end
+
+    context 'when resource is NOT persisted' do
+      let(:response_body) do
+        {
+          errors: {
+            title:             ['Please use a title which is more than 5 characters'],
+            body:              ['Please fill in a body'],
+            virtual_attribute: ['You already posted today', 'Please refrain from using curse words']
+          }
+        }
+      end
+
+      let(:resource) { Post.new(title: 'Lorem Ipsum', body: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.', featured: true) }
+
+      let!(:expected_request) do
+        mock_request = stub_request(:post, 'https://www.example.com/posts.json')
+        mock_request.to_return(status: 422, body: JSON.generate(response_body))
+        mock_request
+      end
+
+      it 'raise the resource invalid error' do
+        expect do
+          Post.create!(title: 'Aliquam lobortis', featured: true)
+        end.to raise_error(RemoteResource::ResourceInvalid, /Validation failed: Title Please use a title/)
+      end
+    end
+  end
+
   describe '.destroy' do
     let(:response_body) do
       {}

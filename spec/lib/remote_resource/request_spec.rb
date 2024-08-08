@@ -398,6 +398,16 @@ RSpec.describe RemoteResource::Request do
       it 'returns the URL-encoded params' do
         expect(CGI.unescape(request.query)).to eql expected_query
       end
+
+      context "when connection_options[:force_get_params_in_body] is present" do
+        let(:connection_options) do
+          { root_element: :data, force_get_params_in_body: true, params: { pseudonym: 'pseudonym', labels: [1, '2', 'three'], pagination: { page: 5, limit: 15, ordered: true } } }
+        end
+
+        it 'returns nil' do
+          expect(request.query).to be_nil
+        end
+      end
     end
 
     context 'when connection_options[:params] are NOT present' do
@@ -428,7 +438,22 @@ RSpec.describe RemoteResource::Request do
       end
     end
 
-    context 'when the http_action is NOT :put, :patch or :post' do
+    context 'when the http_action is :get and connection_options[:force_get_params_in_body] is present' do
+      let(:http_action) { :get }
+      let(:connection_options) do
+        { force_get_params_in_body: true, params: { pseudonym: 'pseudonym', labels: [1, '2', 'three'] } }
+      end
+
+      let(:expected_body) do
+        '{"pseudonym":"pseudonym","labels":[1,"2","three"]}'
+      end
+
+      it 'returns the JSON-encoded connection_options[:params]' do
+        expect(request.body).to eql expected_body
+      end
+    end
+
+    context "when the http_action is :get and connection_options[:params][:force_get_params_in_body] is not present" do
       let(:http_action) { :get }
 
       it 'returns nil' do

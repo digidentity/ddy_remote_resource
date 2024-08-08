@@ -6,6 +6,8 @@
 
 - Allow using request body for GET requests by passing `force_get_params_in_body: true`.
 
+    User.all(params: {ids: ids}, force_get_params_in_body: true)
+
 ## [1.3.1] - 2023-02-26
 
 ### Changed

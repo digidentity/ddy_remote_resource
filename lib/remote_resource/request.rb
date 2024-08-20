@@ -160,6 +160,8 @@ module RemoteResource
         raise RemoteResource::HTTPGone.new(request, response)
       when 418
         raise RemoteResource::HTTPTeapot.new(request, response)
+      when 429
+        raise RemoteResource::HTTPTooManyRequests.new(request, response)
       when 444
         raise RemoteResource::HTTPNoResponse.new(request, response)
       when 494

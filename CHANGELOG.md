@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [1.3.3] - 2023-08-20
+
+### Added
+
+- Add HTTP 429 TooManyRequests error
+
 ## [1.3.2] - 2023-08-08
 
 ### Added

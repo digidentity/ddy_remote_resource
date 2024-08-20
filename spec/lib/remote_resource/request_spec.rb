@@ -675,6 +675,7 @@ RSpec.describe RemoteResource::Request do
         409 => RemoteResource::HTTPConflict,
         410 => RemoteResource::HTTPGone,
         418 => RemoteResource::HTTPTeapot,
+        429 => RemoteResource::HTTPTooManyRequests,
         444 => RemoteResource::HTTPNoResponse,
         494 => RemoteResource::HTTPRequestHeaderTooLarge,
         495 => RemoteResource::HTTPCertError,

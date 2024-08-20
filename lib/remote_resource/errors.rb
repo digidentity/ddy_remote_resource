@@ -81,6 +81,7 @@ module RemoteResource
   HTTPConflict         = Class.new(HTTPClientError) # HTTP 409
   HTTPGone             = Class.new(HTTPClientError) # HTTP 410
   HTTPTeapot           = Class.new(HTTPClientError) # HTTP 418
+  HTTPTooManyRequests  = Class.new(HTTPClientError) # HTTP 429
 
   NginxClientError = Class.new(HTTPClientError) # HTTP errors used in Nginx
 

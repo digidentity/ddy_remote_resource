@@ -6,7 +6,9 @@ require 'request_store'
 
 require_relative 'extensions/ethon/easy/queryable'
 
+require "remote_resource/railtie" if defined?(Rails::Railtie)
 require 'remote_resource/version'
+require 'remote_resource/deprecator'
 require 'remote_resource/errors'
 require 'remote_resource/base'
 require 'remote_resource/collection'
@@ -23,4 +25,5 @@ require 'remote_resource/request'
 require 'remote_resource/util'
 
 module RemoteResource
+  mattr_accessor :find_by_raises_if_resource_not_found, default: true, instance_accessor: false
 end

@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Added
+
+- Add `Resource.create!` method that raises on failure.
+  ```ruby
+  Post.create!
+  # => raises RemoteResource::ResourceInvalid:
+  #      Validation failed: Title Please use a title which is more than 5 characters.
+  ```
+
 ## [1.3.3] - 2023-08-20
 
 ### Added

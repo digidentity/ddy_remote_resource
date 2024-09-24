@@ -1,6 +1,8 @@
 module RemoteResource
   RemoteResourceError = Class.new(StandardError)
 
+  ResourceInvalid = Class.new(ActiveModel::ValidationError)
+
   IdMissingError = Class.new(RemoteResourceError)
 
   CollectionOptionKeyError = Class.new(RemoteResourceError)

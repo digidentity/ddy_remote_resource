@@ -39,6 +39,8 @@ module RemoteResource
         success? ? self : false
       end
 
+      alias_method :update, :update_attributes
+
       private
 
       def create_or_update(attributes = {}, connection_options = {})

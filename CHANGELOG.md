@@ -6,7 +6,7 @@
 
 ### Added
 
-- Added an alias `:update` for the method `:update_attributes`
+- Add an alias `:update` for the method `:update_attributes`
 
 ## [1.3.3] - 2023-08-20
 

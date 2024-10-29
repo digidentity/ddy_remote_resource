@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [1.3.4] - 2024-10-29
+
+### Added
+
+- Add an alias `:update` for the method `:update_attributes`
+
 ## [1.3.3] - 2023-08-20
 
 ### Added

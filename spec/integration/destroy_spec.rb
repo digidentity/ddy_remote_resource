@@ -180,6 +180,20 @@ RSpec.describe '.destroy and #destroy' do
       end
     end
 
+    describe 'with connection_options[:body]' do
+      let!(:expected_request) do
+        mock_request = stub_request(:delete, 'https://www.example.com/posts/12.json')
+        mock_request.with(body: { pseudonym: 'pseudonym' }.to_json, headers: expected_default_headers.merge('Content-Type' => 'application/json'))
+        mock_request.to_return(status: 204, body: response_body.to_json)
+        mock_request
+      end
+
+      it 'performs the correct HTTP DELETE request' do
+        resource.destroy(body: { pseudonym: 'pseudonym' })
+        expect(expected_request).to have_been_requested
+      end
+    end
+
     describe 'with connection_options[:headers]' do
       let!(:expected_request) do
         mock_request = stub_request(:delete, 'https://www.example.com/posts/12.json')

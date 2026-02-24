@@ -415,6 +415,15 @@ RSpec.describe RemoteResource::Querying::PersistenceMethods do
       end
     end
 
+    it 'sends the body when connection_options[:body] is present' do
+      expected_request = stub_request(:delete, 'https://www.example.com/posts/12.json')
+        .with(body: { pseudonym: 'pseudonym' }.to_json)
+        .to_return(status: 204, body: response_body.to_json)
+
+      resource.destroy(body: { pseudonym: 'pseudonym' })
+      expect(expected_request).to have_been_requested
+    end
+
     it 'does NOT change the given connection_options' do
       connection_options = { headers: { 'Foo' => 'Bar' } }
 

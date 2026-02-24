@@ -267,7 +267,55 @@ RSpec.describe RemoteResource::Request do
       let(:expected_body) { nil }
       let(:expected_connection_options) { request.connection_options }
 
-      it 'makes a DELETE request with the connection_options[:params] as query' do
+      it 'makes a DELETE request without a body' do
+        expect(connection).to receive(:delete).with(expected_request_url, params: expected_params,
+                                                    body: expected_body, headers: expected_headers,
+                                                    connecttimeout: 30, timeout: 120).and_call_original
+        request.perform
+      end
+
+      include_examples 'a conditional construct for the response'
+    end
+
+    context 'when the http_action is :delete with connection_options[:body]' do
+      let(:http_action) { 'delete' }
+      let(:attributes) do
+        { id: 15 }
+      end
+      let(:connection_options) do
+        { params: { pseudonym: 'pseudonym' }, body: { pseudonym: 'pseudonym', labels: [1, '2', 'three'] } }
+      end
+
+      let(:expected_request_url) { 'http://www.foobar.com/request_dummy/15.json' }
+      let(:expected_params) { RemoteResource::Util.encode_params_to_query({ pseudonym: 'pseudonym' }) }
+      let(:expected_headers) { described_class::DEFAULT_HEADERS.merge(described_class::DEFAULT_CONTENT_TYPE) }
+      let(:expected_body) { JSON.generate(connection_options[:body]) }
+      let(:expected_connection_options) { request.connection_options }
+
+      it 'makes a DELETE request with the body from connection_options[:body]' do
+        expect(connection).to receive(:delete).with(expected_request_url, params: expected_params,
+                                                    body: expected_body, headers: expected_headers,
+                                                    connecttimeout: 30, timeout: 120).and_call_original
+        request.perform
+      end
+
+      include_examples 'a conditional construct for the response'
+    end
+
+    context 'when the http_action is :delete without attributes' do
+      let(:http_action) { 'delete' }
+      let(:attributes) { {} }
+      let(:connection_options) do
+        { id: 15, params: { pseudonym: 'pseudonym' } }
+      end
+
+      let(:expected_request_url) { 'http://www.foobar.com/request_dummy/15.json' }
+      let(:expected_params) { RemoteResource::Util.encode_params_to_query({ pseudonym: 'pseudonym' }) }
+      let(:expected_headers) { described_class::DEFAULT_HEADERS }
+      let(:expected_body) { nil }
+      let(:expected_connection_options) { request.connection_options }
+
+      it 'makes a DELETE request without body' do
         expect(connection).to receive(:delete).with(expected_request_url, params: expected_params,
                                                     body: expected_body, headers: expected_headers,
                                                     connecttimeout: 30, timeout: 120).and_call_original
@@ -460,6 +508,30 @@ RSpec.describe RemoteResource::Request do
         expect(request.body).to be_nil
       end
     end
+
+      context 'when the http_action is :delete and connection_options[:body] is present' do
+        let(:http_action) { :delete }
+        let(:connection_options) do
+          { body: { pseudonym: 'pseudonym', labels: [1, '2', 'three'] } }
+        end
+
+        let(:expected_body) do
+          '{"pseudonym":"pseudonym","labels":[1,"2","three"]}'
+        end
+
+        it 'returns the JSON-encoded connection_options[:body]' do
+          expect(request.body).to eql expected_body
+        end
+      end
+
+      context 'when the http_action is :delete and connection_options[:body] is not present' do
+        let(:http_action) { :delete }
+
+        it 'returns nil' do
+          expect(request.body).to be_nil
+        end
+      end
+
   end
 
   describe '#attributes' do

@@ -81,6 +81,9 @@ module RemoteResource
         case http_action
         when :put, :patch, :post
           attributes.to_json
+        when :delete
+          body_attributes = connection_options[:body]
+          body_attributes.present? ? body_attributes.to_json : nil
         when :get
           connection_options[:params].to_json if connection_options[:force_get_params_in_body]
         else

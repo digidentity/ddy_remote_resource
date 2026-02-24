@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [1.3.5] - 2026-02-24
+
+### Added
+
+- Enrich DELETE action with body params
+
 ## [1.3.4] - 2024-10-29
 
 ### Added

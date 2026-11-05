@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [1.3.6] - 2026-11-05
+
+### Changed
+
+- Allow Rails 8.0 (`activesupport` and `activemodel` `< 8.1`).
+
 ## [1.3.5] - 2026-02-24
 
 ### Added
